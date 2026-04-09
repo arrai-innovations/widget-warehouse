@@ -7,7 +7,7 @@ from widget_warehouse.catalog.viewsets import (
 )
 
 router = VuedaRouter()
-router.register(r"widgets", WidgetViewSet)
-router.register(r"widget-categories", WidgetCategoryViewSet)
-router.register(r"widget-variants", WidgetVariantViewSet)
+router.register(r"widget", WidgetViewSet)
+router.register(r"widgetcategory", WidgetCategoryViewSet)
+router.register(r"widgetvariant", WidgetVariantViewSet)
 urlpatterns = router.urls
