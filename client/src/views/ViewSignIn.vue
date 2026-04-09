@@ -1,9 +1,9 @@
 <script setup>
 import AuthorizingForm from "@vueda/components/AuthorizingForm.vue";
+import { ControlButton } from "@vueda/controls/button";
 import FormField from "@vueda/fields/FormField.vue";
 import { storeUser } from "@vueda/stores/storeUser.js";
 import WidgetTextInput from "@vueda/widgets/WidgetTextInput.vue";
-import Button from "primevue/button";
 
 const userStore = storeUser();
 
@@ -23,7 +23,7 @@ function login({ formValues }) {
             </FormField>
         </template>
         <template #action-bar>
-            <Button type="submit" label="Sign In" />
+            <ControlButton type="submit">Sign In</ControlButton>
         </template>
     </AuthorizingForm>
 </template>
