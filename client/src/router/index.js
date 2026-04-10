@@ -1,4 +1,4 @@
-import { requireInitialized } from "@vueda/router/guards.js";
+import { requireInitialized, requireUnauth } from "@vueda/router/guards.js";
 import { makeCRUDRoutes } from "@vueda/router/makeCrud.js";
 import { setCrudComponents } from "@vueda/router/routerComponent.js";
 import { createRouter, createWebHistory } from "vue-router";
@@ -23,10 +23,18 @@ export function getRouter(app, pinia) {
 
     const routes = [
         {
+            path: "/",
+            name: "landing",
+            component: () => import("@/views/ViewLanding.vue"),
+            meta: { title: "Landing" },
+            beforeEnter: () => requireUnauth({ name: 'welcome' }, router, pinia)
+        },
+        {
             path: "/sign-in/",
             name: "sign-in",
             component: () => import("@/views/ViewSignIn.vue"),
             meta: { title: "Sign In" },
+            beforeEnter: () => requireUnauth({ name: 'welcome' }, router, pinia)
         },
         {
             path: "/welcome/",

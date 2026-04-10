@@ -1,4 +1,5 @@
 import { vuedaViteConfig } from "@arrai-innovations/vueda/lib/vite.js";
+import tailwindcss from "@tailwindcss/vite";
 import vue from "@vitejs/plugin-vue";
 import fs from "fs";
 import path from "path";
@@ -41,7 +42,7 @@ export default defineConfig(({ mode }) => {
     });
 
     return {
-        plugins: [vue()],
+        plugins: [vue(), tailwindcss()],
         define: vueda.define,
         resolve: {
             ...vueda.resolve,
