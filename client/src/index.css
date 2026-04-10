@@ -1,0 +1,98 @@
+@import "tailwindcss";
+@import "@vueda/theme/vueda-tailwind/base.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant screen (@media screen);
+
+@theme {
+    --breakpoint-2xs: 480px;
+    --breakpoint-3xl: 1920px;
+    --breakpoint-4xl: 2240px;
+    --breakpoint-5xl: 2560px;
+}
+
+@layer base {
+    html {
+        font-size: 16px;
+    }
+
+    .dark {
+        color-scheme: dark;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    h3 {
+        font-size: 1.2rem;
+        font-weight: 400;
+    }
+
+    sub {
+        font-feature-settings: "subs";
+    }
+
+    sup {
+        font-feature-settings: "sups";
+    }
+
+    a {
+        @apply underline;
+    }
+}
+
+@layer utilities {
+    .no-transition * {
+        transition: none !important;
+    }
+
+    @media (prefers-reduced-motion) {
+        * {
+            transition: none !important;
+        }
+    }
+
+    .tabular-numbers {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ordinal {
+        font-variant-numeric: ordinal;
+    }
+
+    .fractions {
+        font-variant-numeric: diagonal-fractions;
+    }
+
+    .disambiguation {
+        font-feature-settings: "ss02", "ss04";
+    }
+
+    .small-caps {
+        font-variant: small-caps;
+    }
+
+    /* Prevents flex/grid children from overflowing their containers */
+    * {
+        min-width: 0;
+    }
+
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply transition-colors duration-200 delay-0;
+    }
+}
