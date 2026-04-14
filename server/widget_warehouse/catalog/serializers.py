@@ -21,7 +21,7 @@ class WidgetCategorySerializer(VuedaLookupSerializer):
 class SupplierSerializer(VuedaSerializer):
     class Meta(VuedaSerializer.Meta):
         model = Supplier
-        fields = [
+        fields = (
             "id",
             "name",
             "slug",
@@ -37,8 +37,8 @@ class SupplierSerializer(VuedaSerializer):
             "updated_at",
             "formatted_name",
             "available_actions",
-        ]
-        read_only_fields = ["created_at", "updated_at"]
+        )
+        read_only_fields = ("created_at", "updated_at")
 
 
 class WidgetSerializer(VuedaSerializer):
@@ -47,7 +47,7 @@ class WidgetSerializer(VuedaSerializer):
 
     class Meta(VuedaSerializer.Meta):
         model = Widget
-        fields = [
+        fields = (
             "id",
             "name",
             "slug",
@@ -67,14 +67,14 @@ class WidgetSerializer(VuedaSerializer):
             "updated_at",
             "formatted_name",
             "available_actions",
-        ]
-        read_only_fields = ["created_at", "updated_at"]
+        )
+        read_only_fields = ("created_at", "updated_at")
 
 
 class WidgetVariantSerializer(VuedaSerializer):
     class Meta(VuedaSerializer.Meta):
         model = WidgetVariant
-        fields = [
+        fields = (
             "id",
             "widget",
             "name",
@@ -83,13 +83,13 @@ class WidgetVariantSerializer(VuedaSerializer):
             "stock_quantity",
             "formatted_name",
             "available_actions",
-        ]
+        )
 
 
 class WarehouseSerializer(VuedaSerializer):
     class Meta(VuedaSerializer.Meta):
         model = Warehouse
-        fields = [
+        fields = (
             "id",
             "name",
             "code",
@@ -101,14 +101,14 @@ class WarehouseSerializer(VuedaSerializer):
             "is_active",
             "formatted_name",
             "available_actions",
-        ]
-        read_only_fields = ["uuid"]
+        )
+        read_only_fields = ("uuid",)
 
 
 class InventoryRecordSerializer(VuedaSerializer):
     class Meta(VuedaSerializer.Meta):
         model = InventoryRecord
-        fields = [
+        fields = (
             "id",
             "variant",
             "warehouse",
@@ -119,7 +119,7 @@ class InventoryRecordSerializer(VuedaSerializer):
             "last_received_at",
             "notes",
             "available_actions",
-        ]
+        )
 
 
 class PromotionSerializer(VuedaSerializer):
@@ -127,7 +127,7 @@ class PromotionSerializer(VuedaSerializer):
 
     class Meta(VuedaSerializer.Meta):
         model = Promotion
-        fields = [
+        fields = (
             "id",
             "name",
             "code",
@@ -139,5 +139,5 @@ class PromotionSerializer(VuedaSerializer):
             "created_at",
             "formatted_name",
             "available_actions",
-        ]
-        read_only_fields = ["created_at"]
+        )
+        read_only_fields = ("created_at",)
