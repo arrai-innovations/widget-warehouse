@@ -24,47 +24,15 @@ export default defineConfig(({ mode }) => {
     const hmrProtocol = env.HMR_PROTOCOL || (https ? "wss" : "ws");
 
     const vueda = vuedaViteConfig({
+        enableRuntimeAliases: false,
         extraAliases: {
             "@": path.resolve(__dirname, "src"),
-        },
-        optimizeDeps: {
-            exclude: ["@arrai-innovations/vueda"],
-            include: [
-                "@arrai-innovations/reactive-helpers",
-                "@sentry/vue",
-                "@vueuse/core",
-                "@vueuse/shared",
-                "lodash-es",
-                "vue",
-                "vue-router",
-            ],
         },
     });
 
     return {
         plugins: [vue(), tailwindcss()],
-        define: vueda.define,
-        resolve: {
-            ...vueda.resolve,
-            // Force shared packages to resolve from this project's
-            // node_modules, preventing duplicate instances when vueda
-            // is linked locally via link: protocol.
-            dedupe: [
-                "vue",
-                "vue-router",
-                "pinia",
-                "primevue",
-                "@primeuix/themes",
-                "@primeuix/styled",
-                "@vueuse/core",
-                "@vueuse/shared",
-                "@floating-ui/vue",
-                "@floating-ui/dom",
-                "lodash-es",
-                "luxon",
-            ],
-        },
-        optimizeDeps: vueda.optimizeDeps,
+        ...vueda,
         server: {
             host: true,
             port: 8080,

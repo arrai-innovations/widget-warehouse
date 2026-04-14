@@ -1,15 +1,35 @@
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
+from django.contrib.postgres.fields.ranges import Range
 from django.core.management.base import BaseCommand
 
-from widget_warehouse.catalog.models import Widget, WidgetCategory, WidgetVariant
+from widget_warehouse.catalog.models import (
+    InventoryRecord,
+    Promotion,
+    Supplier,
+    Warehouse,
+    Widget,
+    WidgetCategory,
+    WidgetVariant,
+)
 
 
 class Command(BaseCommand):
-    help = "Seed the catalog with sample widgets."
+    help = "Seed the catalog with sample widgets, suppliers, warehouses, and promotions."
 
     def handle(self, *args, **options):
+        self._seed_categories()
+        self._seed_suppliers()
+        self._seed_widgets()
+        self._seed_variants()
+        self._seed_warehouses()
+        self._seed_inventory()
+        self._seed_promotions()
+        self.stdout.write(self.style.SUCCESS("Seed complete."))
+
+    def _seed_categories(self):
+        self.stdout.write("Seeding categories...")
         categories = {
             "sprocket": ("SPROCKET", "Toothed wheels for chain or belt drives."),
             "gear": ("GEAR", "Rotating machine parts with cut teeth for torque transfer."),
@@ -17,48 +37,282 @@ class Command(BaseCommand):
             "bearing": ("BEARING", "Constrains relative motion, reduces friction."),
             "gasket": ("GASKET", "Seals the junction between two surfaces."),
         }
-        cat_objs = {}
+        self.cat_objs = {}
         for name, (code, desc) in categories.items():
             obj, created = WidgetCategory.objects.update_or_create(
                 code=code, defaults={"name": name.title(), "description": desc}
             )
-            cat_objs[name] = obj
+            self.cat_objs[name] = obj
             status = "created" if created else "exists"
             self.stdout.write(f"  Category {name}: {status}")
 
+    def _seed_suppliers(self):
+        self.stdout.write("Seeding suppliers...")
+        suppliers_data = [
+            {
+                "slug": "precision-parts-co",
+                "defaults": {
+                    "name": "Precision Parts Co.",
+                    "website": "https://www.precisionparts.example.com",
+                    "contact_email": "sales@precisionparts.example.com",
+                    "country": "US",
+                    "reliability_score": 4.8,
+                    "typical_lead_days": 7,
+                    "is_approved": True,
+                    "notes": "Primary supplier for sprockets and gears. ISO 9001 certified.",
+                    "is_active": True,
+                },
+            },
+            {
+                "slug": "sinomech-industries",
+                "defaults": {
+                    "name": "SinoMech Industries",
+                    "website": "https://www.sinomech.example.com",
+                    "contact_email": "export@sinomech.example.com",
+                    "country": "CN",
+                    "reliability_score": 3.9,
+                    "typical_lead_days": 21,
+                    "is_approved": True,
+                    "notes": "Competitive pricing on fasteners and standard components. Lead times vary.",
+                    "is_active": True,
+                },
+            },
+            {
+                "slug": "eurobearings-gmbh",
+                "defaults": {
+                    "name": "EuroBearings GmbH",
+                    "website": "https://www.eurobearings.example.de",
+                    "contact_email": "info@eurobearings.example.de",
+                    "country": "DE",
+                    "reliability_score": 4.9,
+                    "typical_lead_days": 14,
+                    "is_approved": True,
+                    "notes": "Premium bearings and seals. DIN/EN certified.",
+                    "is_active": True,
+                },
+            },
+            {
+                "slug": "pacific-fasteners",
+                "defaults": {
+                    "name": "Pacific Fasteners Ltd.",
+                    "website": "https://www.pacificfasteners.example.tw",
+                    "contact_email": "orders@pacificfasteners.example.tw",
+                    "country": "TW",
+                    "reliability_score": 4.2,
+                    "typical_lead_days": 18,
+                    "is_approved": True,
+                    "notes": "Specialises in stainless and exotic alloy fasteners.",
+                    "is_active": True,
+                },
+            },
+            {
+                "slug": "apex-components",
+                "defaults": {
+                    "name": "Apex Components Pty Ltd",
+                    "website": "https://www.apexcomponents.example.au",
+                    "contact_email": "procurement@apexcomponents.example.au",
+                    "country": "AU",
+                    "reliability_score": None,
+                    "typical_lead_days": 5,
+                    "is_approved": None,
+                    "notes": "Local supplier under review. Fast domestic delivery.",
+                    "is_active": True,
+                },
+            },
+        ]
+        self.supplier_objs = {}
+        for entry in suppliers_data:
+            obj, created = Supplier.objects.update_or_create(slug=entry["slug"], defaults=entry["defaults"])
+            self.supplier_objs[entry["slug"]] = obj
+            status = "created" if created else "exists"
+            self.stdout.write(f"  Supplier {entry['slug']}: {status}")
+
+    def _seed_widgets(self):
+        self.stdout.write("Seeding widgets...")
+        # (name, slug, sku, cat_key, supplier_slug, price, weight, warranty_days, release_date, specs)
         widgets_data = [
-            ("Standard Sprocket", "SPR-100", "sprocket", "12.50", "0.340", date(2024, 3, 15)),
-            ("Heavy Duty Sprocket", "SPR-200", "sprocket", "24.99", "0.780", date(2024, 6, 1)),
-            ("Micro Sprocket", "SPR-050", "sprocket", "6.75", "0.085", None),
-            ("Spur Gear 24T", "GR-024", "gear", "18.00", "0.420", date(2023, 11, 1)),
-            ("Helical Gear 36T", "GR-036", "gear", "32.50", "0.610", date(2024, 1, 20)),
-            ("Bevel Gear Set", "GR-BEV", "gear", "45.00", "1.200", date(2025, 2, 1)),
-            ("Hex Bolt M8x30", "FST-HB8", "fastener", "0.45", "0.028", date(2022, 5, 10)),
-            ("Socket Cap M6x20", "FST-SC6", "fastener", "0.62", "0.015", date(2022, 5, 10)),
-            ("Wing Nut M10", "FST-WN10", "fastener", "0.38", "0.032", None),
-            ("Ball Bearing 6204", "BRG-6204", "bearing", "8.90", "0.120", date(2023, 8, 1)),
-            ("Tapered Roller Bearing", "BRG-TR30", "bearing", "22.00", "0.450", date(2024, 4, 15)),
-            ("Flat Gasket 50mm", "GSK-F50", "gasket", "2.10", "0.008", date(2024, 9, 1)),
-            ("O-Ring Kit (Assorted)", "GSK-ORK", "gasket", "14.50", "0.095", date(2024, 9, 1)),
+            (
+                "Standard Sprocket",
+                "standard-sprocket",
+                "SPR-100",
+                "sprocket",
+                "precision-parts-co",
+                "12.50",
+                "0.340",
+                365,
+                date(2024, 3, 15),
+                {"teeth": 12, "pitch_mm": 12.7, "material": "carbon steel"},
+            ),
+            (
+                "Heavy Duty Sprocket",
+                "heavy-duty-sprocket",
+                "SPR-200",
+                "sprocket",
+                "precision-parts-co",
+                "24.99",
+                "0.780",
+                730,
+                date(2024, 6, 1),
+                {"teeth": 16, "pitch_mm": 19.05, "material": "alloy steel", "surface_treatment": "heat treated"},
+            ),
+            (
+                "Micro Sprocket",
+                "micro-sprocket",
+                "SPR-050",
+                "sprocket",
+                "sinomech-industries",
+                "6.75",
+                "0.085",
+                180,
+                None,
+                {"teeth": 8, "pitch_mm": 6.35, "material": "stainless steel"},
+            ),
+            (
+                "Spur Gear 24T",
+                "spur-gear-24t",
+                "GR-024",
+                "gear",
+                "precision-parts-co",
+                "18.00",
+                "0.420",
+                365,
+                date(2023, 11, 1),
+                {"teeth": 24, "module": 2, "pressure_angle_deg": 20},
+            ),
+            (
+                "Helical Gear 36T",
+                "helical-gear-36t",
+                "GR-036",
+                "gear",
+                "precision-parts-co",
+                "32.50",
+                "0.610",
+                365,
+                date(2024, 1, 20),
+                {"teeth": 36, "module": 2.5, "helix_angle_deg": 15, "pressure_angle_deg": 20},
+            ),
+            (
+                "Bevel Gear Set",
+                "bevel-gear-set",
+                "GR-BEV",
+                "gear",
+                "eurobearings-gmbh",
+                "45.00",
+                "1.200",
+                730,
+                date(2025, 2, 1),
+                {"ratio": "2:1", "module": 3, "material": "case hardened steel"},
+            ),
+            (
+                "Hex Bolt M8x30",
+                "hex-bolt-m8x30",
+                "FST-HB8",
+                "fastener",
+                "pacific-fasteners",
+                "0.45",
+                "0.028",
+                None,
+                date(2022, 5, 10),
+                {"thread": "M8", "length_mm": 30, "grade": "8.8", "drive": "hex"},
+            ),
+            (
+                "Socket Cap M6x20",
+                "socket-cap-m6x20",
+                "FST-SC6",
+                "fastener",
+                "pacific-fasteners",
+                "0.62",
+                "0.015",
+                None,
+                date(2022, 5, 10),
+                {"thread": "M6", "length_mm": 20, "grade": "12.9", "drive": "allen"},
+            ),
+            (
+                "Wing Nut M10",
+                "wing-nut-m10",
+                "FST-WN10",
+                "fastener",
+                "sinomech-industries",
+                "0.38",
+                "0.032",
+                None,
+                None,
+                {"thread": "M10", "material": "zinc alloy"},
+            ),
+            (
+                "Ball Bearing 6204",
+                "ball-bearing-6204",
+                "BRG-6204",
+                "bearing",
+                "eurobearings-gmbh",
+                "8.90",
+                "0.120",
+                730,
+                date(2023, 8, 1),
+                {"bore_mm": 20, "od_mm": 47, "width_mm": 14, "dynamic_load_kn": 12.7},
+            ),
+            (
+                "Tapered Roller Bearing",
+                "tapered-roller-bearing",
+                "BRG-TR30",
+                "bearing",
+                "eurobearings-gmbh",
+                "22.00",
+                "0.450",
+                730,
+                date(2024, 4, 15),
+                {"bore_mm": 30, "od_mm": 72, "width_mm": 19, "dynamic_load_kn": 48.0},
+            ),
+            (
+                "Flat Gasket 50mm",
+                "flat-gasket-50mm",
+                "GSK-F50",
+                "gasket",
+                "apex-components",
+                "2.10",
+                "0.008",
+                None,
+                date(2024, 9, 1),
+                {"od_mm": 50, "id_mm": 30, "thickness_mm": 1.5, "material": "PTFE"},
+            ),
+            (
+                "O-Ring Kit (Assorted)",
+                "o-ring-kit-assorted",
+                "GSK-ORK",
+                "gasket",
+                "apex-components",
+                "14.50",
+                "0.095",
+                None,
+                date(2024, 9, 1),
+                {"count": 50, "material": "NBR", "sizes": "M5-M20"},
+            ),
         ]
 
-        widget_objs = {}
-        for name, sku, cat_key, price, weight, rel_date in widgets_data:
+        self.widget_objs = {}
+        for name, slug, sku, cat_key, supplier_slug, price, weight, warranty_days, rel_date, specs in widgets_data:
+            warranty = timedelta(days=warranty_days) if warranty_days else None
             obj, created = Widget.objects.update_or_create(
                 sku=sku,
                 defaults={
                     "name": name,
-                    "category": cat_objs[cat_key],
+                    "slug": slug,
+                    "category": self.cat_objs[cat_key],
+                    "supplier": self.supplier_objs.get(supplier_slug),
                     "description": "",
                     "unit_price": Decimal(price),
                     "weight_kg": Decimal(weight),
+                    "warranty_period": warranty,
                     "release_date": rel_date,
+                    "specifications": specs,
                 },
             )
-            widget_objs[sku] = obj
+            self.widget_objs[sku] = obj
             status = "created" if created else "exists"
             self.stdout.write(f"  Widget {sku}: {status}")
 
+    def _seed_variants(self):
+        self.stdout.write("Seeding variants...")
         variants_data = [
             ("SPR-100", "SM", "Small (8T)", "0.00", 50),
             ("SPR-100", "MD", "Medium (12T)", "2.00", 80),
@@ -73,9 +327,10 @@ class Command(BaseCommand):
             ("BRG-6204", "ZZ", "Shielded", "0.80", 150),
         ]
 
+        self.variant_objs = {}
         for parent_sku, suffix, name, add_price, stock in variants_data:
-            parent = widget_objs[parent_sku]
-            _, created = WidgetVariant.objects.update_or_create(
+            parent = self.widget_objs[parent_sku]
+            obj, created = WidgetVariant.objects.update_or_create(
                 widget=parent,
                 sku_suffix=suffix,
                 defaults={
@@ -84,7 +339,138 @@ class Command(BaseCommand):
                     "stock_quantity": stock,
                 },
             )
+            self.variant_objs[f"{parent_sku}-{suffix}"] = obj
             status = "created" if created else "exists"
             self.stdout.write(f"  Variant {parent_sku}-{suffix}: {status}")
 
-        self.stdout.write(self.style.SUCCESS("Seed complete."))
+    def _seed_warehouses(self):
+        self.stdout.write("Seeding warehouses...")
+        warehouses_data = [
+            {
+                "code": "SYD-DC",
+                "defaults": {
+                    "name": "Sydney Distribution Centre",
+                    "address": "42 Industrial Drive\nSydney NSW 2000\nAustralia",
+                    "contact_email": "syd.warehouse@widgetwarehouse.example.com",
+                    "opens_at": "07:00",
+                    "closes_at": "18:00",
+                    "is_active": True,
+                },
+            },
+            {
+                "code": "MEL-OVF",
+                "defaults": {
+                    "name": "Melbourne Overflow",
+                    "address": "17 Logistics Way\nMelbourne VIC 3000\nAustralia",
+                    "contact_email": "mel.warehouse@widgetwarehouse.example.com",
+                    "opens_at": "08:00",
+                    "closes_at": "17:00",
+                    "is_active": True,
+                },
+            },
+            {
+                "code": "BNE-STG",
+                "defaults": {
+                    "name": "Brisbane Staging",
+                    "address": "3 Commerce Park\nBrisbane QLD 4000\nAustralia",
+                    "contact_email": "bne.warehouse@widgetwarehouse.example.com",
+                    "opens_at": "09:00",
+                    "closes_at": "16:00",
+                    "is_active": False,
+                },
+            },
+        ]
+        self.warehouse_objs = {}
+        for entry in warehouses_data:
+            obj, created = Warehouse.objects.update_or_create(code=entry["code"], defaults=entry["defaults"])
+            self.warehouse_objs[entry["code"]] = obj
+            status = "created" if created else "exists"
+            self.stdout.write(f"  Warehouse {entry['code']}: {status}")
+
+    def _seed_inventory(self):
+        self.stdout.write("Seeding inventory records...")
+        syd = self.warehouse_objs["SYD-DC"]
+        mel = self.warehouse_objs["MEL-OVF"]
+        now = datetime.now(tz=UTC)
+
+        inventory_data = [
+            # (variant_key, warehouse, qty_on_hand, reorder_threshold, max_stock, last_stocktake, last_received)
+            ("SPR-100-SM", syd, 48, 20, 100, now, date(2026, 3, 10)),
+            ("SPR-100-MD", syd, 75, 30, 150, now, date(2026, 3, 10)),
+            ("SPR-100-LG", syd, 28, 15, 60, now, date(2026, 3, 10)),
+            ("SPR-200-SS", syd, 12, 10, 40, now, date(2026, 2, 28)),
+            ("SPR-200-CS", syd, 38, 20, 80, now, date(2026, 2, 28)),
+            ("BRG-6204-2RS", syd, 95, 40, 200, now, date(2026, 3, 15)),
+            ("BRG-6204-ZZ", syd, 140, 50, 250, now, date(2026, 3, 15)),
+            ("FST-HB8-ZN", syd, 480, 200, 1000, now, date(2026, 3, 1)),
+            ("FST-HB8-SS", syd, 195, 100, 500, now, date(2026, 3, 1)),
+            ("SPR-100-SM", mel, 20, 10, 50, now, date(2026, 1, 20)),
+            ("SPR-100-MD", mel, 30, 15, 80, now, date(2026, 1, 20)),
+            ("BRG-6204-2RS", mel, 40, 20, 100, now, date(2026, 2, 5)),
+        ]
+
+        for variant_key, warehouse, qty, reorder, max_stock, stocktake, received in inventory_data:
+            variant = self.variant_objs.get(variant_key)
+            if not variant:
+                continue
+            _, created = InventoryRecord.objects.update_or_create(
+                variant=variant,
+                warehouse=warehouse,
+                defaults={
+                    "quantity_on_hand": qty,
+                    "reorder_threshold": reorder,
+                    "max_stock_level": max_stock,
+                    "last_stocktake_at": stocktake,
+                    "last_received_at": received,
+                },
+            )
+            status = "created" if created else "exists"
+            self.stdout.write(f"  Inventory {variant_key} @ {warehouse.code}: {status}")
+
+    def _seed_promotions(self):
+        self.stdout.write("Seeding promotions...")
+        sprocket_widgets = list(Widget.objects.filter(category__code="SPROCKET"))
+        bearing_widgets = list(Widget.objects.filter(category__code="BEARING"))
+
+        promotions_data = [
+            {
+                "code": "SPRING26",
+                "defaults": {
+                    "name": "Spring Clearance 2026",
+                    "description": "End-of-season discount on all sprocket lines.",
+                    "discount_percent": Decimal("15.00"),
+                    "valid_dates": Range(lower=date(2026, 9, 1), upper=date(2026, 9, 30)),
+                    "is_active": True,
+                },
+                "widgets": sprocket_widgets,
+            },
+            {
+                "code": "BULK-BRG",
+                "defaults": {
+                    "name": "Bulk Buyer Bearing Discount",
+                    "description": "10% off bearings when ordering 50 or more units.",
+                    "discount_percent": Decimal("10.00"),
+                    "valid_dates": Range(lower=date(2025, 7, 1), upper=date(2025, 12, 31)),
+                    "is_active": False,
+                },
+                "widgets": bearing_widgets,
+            },
+            {
+                "code": "LAUNCH-GR-BEV",
+                "defaults": {
+                    "name": "Bevel Gear Launch Promo",
+                    "description": "Introductory pricing on the new bevel gear set.",
+                    "discount_percent": Decimal("20.00"),
+                    "valid_dates": Range(lower=date(2025, 2, 1), upper=date(2025, 4, 30)),
+                    "is_active": False,
+                },
+                "widgets": [self.widget_objs.get("GR-BEV")] if self.widget_objs.get("GR-BEV") else [],
+            },
+        ]
+
+        for entry in promotions_data:
+            promo, created = Promotion.objects.update_or_create(code=entry["code"], defaults=entry["defaults"])
+            if entry["widgets"]:
+                promo.widgets.set(entry["widgets"])
+            status = "created" if created else "exists"
+            self.stdout.write(f"  Promotion {entry['code']}: {status}")
