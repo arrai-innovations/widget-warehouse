@@ -1,3 +1,6 @@
+import uuid
+
+from django.contrib.postgres import fields as pg_fields
 from django.db import models
 from vueda.core.models import BaseModelMeta, Lookup, VuedaModel
 
@@ -12,21 +15,83 @@ class WidgetCategory(Lookup):
         verbose_name_plural = "widget categories"
 
 
+class Supplier(VuedaModel):
+    """A company that supplies widgets to the warehouse."""
+
+    COUNTRY_CHOICES = [
+        ("AU", "Australia"),
+        ("CN", "China"),
+        ("DE", "Germany"),
+        ("GB", "United Kingdom"),
+        ("JP", "Japan"),
+        ("TW", "Taiwan"),
+        ("US", "United States"),
+    ]
+
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=100, unique=True)
+    website = models.URLField(blank=True)
+    contact_email = models.EmailField()
+    country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=True)
+    reliability_score = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Supplier reliability rating from 0.0 to 5.0.",
+    )
+    typical_lead_days = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text="Typical lead time from order to delivery, in days.",
+    )
+    is_approved = models.BooleanField(
+        null=True,
+        blank=True,
+        help_text="Approval status: null = under review, true = approved, false = rejected.",
+    )
+    notes = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta(BaseModelMeta):
+        ordering = ["name", "id"]
+
+
 class Widget(VuedaModel):
     """A hypothetical manufactured product."""
 
     name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=100, unique=True, blank=True, null=True)
     sku = models.CharField("SKU", max_length=64, unique=True)
     category = models.ForeignKey(
         WidgetCategory,
         on_delete=models.PROTECT,
         related_name="widgets",
     )
+    supplier = models.ForeignKey(
+        Supplier,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="widgets",
+    )
     description = models.TextField(blank=True)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     weight_kg = models.DecimalField("Weight (kg)", max_digits=8, decimal_places=3, null=True, blank=True)
+    warranty_period = models.DurationField(
+        null=True,
+        blank=True,
+        help_text="Duration of the product warranty, e.g. 365 days.",
+    )
     is_active = models.BooleanField(default=True)
     release_date = models.DateField(null=True, blank=True)
+    image = models.ImageField(upload_to="widgets/images/", null=True, blank=True)
+    datasheet = models.FileField(upload_to="widgets/datasheets/", null=True, blank=True)
+    specifications = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Arbitrary key-value specification data.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -51,3 +116,66 @@ class WidgetVariant(VuedaModel):
                 name="unique_variant_sku_per_widget",
             ),
         ]
+
+
+class Warehouse(VuedaModel):
+    """A physical storage and distribution facility."""
+
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=32, unique=True)
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    address = models.TextField()
+    contact_email = models.EmailField(blank=True)
+    opens_at = models.TimeField()
+    closes_at = models.TimeField()
+    is_active = models.BooleanField(default=True)
+
+    class Meta(BaseModelMeta):
+        ordering = ["name", "id"]
+
+
+class InventoryRecord(VuedaModel):
+    """Stock levels for a widget variant at a specific warehouse."""
+
+    formatted_name = None
+
+    variant = models.ForeignKey(WidgetVariant, on_delete=models.CASCADE, related_name="inventory")
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="inventory")
+    quantity_on_hand = models.PositiveIntegerField(default=0)
+    reorder_threshold = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Reorder stock when quantity on hand falls below this level.",
+    )
+    max_stock_level = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Maximum stock level to hold at this location.",
+    )
+    last_stocktake_at = models.DateTimeField(null=True, blank=True)
+    last_received_at = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta(BaseModelMeta):
+        ordering = ["warehouse", "variant"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["variant", "warehouse"],
+                name="unique_inventory_per_variant_warehouse",
+            ),
+        ]
+
+
+class Promotion(VuedaModel):
+    """A time-limited discount applied to a selection of widgets."""
+
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=64, unique=True)
+    description = models.TextField(blank=True)
+    discount_percent = models.DecimalField(max_digits=5, decimal_places=2)
+    valid_dates = pg_fields.DateRangeField()
+    is_active = models.BooleanField(default=True)
+    widgets = models.ManyToManyField(Widget, blank=True, related_name="promotions")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta(BaseModelMeta):
+        ordering = ["-created_at", "id"]

@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/*"],
+            "@vueda/*": ["../node_modules/@arrai-innovations/vueda/lib/*"]
+        }
+    }
+}
