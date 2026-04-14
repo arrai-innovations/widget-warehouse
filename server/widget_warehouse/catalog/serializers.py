@@ -15,7 +15,7 @@ from widget_warehouse.catalog.models import (
 class WidgetCategorySerializer(VuedaLookupSerializer):
     class Meta(VuedaLookupSerializer.Meta):
         model = WidgetCategory
-        fields = [*VuedaLookupSerializer.Meta.fields, "description"]
+        fields = (*VuedaLookupSerializer.Meta.fields, "description")
 
 
 class SupplierSerializer(VuedaSerializer):
