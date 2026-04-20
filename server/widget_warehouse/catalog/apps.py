@@ -9,16 +9,28 @@ class CatalogConfig(AppConfig):
         from vueda.info import register
 
         from .serializers import (
+            InventoryRecordSerializer,
+            PromotionSerializer,
+            SupplierSerializer,
+            WarehouseSerializer,
             WidgetCategorySerializer,
             WidgetSerializer,
             WidgetVariantSerializer,
         )
         from .viewsets import (
+            InventoryRecordViewSet,
+            PromotionViewSet,
+            SupplierViewSet,
+            WarehouseViewSet,
             WidgetCategoryViewSet,
             WidgetVariantViewSet,
             WidgetViewSet,
         )
 
+        register(InventoryRecordSerializer, InventoryRecordViewSet)
+        register(PromotionSerializer, PromotionViewSet)
+        register(SupplierSerializer, SupplierViewSet)
+        register(WarehouseSerializer, WarehouseViewSet)
         register(WidgetCategorySerializer, WidgetCategoryViewSet)
         register(WidgetSerializer, WidgetViewSet)
         register(WidgetVariantSerializer, WidgetVariantViewSet)
