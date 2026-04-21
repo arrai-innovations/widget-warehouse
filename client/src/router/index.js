@@ -1,18 +1,28 @@
 import { requireInitialized, requireUnauth } from "@vueda/router/guards.js";
 import { makeCRUDRoutes } from "@vueda/router/makeCrud.js";
 import { setCrudComponents } from "@vueda/router/routerComponent.js";
+import { getPascalCaseName } from "@vueda/utils/case.js";
 import { createRouter, createWebHistory } from "vue-router";
+
+function makeViewLoader(action) {
+    return async ({ app, model }) => {
+        try {
+            return (
+                await import(`@/views/View${action}${getPascalCaseName(app)}${getPascalCaseName(model)}.vue`)
+            ).default;
+        } catch {
+            return (await import(`@/views/DefaultView${action}.vue`)).default;
+        }
+    };
+}
 
 export function getRouter(app, pinia) {
     const crudComponents = {
-        list: async () => (await import("@vueda/views/ViewList.vue")).default,
-        create: async () =>
-            (await import("@vueda/views/ViewCreate.vue")).default,
-        read: async () => (await import("@vueda/views/ViewRead.vue")).default,
-        update: async () =>
-            (await import("@vueda/views/ViewUpdate.vue")).default,
-        destroy: async () =>
-            (await import("@vueda/views/ViewDestroy.vue")).default,
+        list: makeViewLoader("List"),
+        create: makeViewLoader("Create"),
+        read: makeViewLoader("Read"),
+        update: makeViewLoader("Update"),
+        destroy: makeViewLoader("Destroy"),
     };
     setCrudComponents(crudComponents);
 
