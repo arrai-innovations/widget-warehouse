@@ -36,7 +36,6 @@ class SupplierSerializer(VuedaSerializer):
             "created_at",
             "updated_at",
             "formatted_name",
-            "available_actions",
         )
         read_only_fields = ("created_at", "updated_at")
 
@@ -66,7 +65,6 @@ class WidgetSerializer(VuedaSerializer):
             "created_at",
             "updated_at",
             "formatted_name",
-            "available_actions",
         )
         read_only_fields = ("created_at", "updated_at")
 
@@ -82,7 +80,6 @@ class WidgetVariantSerializer(VuedaSerializer):
             "additional_price",
             "stock_quantity",
             "formatted_name",
-            "available_actions",
         )
 
 
@@ -100,7 +97,6 @@ class WarehouseSerializer(VuedaSerializer):
             "closes_at",
             "is_active",
             "formatted_name",
-            "available_actions",
         )
         read_only_fields = ("uuid",)
 
@@ -118,7 +114,6 @@ class InventoryRecordSerializer(VuedaSerializer):
             "last_stocktake_at",
             "last_received_at",
             "notes",
-            "available_actions",
         )
 
 
@@ -138,6 +133,5 @@ class PromotionSerializer(VuedaSerializer):
             "widgets",
             "created_at",
             "formatted_name",
-            "available_actions",
         )
         read_only_fields = ("created_at",)
