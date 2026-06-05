@@ -20,6 +20,8 @@ Thumbs.db
 
 # Local config (secrets)
 server/config.local.toml
+# Local gunicorn overrides (machine-specific paths, e.g. TLS cert/key)
+server/gunicorn.conf.py
 
 # Environment
 .env.local
