@@ -1,4 +1,5 @@
 <script setup>
+import TheBreadcrumb from "./TheBreadcrumb.vue";
 import TheNav from "./TheNav.vue";
 import { faBars } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -43,14 +44,20 @@ onMounted(() => {
     <SidebarProvider>
         <TheNav />
         <SidebarInset>
-            <header class="flex h-12 items-center gap-2 px-4 md:hidden border-b bg-sidebar">
+            <header class="flex h-12 shrink-0 items-center gap-2 border-b bg-sidebar px-4">
                 <SidebarTrigger>
                     <template #icon>
                         <FontAwesomeIcon :icon="faBars" fixed-width />
                     </template>
                 </SidebarTrigger>
-                <NavLogo />
+                <NavLogo class="md:hidden" />
+                <div class="hidden md:block">
+                    <TheBreadcrumb />
+                </div>
             </header>
+            <div class="border-b bg-background px-4 py-2 md:hidden">
+                <TheBreadcrumb />
+            </div>
             <RouterView />
         </SidebarInset>
     </SidebarProvider>
