@@ -6,11 +6,11 @@
         "dev": "vite",
         "build": "vite build",
         "preview": "vite preview",
-        "test": "npx --no-install vitest run",
-        "lint": "npx eslint --no-warn-ignored .",
-        "format": "npx prettier --check .",
-        "eslint": "npx eslint --fix .",
-        "prettier": "npx prettier --write ."
+        "test": "vitest run",
+        "lint": "eslint --no-warn-ignored .",
+        "format": "prettier --check .",
+        "eslint": "eslint --fix .",
+        "prettier": "prettier --write ."
     },
     "dependencies": {
         "@arrai-innovations/reactive-helpers": "^21.1.0",
