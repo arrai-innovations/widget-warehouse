@@ -13,7 +13,8 @@ env = TomlEnv(
     }
 )
 
-locals().update(get_defaults(env))
+default_settings = get_defaults(env)
+locals().update(default_settings)
 
 # WARNING: LocMemCache is per-process. ASGI servers (gunicorn, uvicorn, daphne) run
 # multiple worker processes with isolated caches. Configure a shared cache backend
@@ -29,4 +30,4 @@ SESSION_ENGINE = "django.contrib.sessions.backends.db"
 # Imported after get_defaults() so PERMISSION_NAMES_MAPPING is already set. If you
 # override PERMISSION_NAMES_MAPPING in a child settings module (e.g. local.py,
 # production.py), re-import patch_django there after the customization.
-INSTALLED_APPS += ["widget_warehouse.catalog"]
+INSTALLED_APPS = [*default_settings["INSTALLED_APPS"], "widget_warehouse.catalog"]

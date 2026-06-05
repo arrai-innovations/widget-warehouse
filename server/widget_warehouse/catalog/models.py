@@ -11,14 +11,14 @@ class WidgetCategory(Lookup):
     description = models.TextField(blank=True)
 
     class Meta(BaseModelMeta):
-        ordering = ["name", "id"]
+        ordering = ("name", "id")
         verbose_name_plural = "widget categories"
 
 
 class Supplier(VuedaModel):
     """A company that supplies widgets to the warehouse."""
 
-    COUNTRY_CHOICES = [
+    COUNTRY_CHOICES = (
         ("AU", "Australia"),
         ("CN", "China"),
         ("DE", "Germany"),
@@ -26,7 +26,7 @@ class Supplier(VuedaModel):
         ("JP", "Japan"),
         ("TW", "Taiwan"),
         ("US", "United States"),
-    ]
+    )
 
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=100, unique=True)
@@ -54,7 +54,7 @@ class Supplier(VuedaModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta(BaseModelMeta):
-        ordering = ["name", "id"]
+        ordering = ("name", "id")
 
 
 class Widget(VuedaModel):
@@ -96,7 +96,7 @@ class Widget(VuedaModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta(BaseModelMeta):
-        ordering = ["name", "id"]
+        ordering = ("name", "id")
 
 
 class WidgetVariant(VuedaModel):
@@ -109,13 +109,13 @@ class WidgetVariant(VuedaModel):
     stock_quantity = models.PositiveIntegerField(default=0)
 
     class Meta(BaseModelMeta):
-        ordering = ["widget", "name", "id"]
-        constraints = [
+        ordering = ("widget", "name", "id")
+        constraints = (
             models.UniqueConstraint(
-                fields=["widget", "sku_suffix"],
+                fields=("widget", "sku_suffix"),
                 name="unique_variant_sku_per_widget",
             ),
-        ]
+        )
 
 
 class Warehouse(VuedaModel):
@@ -131,7 +131,7 @@ class Warehouse(VuedaModel):
     is_active = models.BooleanField(default=True)
 
     class Meta(BaseModelMeta):
-        ordering = ["name", "id"]
+        ordering = ("name", "id")
 
 
 class InventoryRecord(VuedaModel):
@@ -156,13 +156,13 @@ class InventoryRecord(VuedaModel):
     notes = models.TextField(blank=True)
 
     class Meta(BaseModelMeta):
-        ordering = ["warehouse", "variant"]
-        constraints = [
+        ordering = ("warehouse", "variant")
+        constraints = (
             models.UniqueConstraint(
-                fields=["variant", "warehouse"],
+                fields=("variant", "warehouse"),
                 name="unique_inventory_per_variant_warehouse",
             ),
-        ]
+        )
 
 
 class Promotion(VuedaModel):
@@ -178,4 +178,4 @@ class Promotion(VuedaModel):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta(BaseModelMeta):
-        ordering = ["-created_at", "id"]
+        ordering = ("-created_at", "id")
