@@ -7,9 +7,8 @@ import { createRouter, createWebHistory } from "vue-router";
 function makeViewLoader(action) {
     return async ({ app, model }) => {
         try {
-            return (
-                await import(`@/views/View${action}${getPascalCaseName(app)}${getPascalCaseName(model)}.vue`)
-            ).default;
+            return (await import(`@/views/View${action}${getPascalCaseName(app)}${getPascalCaseName(model)}.vue`))
+                .default;
         } catch {
             return (await import(`@/views/DefaultView${action}.vue`)).default;
         }
@@ -37,14 +36,14 @@ export function getRouter(app, pinia) {
             name: "landing",
             component: () => import("@/views/ViewLanding.vue"),
             meta: { title: "Landing" },
-            beforeEnter: () => requireUnauth({ name: 'welcome' }, router, pinia)
+            beforeEnter: () => requireUnauth({ name: "welcome" }, router, pinia),
         },
         {
             path: "/sign-in/",
             name: "sign-in",
             component: () => import("@/views/ViewSignIn.vue"),
             meta: { title: "Sign In" },
-            beforeEnter: () => requireUnauth({ name: 'welcome' }, router, pinia)
+            beforeEnter: () => requireUnauth({ name: "welcome" }, router, pinia),
         },
         {
             path: "/welcome/",
@@ -54,8 +53,7 @@ export function getRouter(app, pinia) {
             beforeEnter: () => requireInitialized(router, pinia),
         },
         ...makeCRUDRoutes({
-            component: async () =>
-                (await import("@vueda/views/ViewActionRouter.vue")).default,
+            component: async () => (await import("@vueda/views/ViewActionRouter.vue")).default,
             authRedirect: { name: "sign-in" },
             groupsRedirect: { name: "welcome" },
             actionRedirect: { name: "not-found" },
@@ -67,8 +65,7 @@ export function getRouter(app, pinia) {
         {
             path: "/:pathMatch(.*)*",
             name: "not-found",
-            component: async () =>
-                (await import("@vueda/views/ViewNotFound.vue")).default,
+            component: async () => (await import("@vueda/views/ViewNotFound.vue")).default,
             meta: {
                 title: "Not Found",
                 titles: {

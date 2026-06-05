@@ -58,40 +58,40 @@
 /*    }*/
 /*}*/
 
-/*@layer utilities {*/
-/*    .no-transition * {*/
-/*        transition: none !important;*/
-/*    }*/
+@layer utilities {
+    .no-transition * {
+        transition: none !important;
+    }
 
-/*    @media (prefers-reduced-motion) {*/
-/*        * {*/
-/*            transition: none !important;*/
-/*        }*/
-/*    }*/
+    /*    @media (prefers-reduced-motion) {*/
+    /*        * {*/
+    /*            transition: none !important;*/
+    /*        }*/
+    /*    }*/
 
-/*    .tabular-numbers {*/
-/*        text-align: right;*/
-/*        font-variant-numeric: tabular-nums;*/
-/*    }*/
+    /*    .tabular-numbers {*/
+    /*        text-align: right;*/
+    /*        font-variant-numeric: tabular-nums;*/
+    /*    }*/
 
-/*    .ordinal {*/
-/*        font-variant-numeric: ordinal;*/
-/*    }*/
+    /*    .ordinal {*/
+    /*        font-variant-numeric: ordinal;*/
+    /*    }*/
 
-/*    .fractions {*/
-/*        font-variant-numeric: diagonal-fractions;*/
-/*    }*/
+    /*    .fractions {*/
+    /*        font-variant-numeric: diagonal-fractions;*/
+    /*    }*/
 
-/*    .disambiguation {*/
-/*        font-feature-settings: "ss02", "ss04";*/
-/*    }*/
+    /*    .disambiguation {*/
+    /*        font-feature-settings: "ss02", "ss04";*/
+    /*    }*/
 
-/*    .small-caps {*/
-/*        font-variant: small-caps;*/
-/*    }*/
+    /*    .small-caps {*/
+    /*        font-variant: small-caps;*/
+    /*    }*/
 
-/*    !* Prevents flex/grid children from overflowing their containers *!*/
-/*    * {*/
-/*        min-width: 0;*/
-/*    }*/
-/*}*/
+    /*    !* Prevents flex/grid children from overflowing their containers *!*/
+    /*    * {*/
+    /*        min-width: 0;*/
+    /*    }*/
+}
