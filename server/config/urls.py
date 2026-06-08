@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import include, path
 from vueda.info.urls import urlpatterns as vueda_info_urls
 from vueda.user.urls import urlpatterns as vueda_user_urls
@@ -19,3 +21,5 @@ urlpatterns = [
         ),
     ),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

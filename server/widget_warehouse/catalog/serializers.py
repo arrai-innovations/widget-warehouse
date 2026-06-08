@@ -1,4 +1,4 @@
-from vueda.core.fields.serializers import FileField, RangeField
+from vueda.core.fields.serializers import FileField, ImageField, RangeField
 from vueda.core.serializers import VuedaLookupSerializer, VuedaSerializer
 
 from widget_warehouse.catalog.models import (
@@ -41,7 +41,7 @@ class SupplierSerializer(VuedaSerializer):
 
 
 class WidgetSerializer(VuedaSerializer):
-    image = FileField(required=False, allow_null=True)
+    image = ImageField(required=False, allow_null=True)
     datasheet = FileField(required=False, allow_null=True)
 
     class Meta(VuedaSerializer.Meta):
