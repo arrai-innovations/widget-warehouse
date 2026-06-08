@@ -1,6 +1,7 @@
 <script setup>
 import TheBreadcrumb from "./TheBreadcrumb.vue";
 import TheNav from "./TheNav.vue";
+import ThePageTitle from "./ThePageTitle.vue";
 import { faBars } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import Sonner from "@vueda/feedback/toast/Sonner.vue";
@@ -8,11 +9,16 @@ import SidebarInset from "@vueda/navigation/sidebar/SidebarInset.vue";
 import SidebarProvider from "@vueda/navigation/sidebar/SidebarProvider.vue";
 import SidebarTrigger from "@vueda/navigation/sidebar/SidebarTrigger.vue";
 import { storeDarkMode } from "@vueda/stores/storeDarkMode.js";
+import { usePageTitle } from "@vueda/use/usePageTitle.js";
 import throttle from "lodash-es/throttle.js";
 import { onMounted, toRef, watch } from "vue";
 import { RouterView } from "vue-router";
 
 import NavLogo from "@/nav/NavLogo.vue";
+
+// Establish the page-title context above both ThePageTitle and the routed views, so each view can
+// contribute its title via usePageTitle and its page actions via PageActions.
+usePageTitle();
 
 const darkModeStore = storeDarkMode();
 const removeNoTransition = () => {
@@ -58,6 +64,7 @@ onMounted(() => {
             <div class="border-b bg-background px-4 py-2 md:hidden">
                 <TheBreadcrumb />
             </div>
+            <ThePageTitle />
             <RouterView />
         </SidebarInset>
     </SidebarProvider>

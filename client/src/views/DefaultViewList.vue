@@ -2,10 +2,10 @@
 import ErrorDisplay from "@vueda/components/ErrorDisplay.vue";
 import FilterGroup from "@vueda/components/FilterGroup.vue";
 import LinkModelView from "@vueda/components/LinkModelView.vue";
-import LoadingSpinnerInline from "@vueda/components/LoadingSpinnerInline.vue";
 import MobileSortComponent from "@vueda/components/MobileSortComponent.vue";
 import ObjectsGrid from "@vueda/components/ObjectsGrid.vue";
 import ObjectsGridBodyCell from "@vueda/components/ObjectsGridBodyCell.vue";
+import PageActions from "@vueda/components/PageActions.vue";
 import PaginationComponent from "@vueda/components/PaginationComponent.vue";
 import StickyBar from "@vueda/components/StickyBar.vue";
 import Checkbox from "@vueda/controls/checkbox/Checkbox.vue";
@@ -17,6 +17,7 @@ import SelectContent from "@vueda/controls/select/SelectContent.vue";
 import SelectItem from "@vueda/controls/select/SelectItem.vue";
 import SelectTrigger from "@vueda/controls/select/SelectTrigger.vue";
 import SelectValue from "@vueda/controls/select/SelectValue.vue";
+import { usePageTitle } from "@vueda/use/usePageTitle.js";
 import { useSlotNameResolver } from "@vueda/use/useSlotNameResolver.js";
 import { useViewList } from "@vueda/use/useViewList.js";
 import { getCRUDName, memoizedStartCase } from "@vueda/utils/case.js";
@@ -97,6 +98,9 @@ const props = defineProps({
 
 const { modelConfig, list, actions, search, sort, columns, pagination } = useViewList(props);
 
+// Contribute the page title and loading state to the layout's ThePageTitle display.
+usePageTitle(() => ({ title: list.titleStr, loading: list.instanceList.state.loading }));
+
 const slots = useSlots();
 const targetlessActionButtonSlotName = useSlotNameResolver(["targetless-action-button", "button"]);
 const bulkActionButtonSlotName = useSlotNameResolver(["bulk-action-button", "button"]);
@@ -106,35 +110,22 @@ const workflowActionButtonSlotName = useSlotNameResolver(["workflow-action-butto
     <div>
         <div>
             <div>
-                <div>
-                    <div>
-                        <h1>
-                            <slot name="title">{{ list.titleStr }}</slot>
-                            <template v-if="list.instanceList.state.loading">
-                                &nbsp;
-                                <loading-spinner-inline />
-                            </template>
-                        </h1>
-                        <slot name="title-suffix" />
-                    </div>
-                    <div>
-                        <slot name="targetless-action-buttons" :targetless-actions="actions.targetlessActions">
-                            <template
-                                v-for="actionName in actions.targetlessActions"
-                                :key="getCRUDName({ app: app, model: model, view: actionName })"
+                <!-- Targetless (list-level) actions teleport into the layout's ThePageTitle action zone. -->
+                <page-actions>
+                    <slot name="targetless-action-buttons" :targetless-actions="actions.targetlessActions">
+                        <template
+                            v-for="actionName in actions.targetlessActions"
+                            :key="getCRUDName({ app: app, model: model, view: actionName })"
+                        >
+                            <slot
+                                :name="targetlessActionButtonSlotName.name"
+                                v-bind="actions.buttonSlotProps[actionName]"
                             >
-                                <slot
-                                    :name="targetlessActionButtonSlotName.name"
-                                    v-bind="actions.buttonSlotProps[actionName]"
-                                >
-                                    <link-model-view v-bind="actions.buttonSlotProps[actionName]" />
-                                </slot>
-                            </template>
-                        </slot>
-                    </div>
-                    <hr />
-                </div>
-                <hr />
+                                <link-model-view v-bind="actions.buttonSlotProps[actionName]" />
+                            </slot>
+                        </template>
+                    </slot>
+                </page-actions>
                 <div>
                     <div data-qa="view-list-under-actions">
                         <div data-qa="view-list-action-buttons">

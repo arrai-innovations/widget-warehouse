@@ -3,8 +3,10 @@ import ErrorDisplay from "@vueda/components/ErrorDisplay.vue";
 import FormModel from "@vueda/components/FormModel.vue";
 import LinkModelView from "@vueda/components/LinkModelView.vue";
 import LoadingSpinnerInline from "@vueda/components/LoadingSpinnerInline.vue";
+import PageActions from "@vueda/components/PageActions.vue";
 import StickyBar from "@vueda/components/StickyBar.vue";
 import Button from "@vueda/controls/button/Button.vue";
+import { usePageTitle } from "@vueda/use/usePageTitle.js";
 import { useViewUpdate } from "@vueda/use/useViewUpdate.js";
 import { memoizedStartCase } from "@vueda/utils/case.js";
 import { FormContextSymbol } from "@vueda/utils/symbols.js";
@@ -45,6 +47,9 @@ const slots = useSlots();
 
 const { formContext, objectForm, instanceObject, instance, actions } = useViewUpdate(props);
 
+// Contribute the page title and loading state to the layout's ThePageTitle display.
+usePageTitle(() => ({ title: instance.titleStr, loading: instance.pageLoading }));
+
 provide(FormContextSymbol, formContext);
 
 onMounted(() => {
@@ -67,40 +72,26 @@ onMounted(() => {
 </script>
 <template>
     <div :class="props.class" data-qa="update-form-root">
-        <div>
-            <div>
-                <div>
-                    <h1>
-                        <slot name="title">{{ instance.titleStr }}</slot>
-                        <template v-if="instance.pageLoading">
-                            &nbsp;
-                            <loading-spinner-inline />
-                        </template>
-                    </h1>
-                    <slot name="title-suffix" />
-                </div>
-                <div>
-                    <template v-for="actionName in actions.nonDetailActions" :key="actionName">
-                        <slot
-                            :app="app"
-                            :label="memoizedStartCase(actionName)"
-                            :model="model"
-                            name="targetless-action-button"
-                            :view="actionName"
-                        >
-                            <link-model-view
-                                :app="app"
-                                :label="memoizedStartCase(actionName)"
-                                :model="model"
-                                :view="actionName"
-                            />
-                        </slot>
-                    </template>
-                    <slot name="extra-buttons" />
-                </div>
-                <hr />
-            </div>
-        </div>
+        <!-- Page-level actions teleport into the layout's ThePageTitle action zone. -->
+        <page-actions>
+            <template v-for="actionName in actions.nonDetailActions" :key="actionName">
+                <slot
+                    :app="app"
+                    :label="memoizedStartCase(actionName)"
+                    :model="model"
+                    name="targetless-action-button"
+                    :view="actionName"
+                >
+                    <link-model-view
+                        :app="app"
+                        :label="memoizedStartCase(actionName)"
+                        :model="model"
+                        :view="actionName"
+                    />
+                </slot>
+            </template>
+            <slot name="extra-buttons" />
+        </page-actions>
         <sticky-bar class="w-full">
             <div data-qa="update-action-button">
                 <slot
