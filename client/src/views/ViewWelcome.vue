@@ -1,14 +1,17 @@
 <script setup>
 import { storeUser } from "@vueda/stores/storeUser.js";
+import { usePageTitle } from "@vueda/use/usePageTitle.js";
 import { computed } from "vue";
 
 const userStore = storeUser();
 const displayName = computed(() => userStore.user?.name || userStore.user?.email || "there");
+
+// Contribute this custom view's title to the layout's ThePageTitle display.
+usePageTitle(() => ({ title: `Welcome, ${displayName.value}` }));
 </script>
 
 <template>
     <div style="padding: 2rem">
-        <h1>Welcome, {{ displayName }}</h1>
         <p>Widget Warehouse management console.</p>
         <nav>
             <ul>

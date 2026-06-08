@@ -1,7 +1,11 @@
-<script setup></script>
+<script setup>
+import { usePageTitle } from "@vueda/use/usePageTitle.js";
+
+// Contribute this custom view's title to the layout's ThePageTitle display.
+usePageTitle(() => ({ title: "Widget Warehouse" }));
+</script>
 
 <template>
-    <h1>Widget Warehouse</h1>
     <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a diam lectus. Sed sit amet ipsum mauris.
         Maecenas congue ligula ac quam viverra nec consectetur ante hendrerit. Donec et mollis dolor. Praesent et diam
