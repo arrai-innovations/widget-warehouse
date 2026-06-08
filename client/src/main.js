@@ -1,4 +1,5 @@
 import TheApp from "./TheApp.vue";
+import { setupModelConfig } from "./modelConfig.js";
 import { getRouter } from "./router/index.js";
 import { config as faConfig } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
@@ -61,6 +62,7 @@ const pinia = createPinia();
 const router = getRouter(app, pinia);
 
 app.use(pinia);
+setupModelConfig(pinia);
 app.use(router);
 
 app.mount("#the-app");
