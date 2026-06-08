@@ -5,8 +5,7 @@ requires-python = ">=3.11"
 dependencies = [
   "vueda >=3.0.0,<4",
   "psycopg[binary] >=3.2.0,<4",
-  "gunicorn >=23.0.0,<24",
-  "uvicorn[standard] >=0.34.0,<1",
+  "gunicorn >=26.0.0,<27",
   "pillow>=12.2.0",
 ]
 

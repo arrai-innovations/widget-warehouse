@@ -37,7 +37,7 @@ serve:
   pnpx concurrently -n server,client -c green,cyan "just serve-server" "just serve-client"
 
 serve-server:
-  cd {{justfile_directory()}}/server && uv run --no-sync gunicorn config.asgi -k uvicorn.workers.UvicornWorker --reload --bind 0.0.0.0:8000 --keyfile /etc/pki/tls/private/arrai.com.key --certfile /etc/pki/tls/certs/arrai.com.crt
+  cd {{justfile_directory()}}/server && uv run --no-sync gunicorn config.asgi -k asgi --reload --bind 0.0.0.0:8000 --keyfile /etc/pki/tls/private/arrai.com.key --certfile /etc/pki/tls/certs/arrai.com.crt
 
 serve-client:
   cd {{justfile_directory()}}/client && pnpm run dev
