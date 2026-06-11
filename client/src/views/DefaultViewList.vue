@@ -1,21 +1,54 @@
 <script setup>
 import LinkModelView from "@vueda/components/LinkModelView.vue";
+import { useFilteredActions } from "@vueda/use/useFilteredActions.js";
+import { useModelConfig } from "@vueda/use/useModelConfig.js";
 import ViewList from "@vueda/views/ViewList.vue";
+import { computed, toRef } from "vue";
 
-defineProps({
+const props = defineProps({
     app: { type: String, required: true },
     model: { type: String, required: true },
+    displayFields: { type: Object, default: undefined },
 });
 defineOptions({ inheritAttrs: false });
+
+const modelConfig = useModelConfig(toRef(props, "app"), toRef(props, "model"), "list");
+const filteredActions = useFilteredActions({ modelConfigInstance: modelConfig });
+const updateField = {
+    name: "update",
+    label: "Actions",
+};
+
+const displayFieldsWithUpdate = computed(() => {
+    const fields = {};
+    const configuredDisplayFields = Object.keys(props.displayFields || {}).length
+        ? Object.values(props.displayFields)
+        : (modelConfig.config?.displayFields || []).map((name) => ({
+              name,
+              ...modelConfig.config?.fieldDetails?.[name],
+          }));
+
+    if (filteredActions.actions.includes("update")) {
+        fields.update = updateField;
+    }
+    for (const field of configuredDisplayFields) {
+        if (field?.name === "update") {
+            fields.update = { ...updateField, ...field };
+        } else if (field?.name) {
+            fields[field.name] = field;
+        }
+    }
+    return fields;
+});
 </script>
 
 <template>
-    <ViewList v-bind="{ ...$props, ...$attrs }">
+    <ViewList :app="app" :model="model" v-bind="$attrs" :display-fields="displayFieldsWithUpdate">
         <!--
-            Reusable per-row detail links. A model opts in by adding the matching
-            synthetic column ("update" or "read") to its list displayFields (see
-            src/modelConfig.js). These are not real fields, so the fetched cell is
-            empty and the slot supplies a LinkModelView using the row's pk.
+            Reusable per-row detail links. The default list prepends a synthetic
+            "update" display field for update-capable models without adding it to
+            fetch fields. The "read" slot remains available for explicit model
+            list customizations.
         -->
         <template #[`field(update)`]="{ pk }">
             <LinkModelView :app="app" :model="model" :pk="pk" view="update" label="Edit" />
