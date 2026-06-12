@@ -1,4 +1,5 @@
 <script setup>
+import Skeleton from "@vueda/feedback/skeleton/Skeleton.vue";
 import Breadcrumb from "@vueda/navigation/breadcrumb/Breadcrumb.vue";
 import BreadcrumbItem from "@vueda/navigation/breadcrumb/BreadcrumbItem.vue";
 import BreadcrumbLink from "@vueda/navigation/breadcrumb/BreadcrumbLink.vue";
@@ -14,6 +15,13 @@ import { RouterLink, useRoute } from "vue-router";
 
 const route = useRoute();
 const modelInfoStore = storeModelInfo();
+
+// Until the initial navigation resolves, `route` is Vue Router's START_LOCATION
+// (name: undefined, empty params). The CRUD `beforeEnter` guard (requireModelInfo)
+// holds this window open until model info is fetched, so a null route name is our
+// signal for the reload flash where we don't yet know app/model/action. It flips
+// the instant the route commits, unlike router.isReady() which lags by a tick.
+const routeResolved = computed(() => route.name != null);
 
 const isCrudRoute = computed(() => route.name === "actionrouter.listview" || route.name === "actionrouter.detailview");
 const app = computed(() => route.params.app);
@@ -70,7 +78,18 @@ const actionTitle = computed(() => {
                 </BreadcrumbLink>
             </BreadcrumbItem>
 
-            <template v-if="isCrudRoute">
+            <template v-if="!routeResolved">
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                    <Skeleton class="h-4 w-16 align-middle" />
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                    <Skeleton class="h-4 w-24 align-middle" />
+                </BreadcrumbItem>
+            </template>
+
+            <template v-else-if="isCrudRoute">
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                     <BreadcrumbPage v-if="action === 'list'">{{ appTitle }}</BreadcrumbPage>
