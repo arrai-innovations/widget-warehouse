@@ -18,7 +18,7 @@ const comClassesAnimated = props.animated ? `overflow-hidden max-w-15 ${animatio
     <RouterLink
         to="/"
         aria-label="Widget Warehouse home"
-        class="flex items-baseline [&>span]:inline-block [&>span]:align-top text-[#0077f7] group-data-[collapsible=icon]:tracking-[-0.0125em]"
+        class="flex items-baseline [&>span]:inline-block [&>span]:align-top text-[#0077f7] group-data-[collapsible=icon]:tracking-[-0.125em]"
         ><span class="font-bold">W</span
         ><span class="font-bold overflow-hidden max-w-20" :class="widgetClassesAnimated">idget </span
         ><span class="italic">W</span

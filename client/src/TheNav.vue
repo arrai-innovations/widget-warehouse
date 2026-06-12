@@ -1,14 +1,14 @@
 <script setup>
 import {
     faBoxesStacked,
+    faCloudMoon,
     faCodeBranch,
     faCog,
     faHandshake,
     faLayerGroup,
-    faMoon,
     faRightFromBracket,
     faRightToBracket,
-    faSun,
+    faSunBright,
     faTag,
     faWarehouse,
 } from "@fortawesome/pro-duotone-svg-icons";
@@ -120,8 +120,8 @@ function isModelActive(modelName) {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton variant="outline" tooltip="Toggle color mode" @click="darkModeStore.toggle()">
-                        <FontAwesomeIcon v-if="darkModeStore.isDark" :icon="faSun" fixed-width />
-                        <FontAwesomeIcon v-else :icon="faMoon" fixed-width />
+                        <FontAwesomeIcon v-if="darkModeStore.isDark" :icon="faSunBright" fixed-width />
+                        <FontAwesomeIcon v-else :icon="faCloudMoon" fixed-width />
                         <span>Switch to {{ darkModeStore.isDark ? "light" : "dark" }} mode</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
