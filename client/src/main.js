@@ -18,7 +18,7 @@ import {
     faSpinner,
     faTriangleExclamation,
     faXmark,
-} from "@fortawesome/free-solid-svg-icons";
+} from "@fortawesome/pro-duotone-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import vuedaTailwind from "@vueda/theme/vueda-tailwind/index.js";
 import { setIcons } from "@vueda/use/useIcons.js";
