@@ -23,6 +23,7 @@ import SidebarHeader from "@vueda/navigation/sidebar/SidebarHeader.vue";
 import SidebarMenu from "@vueda/navigation/sidebar/SidebarMenu.vue";
 import SidebarMenuButton from "@vueda/navigation/sidebar/SidebarMenuButton.vue";
 import SidebarMenuItem from "@vueda/navigation/sidebar/SidebarMenuItem.vue";
+import SidebarMenuSkeleton from "@vueda/navigation/sidebar/SidebarMenuSkeleton.vue";
 import SidebarRail from "@vueda/navigation/sidebar/SidebarRail.vue";
 import SidebarUserBlock from "@vueda/navigation/sidebar/SidebarUserBlock.vue";
 import { getCRUDForTo } from "@vueda/router/getCrud.js";
@@ -80,8 +81,9 @@ function isModelActive(modelName) {
                 <SidebarGroupContent>
                     <SidebarMenu>
                         <SidebarMenuItem v-for="model in models" :key="model.title">
+                            <SidebarMenuSkeleton v-if="unref(model.to) === undefined" :show-icon="!!model.icon" />
                             <SidebarMenuButton
-                                v-if="unref(model.to)"
+                                v-else-if="unref(model.to)"
                                 as-child
                                 :is-active="isModelActive(model.model)"
                                 :tooltip="model.title"
