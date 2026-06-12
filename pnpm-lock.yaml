@@ -41,7 +41,7 @@ importers:
       '@fortawesome/fontawesome-svg-core':
         specifier: ^7.2.0
         version: 7.2.0
-      '@fortawesome/pro-duotone-svg-icons':
+      '@fortawesome/sharp-duotone-solid-svg-icons':
         specifier: ^7.2.0
         version: 7.2.0
       '@fortawesome/vue-fontawesome':
@@ -477,8 +477,8 @@ packages:
     resolution: {integrity: sha512-6639htZMjEkwskf3J+e6/iar+4cTNM9qhoWuRfj9F3eJD6r7iCzV1SWnQr2Mdv0QT0suuqU8BoJCZUyCtP9R4Q==}
     engines: {node: '>=6'}
 
-  '@fortawesome/pro-duotone-svg-icons@7.2.0':
-    resolution: {integrity: sha512-G0oZPLWrOjodNsKEzjnmZ/wzXCQhyXHsscIuCsRwPr42N0zgMmVvClZuEq6eqiBiyo1qhm3RnN6xNLddJh9z7A==}
+  '@fortawesome/sharp-duotone-solid-svg-icons@7.2.0':
+    resolution: {integrity: sha512-lhk4wen6fmHuxDgOkcfTWXNXGdKDThR7EJtTrBtyd/pjXuDzOUmlO95CMCZMHOaqo/Xxa7hyl32Pep171DN0vQ==}
     engines: {node: '>=6'}
 
   '@fortawesome/vue-fontawesome@3.2.0':
@@ -3166,7 +3166,7 @@ snapshots:
     dependencies:
       '@fortawesome/fontawesome-common-types': 7.2.0
 
-  '@fortawesome/pro-duotone-svg-icons@7.2.0':
+  '@fortawesome/sharp-duotone-solid-svg-icons@7.2.0':
     dependencies:
       '@fortawesome/fontawesome-common-types': 7.2.0
 
