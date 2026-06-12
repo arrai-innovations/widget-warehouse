@@ -2,7 +2,7 @@
 import TheBreadcrumb from "./TheBreadcrumb.vue";
 import TheNav from "./TheNav.vue";
 import ThePageTitle from "./ThePageTitle.vue";
-import { faBars } from "@fortawesome/pro-duotone-svg-icons";
+import { faBars } from "@fortawesome/sharp-duotone-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import Sonner from "@vueda/feedback/toast/Sonner.vue";
 import SidebarInset from "@vueda/navigation/sidebar/SidebarInset.vue";

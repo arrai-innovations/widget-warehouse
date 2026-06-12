@@ -11,7 +11,7 @@ import {
     faSunBright,
     faTag,
     faWarehouse,
-} from "@fortawesome/pro-duotone-svg-icons";
+} from "@fortawesome/sharp-duotone-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import Sidebar from "@vueda/navigation/sidebar/Sidebar.vue";
 import SidebarContent from "@vueda/navigation/sidebar/SidebarContent.vue";
