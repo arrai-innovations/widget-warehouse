@@ -28,6 +28,8 @@ import { setupDefaultObjectCrud } from "@vueda/utils/objectCrud.js";
 import { createPinia } from "pinia";
 import { createApp } from "vue";
 
+import { setupModelConfig } from "@/setupModelConfig.js";
+
 faConfig.autoAddCss = false;
 
 setTheme(vuedaTailwind);
@@ -58,9 +60,12 @@ setupDefaultObjectCrud();
 
 const app = createApp(TheApp);
 const pinia = createPinia();
-const router = getRouter(app, pinia);
 
 app.use(pinia);
+setupModelConfig(pinia);
+
+const router = getRouter(app, pinia);
+
 app.use(router);
 
 app.mount("#the-app");

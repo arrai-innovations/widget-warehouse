@@ -1,3 +1,6 @@
+from typing import ClassVar
+
+from django.conf import settings
 from vueda.core.fields.serializers import FileField, ImageField, RangeField
 from vueda.core.serializers import VuedaLookupSerializer, VuedaSerializer
 
@@ -67,6 +70,21 @@ class WidgetSerializer(VuedaSerializer):
             *VuedaSerializer.Meta.fields,
         )
         read_only_fields = ("created_at", "updated_at")
+        expandable_fields: ClassVar[dict] = {
+            "category": (
+                WidgetCategorySerializer,
+                {
+                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                },
+            ),
+            "supplier": (
+                SupplierSerializer,
+                {
+                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                },
+            ),
+        }
+        expandable_fields.update(VuedaSerializer.Meta.expandable_fields)
 
 
 class WidgetVariantSerializer(VuedaSerializer):

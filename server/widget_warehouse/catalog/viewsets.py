@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from vueda.core.viewsets import VuedaViewSet
 
 from widget_warehouse.catalog.filtersets import (
@@ -45,6 +47,7 @@ class WidgetViewSet(VuedaViewSet):
     queryset = Widget.objects.all()
     serializer_class = WidgetSerializer
     filterset_class = WidgetFilterSet
+    permit_list_expands: ClassVar[list[str]] = ["category", "supplier"]
 
 
 class WidgetVariantViewSet(VuedaViewSet):
