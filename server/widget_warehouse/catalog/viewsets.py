@@ -48,6 +48,16 @@ class WidgetViewSet(VuedaViewSet):
     serializer_class = WidgetSerializer
     filterset_class = WidgetFilterSet
     permit_list_expands: ClassVar[list[str]] = ["category", "supplier"]
+    search_fields: ClassVar[list[str]] = [
+        "name",
+        "slug",
+        "sku",
+        "description",
+        "category__code",
+        "category__name",
+        "supplier__name",
+        "supplier__slug",
+    ]
 
 
 class WidgetVariantViewSet(VuedaViewSet):

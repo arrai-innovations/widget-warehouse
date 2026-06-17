@@ -1,3 +1,4 @@
+from django_filters import rest_framework
 from vueda.core.filters import VuedaFilterSet
 
 from widget_warehouse.catalog.models import (
@@ -24,9 +25,14 @@ class SupplierFilterSet(VuedaFilterSet):
 
 
 class WidgetFilterSet(VuedaFilterSet):
+    name = rest_framework.CharFilter(field_name="name", label="Name", lookup_expr="icontains")
+    slug = rest_framework.CharFilter(field_name="slug", label="Slug", lookup_expr="icontains")
+    sku = rest_framework.CharFilter(field_name="sku", label="SKU", lookup_expr="icontains")
+    sku_exact = rest_framework.CharFilter(field_name="sku", label="SKU exact", lookup_expr="iexact")
+
     class Meta:
         model = Widget
-        fields = ("id", "name", "sku", "category", "supplier", "is_active")
+        fields = ("id", "name", "slug", "sku", "category", "supplier", "is_active")
 
 
 class WidgetVariantFilterSet(VuedaFilterSet):

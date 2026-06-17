@@ -16,6 +16,10 @@ dev = [
   "pytest-django >=4.0.0,<5",
 ]
 
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.local"
+python_files = ["test_*.py", "*_test.py", "tests.py"]
+
 [[tool.uv.index]]
 name = "arrai"
 url = "https://pypi.arrai.dev/simple/"
