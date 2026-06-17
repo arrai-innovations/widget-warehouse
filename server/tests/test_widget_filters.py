@@ -28,6 +28,7 @@ def widget_catalog():
         supplier=supplier,
         description="Sealed radial bearing for compact assemblies.",
         unit_price=Decimal("8.90"),
+        weight_kg=Decimal("0.120"),
     )
     gear = Widget.objects.create(
         name="Spur Gear 24T",
@@ -36,6 +37,7 @@ def widget_catalog():
         category=other_category,
         description="Steel spur gear.",
         unit_price=Decimal("18.00"),
+        weight_kg=Decimal("0.420"),
     )
 
     return bearing, gear
@@ -64,3 +66,33 @@ def test_widget_search_limits_results(widget_catalog, settings):
     queryset = VuedaSearchFilterBackend().filter_queryset(request, Widget.objects.order_by("sku"), WidgetViewSet())
 
     assert list(queryset.values_list("sku", flat=True)) == ["BRG-6204"]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("params", "expected_skus"),
+    [
+        ({"unit_price_min": "9.00"}, ["GR-024"]),
+        ({"unit_price_max": "10.00"}, ["BRG-6204"]),
+        ({"unit_price_min": "8.00", "unit_price_max": "10.00"}, ["BRG-6204"]),
+    ],
+)
+def test_widget_unit_price_range_filter(widget_catalog, params, expected_skus):
+    queryset = WidgetFilterSet(params, queryset=Widget.objects.order_by("sku")).qs
+
+    assert list(queryset.values_list("sku", flat=True)) == expected_skus
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("params", "expected_skus"),
+    [
+        ({"weight_kg_min": "0.200"}, ["GR-024"]),
+        ({"weight_kg_max": "0.200"}, ["BRG-6204"]),
+        ({"weight_kg_min": "0.100", "weight_kg_max": "0.200"}, ["BRG-6204"]),
+    ],
+)
+def test_widget_weight_range_filter(widget_catalog, params, expected_skus):
+    queryset = WidgetFilterSet(params, queryset=Widget.objects.order_by("sku")).qs
+
+    assert list(queryset.values_list("sku", flat=True)) == expected_skus
