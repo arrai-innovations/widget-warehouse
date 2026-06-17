@@ -29,10 +29,12 @@ class WidgetFilterSet(VuedaFilterSet):
     slug = rest_framework.CharFilter(field_name="slug", label="Slug", lookup_expr="icontains")
     sku = rest_framework.CharFilter(field_name="sku", label="SKU", lookup_expr="icontains")
     sku_exact = rest_framework.CharFilter(field_name="sku", label="SKU exact", lookup_expr="iexact")
+    unit_price = rest_framework.RangeFilter(field_name="unit_price", label="Unit price")
+    weight_kg = rest_framework.RangeFilter(field_name="weight_kg", label="Weight (kg)")
 
     class Meta:
         model = Widget
-        fields = ("id", "name", "slug", "sku", "category", "supplier", "is_active")
+        fields = ("id", "name", "slug", "sku", "category", "supplier", "unit_price", "weight_kg", "is_active")
 
 
 class WidgetVariantFilterSet(VuedaFilterSet):
