@@ -139,6 +139,9 @@ class InventoryRecord(VuedaModel):
 
     formatted_name = None
 
+    def get_formatted_name(self):
+        return f"{self.variant} @ {self.warehouse.code}"
+
     variant = models.ForeignKey(WidgetVariant, on_delete=models.CASCADE, related_name="inventory")
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="inventory")
     quantity_on_hand = models.PositiveIntegerField(default=0)
