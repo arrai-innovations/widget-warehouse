@@ -22,6 +22,7 @@ class Command(BaseCommand):
         self._seed_categories()
         self._seed_suppliers()
         self._seed_widgets()
+        self._seed_bulk_widgets()
         self._seed_variants()
         self._seed_warehouses()
         self._seed_inventory()
@@ -310,6 +311,138 @@ class Command(BaseCommand):
             self.widget_objs[sku] = obj
             status = "created" if created else "exists"
             self.stdout.write(f"  Widget {sku}: {status}")
+
+    def _seed_bulk_widgets(self):
+        self.stdout.write("Seeding bulk widgets for pagination testing...")
+        suppliers = list(self.supplier_objs.values())
+        bulk_specs = {
+            "sprocket": [
+                {"teeth": t, "pitch_mm": p, "material": m}
+                for t, p, m in [
+                    (10, 9.525, "carbon steel"),
+                    (14, 12.7, "stainless steel"),
+                    (18, 15.875, "alloy steel"),
+                    (20, 19.05, "carbon steel"),
+                    (24, 25.4, "stainless steel"),
+                    (28, 12.7, "alloy steel"),
+                    (32, 19.05, "carbon steel"),
+                    (36, 25.4, "stainless steel"),
+                    (40, 9.525, "alloy steel"),
+                    (48, 12.7, "carbon steel"),
+                ]
+            ],
+            "gear": [
+                {"teeth": t, "module": m, "pressure_angle_deg": 20}
+                for t, m in [
+                    (12, 1),
+                    (15, 1.5),
+                    (18, 2),
+                    (21, 2),
+                    (27, 2.5),
+                    (30, 3),
+                    (33, 2.5),
+                    (42, 3),
+                    (48, 4),
+                    (60, 4),
+                ]
+            ],
+            "fastener": [
+                {"thread": th, "length_mm": ln, "grade": gr, "drive": dr}
+                for th, ln, gr, dr in [
+                    ("M4", 10, "8.8", "hex"),
+                    ("M4", 20, "10.9", "allen"),
+                    ("M5", 16, "8.8", "hex"),
+                    ("M5", 25, "12.9", "allen"),
+                    ("M6", 12, "8.8", "hex"),
+                    ("M8", 20, "10.9", "torx"),
+                    ("M10", 30, "8.8", "hex"),
+                    ("M10", 50, "10.9", "allen"),
+                    ("M12", 40, "8.8", "hex"),
+                    ("M16", 60, "10.9", "hex"),
+                ]
+            ],
+            "bearing": [
+                {"bore_mm": b, "od_mm": o, "width_mm": w, "dynamic_load_kn": d}
+                for b, o, w, d in [
+                    (8, 22, 7, 3.5),
+                    (10, 26, 8, 4.6),
+                    (12, 28, 8, 5.1),
+                    (15, 35, 11, 7.8),
+                    (17, 40, 12, 9.5),
+                    (20, 52, 15, 15.9),
+                    (25, 52, 15, 14.0),
+                    (30, 62, 16, 19.5),
+                    (35, 72, 17, 25.5),
+                    (40, 80, 18, 30.7),
+                ]
+            ],
+            "gasket": [
+                {"od_mm": o, "id_mm": i, "thickness_mm": t, "material": m}
+                for o, i, t, m in [
+                    (20, 10, 1.0, "PTFE"),
+                    (25, 12, 1.5, "NBR"),
+                    (30, 15, 2.0, "silicone"),
+                    (40, 20, 1.0, "PTFE"),
+                    (50, 25, 1.5, "NBR"),
+                    (60, 35, 2.0, "silicone"),
+                    (75, 50, 1.5, "PTFE"),
+                    (80, 55, 2.0, "NBR"),
+                    (100, 70, 2.5, "silicone"),
+                    (120, 90, 3.0, "PTFE"),
+                ]
+            ],
+        }
+        cat_prefixes = {
+            "sprocket": ("SPR", "Sprocket"),
+            "gear": ("GR", "Gear"),
+            "fastener": ("FST", "Fastener"),
+            "bearing": ("BRG", "Bearing"),
+            "gasket": ("GSK", "Gasket"),
+        }
+        base_prices = {
+            "sprocket": Decimal("9.00"),
+            "gear": Decimal("14.00"),
+            "fastener": Decimal("0.55"),
+            "bearing": Decimal("6.50"),
+            "gasket": Decimal("1.80"),
+        }
+        base_weights = {
+            "sprocket": Decimal("0.250"),
+            "gear": Decimal("0.300"),
+            "fastener": Decimal("0.020"),
+            "bearing": Decimal("0.080"),
+            "gasket": Decimal("0.010"),
+        }
+
+        idx = 0
+        for cat_key, specs_list in bulk_specs.items():
+            prefix, label = cat_prefixes[cat_key]
+            for i, specs in enumerate(specs_list, start=1):
+                idx += 1
+                sku = f"{prefix}-B{i:03d}"
+                slug = f"{cat_key}-bulk-{i:03d}"
+                name = f"{label} B{i:03d}"
+                price = base_prices[cat_key] + Decimal(i) * Decimal("0.75")
+                weight = base_weights[cat_key] + Decimal(i) * Decimal("0.015")
+                supplier = suppliers[idx % len(suppliers)]
+                obj, created = Widget.objects.update_or_create(
+                    sku=sku,
+                    defaults={
+                        "name": name,
+                        "slug": slug,
+                        "category": self.cat_objs[cat_key],
+                        "supplier": supplier,
+                        "description": "",
+                        "unit_price": price,
+                        "weight_kg": weight,
+                        "warranty_period": timedelta(days=365),
+                        "release_date": date(2025, 1, 1),
+                        "specifications": specs,
+                    },
+                )
+                self.widget_objs[sku] = obj
+                status = "created" if created else "exists"
+                self.stdout.write(f"  Widget {sku}: {status}")
 
     def _seed_variants(self):
         self.stdout.write("Seeding variants...")
