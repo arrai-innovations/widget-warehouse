@@ -31,3 +31,5 @@ SESSION_ENGINE = "django.contrib.sessions.backends.db"
 # override PERMISSION_NAMES_MAPPING in a child settings module (e.g. local.py,
 # production.py), re-import patch_django there after the customization.
 INSTALLED_APPS = [*default_settings["INSTALLED_APPS"], "widget_warehouse.catalog"]
+
+REST_FRAMEWORK = {**REST_FRAMEWORK, "PAGE_SIZE": 10}  # noqa: F821
