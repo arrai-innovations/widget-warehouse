@@ -4,6 +4,7 @@ import TheNav from "./TheNav.vue";
 import ThePageTitle from "./ThePageTitle.vue";
 import { faBars } from "@fortawesome/sharp-duotone-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import StickyStackProvider from "@vueda/components/StickyStackProvider.vue";
 import Sonner from "@vueda/feedback/toast/Sonner.vue";
 import SidebarInset from "@vueda/navigation/sidebar/SidebarInset.vue";
 import SidebarProvider from "@vueda/navigation/sidebar/SidebarProvider.vue";
@@ -64,8 +65,12 @@ onMounted(() => {
             <div class="border-b bg-background px-4 py-2 md:hidden">
                 <TheBreadcrumb />
             </div>
-            <ThePageTitle />
-            <RouterView />
+            <StickyStackProvider>
+                <template #top>
+                    <ThePageTitle />
+                </template>
+                <RouterView />
+            </StickyStackProvider>
         </SidebarInset>
     </SidebarProvider>
     <Sonner />
