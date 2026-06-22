@@ -3,6 +3,8 @@ import { getRouter } from "./router/index.js";
 import { config as faConfig } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import {
+    faAnglesLeft,
+    faAnglesRight,
     faCaretDown,
     faCaretUp,
     faCheck,
@@ -39,6 +41,8 @@ setIcons({
         indeterminate: { component: FontAwesomeIcon, props: { icon: faMinus } },
     },
     Default: {
+        anglesLeft: { component: FontAwesomeIcon, props: { icon: faAnglesLeft } },
+        anglesRight: { component: FontAwesomeIcon, props: { icon: faAnglesRight } },
         caretDown: { component: FontAwesomeIcon, props: { icon: faCaretDown } },
         caretUp: { component: FontAwesomeIcon, props: { icon: faCaretUp } },
         check: { component: FontAwesomeIcon, props: { icon: faCheck } },
