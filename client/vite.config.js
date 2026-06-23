@@ -34,6 +34,9 @@ export default defineConfig(({ mode }) => {
         plugins: [vue(), tailwindcss()],
         ...vueda,
         server: {
+            // Preserve vuedaViteConfig's server config (notably fs.allow for linked vueda source);
+            // the app's own keys below still take precedence.
+            ...vueda.server,
             host: true,
             port: 8080,
             strictPort: true,
