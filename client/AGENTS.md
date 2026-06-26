@@ -11,9 +11,11 @@ Run these from the repo root unless a command explicitly says otherwise:
 - Check client: `just check-client`
 - Fix client: `just fix-client`
 - Test client: `just test-client`
+- Build app client: `just build`
+- Preview production app with local server: `just preview`
 - Serve client only: `just serve-client`
-- Build client: `just build-client`
-- Preview production build: `just preview-client`
+- Build client only: `just build-client`
+- Preview production client only: `just preview-client`
 
 Package scripts in `client/package.json`:
 

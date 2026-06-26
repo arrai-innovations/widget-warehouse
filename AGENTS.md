@@ -38,6 +38,8 @@ This repo uses two workspace managers, both rooted here:
 - Checks: `just check`
 - Fix formatting and lint issues: `just fix`
 - Tests: `just test`
+- Build app client: `just build`
+- Preview production app with local server: `just preview`
 - Run local app: `just serve`
 - Django management commands: `just manage <command>`
 

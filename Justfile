@@ -30,8 +30,13 @@ test-server:
 test-client:
   cd {{justfile_directory()}}/client && pnpm test run
 
+build: build-client
+
 build-client:
   cd {{justfile_directory()}}/client && pnpm run build
+
+preview: build-client
+  pnpx concurrently -n server,client -c green,cyan "just serve-server" "just preview-client"
 
 preview-client:
   cd {{justfile_directory()}}/client && pnpm run preview
