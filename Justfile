@@ -30,6 +30,12 @@ test-server:
 test-client:
   cd {{justfile_directory()}}/client && pnpm test run
 
+build-client:
+  cd {{justfile_directory()}}/client && pnpm run build
+
+preview-client:
+  cd {{justfile_directory()}}/client && pnpm run preview
+
 manage *args:
   cd {{justfile_directory()}}/server && uv run --no-sync python manage.py {{args}}
 

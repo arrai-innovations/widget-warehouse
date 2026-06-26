@@ -51,6 +51,8 @@ Package-specific commands:
 | `just fix-client` | ESLint fixes and Prettier formatting in `client/` |
 | `just test-server` | Pytest in `server/` |
 | `just test-client` | Vitest in `client/` |
+| `just build-client` | Vite production build in `client/` |
+| `just preview-client` | Vite production build preview in `client/` |
 | `just serve-server` | Gunicorn with Uvicorn worker on port 8000 |
 | `just serve-client` | Vite dev server |
 

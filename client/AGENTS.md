@@ -12,8 +12,8 @@ Run these from the repo root unless a command explicitly says otherwise:
 - Fix client: `just fix-client`
 - Test client: `just test-client`
 - Serve client only: `just serve-client`
-- Build client: `cd client && pnpm run build`
-- Preview production build: `cd client && pnpm run preview`
+- Build client: `just build-client`
+- Preview production build: `just preview-client`
 
 Package scripts in `client/package.json`:
 
