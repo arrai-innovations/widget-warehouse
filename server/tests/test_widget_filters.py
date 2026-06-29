@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 import pytest
+from rest_framework.filters import OrderingFilter
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
 from vueda.core.filters import VuedaSearchFilterBackend
@@ -66,6 +67,28 @@ def test_widget_search_limits_results(widget_catalog, settings):
     queryset = VuedaSearchFilterBackend().filter_queryset(request, Widget.objects.order_by("sku"), WidgetViewSet())
 
     assert list(queryset.values_list("sku", flat=True)) == ["BRG-6204"]
+
+
+def test_widget_sorting_fields_exclude_unsuitable_columns():
+    fields = [
+        field_name for field_name, _label in OrderingFilter().get_valid_fields(Widget.objects.all(), WidgetViewSet())
+    ]
+
+    assert fields == [
+        "name",
+        "slug",
+        "sku",
+        "category",
+        "supplier",
+        "unit_price",
+        "weight_kg",
+        "warranty_period",
+        "is_active",
+        "release_date",
+        "created_at",
+        "updated_at",
+    ]
+    assert not {"id", "image", "description", "datasheet", "specifications"} & set(fields)
 
 
 @pytest.mark.django_db
