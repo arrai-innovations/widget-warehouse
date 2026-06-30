@@ -1,3 +1,7 @@
+# Treat recipe lines starting with `#` as justfile comments: don't echo them to
+# stderr or pass them to the shell.
+set ignore-comments := true
+
 bootstrap:
   cd {{justfile_directory()}} && pnpm install
   pnpm -C {{justfile_directory()}} exec lefthook install
@@ -48,7 +52,10 @@ serve:
   pnpx concurrently -n server,client -c green,cyan "just serve-server" "just serve-client"
 
 serve-server:
-  cd {{justfile_directory()}}/server && uv run --no-sync gunicorn config.asgi -k asgi --reload --bind 0.0.0.0:8000 --keyfile /etc/pki/tls/private/arrai.com.key --certfile /etc/pki/tls/certs/arrai.com.crt
+  # TLS is opt-in and machine-specific: copy server/gunicorn.conf.py.example to
+  # server/gunicorn.conf.py and set certfile/keyfile there. gunicorn auto-loads
+  # that file from the server/ directory. With no such file, this serves HTTP.
+  cd {{justfile_directory()}}/server && uv run --no-sync gunicorn config.asgi -k asgi --reload --bind 0.0.0.0:8000
 
 serve-client:
   cd {{justfile_directory()}}/client && pnpm run dev -- --force
