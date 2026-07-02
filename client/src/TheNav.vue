@@ -60,7 +60,16 @@ const models = [
 ].map(({ icon = null, ...m }) => ({
     ...m,
     icon,
-    to: computedAsync(() => getCRUDForTo({ app: "catalog", model: m.model, view: "list" })),
+    // Reading userStore.loggedIn synchronously makes this computedAsync react to
+    // sign-in: it re-evaluates once authenticated and resolves the real route.
+    // Returning early while logged out also avoids fetching model info before we
+    // have a session; those 403s would otherwise poison storeModelInfo's error
+    // cache (its self-DDoS guard), leaving the nav stuck on skeletons even after
+    // login until a full page reload.
+    to: computedAsync(() => {
+        if (!userStore.loggedIn) return undefined;
+        return getCRUDForTo({ app: "catalog", model: m.model, view: "list" });
+    }),
 }));
 
 function isModelActive(modelName) {
@@ -76,7 +85,7 @@ function isModelActive(modelName) {
             </div>
         </SidebarHeader>
         <SidebarContent>
-            <SidebarGroup>
+            <SidebarGroup v-if="userStore.loggedIn">
                 <SidebarGroupLabel>Catalog</SidebarGroupLabel>
                 <SidebarGroupContent>
                     <SidebarMenu>
