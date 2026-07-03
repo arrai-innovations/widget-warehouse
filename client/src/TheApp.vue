@@ -2,9 +2,10 @@
 import TheBreadcrumb from "./TheBreadcrumb.vue";
 import TheNav from "./TheNav.vue";
 import ThePageTitle from "./ThePageTitle.vue";
-import { faBars } from "@fortawesome/sharp-duotone-solid-svg-icons";
+import { faBars, faCloudMoon, faSunBright } from "@fortawesome/sharp-duotone-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import StickyStackProvider from "@vueda/components/StickyStackProvider.vue";
+import Button from "@vueda/controls/button/Button.vue";
 import Sonner from "@vueda/feedback/toast/Sonner.vue";
 import SidebarInset from "@vueda/navigation/sidebar/SidebarInset.vue";
 import SidebarProvider from "@vueda/navigation/sidebar/SidebarProvider.vue";
@@ -21,8 +22,8 @@ import NavLogo from "@/nav/NavLogo.vue";
 // contribute its title via usePageTitle and its page actions via PageActions.
 usePageTitle();
 
-// Guest routes (landing, sign-in) have no nav to show and nothing to break out of, so they skip the
-// sidebar shell entirely and render the routed view directly.
+// Guest routes have no nav to show and nothing to break out of, so they skip the sidebar shell while
+// keeping a small amount of public chrome for branding and global controls.
 const route = useRoute();
 const isGuestRoute = computed(() => route.meta.guest === true);
 
@@ -53,7 +54,15 @@ onMounted(() => {
 </script>
 
 <template>
-    <div v-if="isGuestRoute" class="min-h-svh bg-background text-foreground">
+    <div v-if="isGuestRoute" class="relative min-h-svh bg-background text-foreground">
+        <header
+            class="absolute inset-x-0 top-0 z-10 flex h-12 items-center justify-between gap-2 border-b bg-sidebar px-4"
+        >
+            <NavLogo class="min-w-0 whitespace-nowrap" />
+            <Button emphasis="ghost" size="icon-sm" aria-label="Toggle color mode" @click="darkModeStore.toggle()">
+                <FontAwesomeIcon :icon="darkModeStore.isDark ? faSunBright : faCloudMoon" fixed-width />
+            </Button>
+        </header>
         <RouterView />
     </div>
     <SidebarProvider v-else>
