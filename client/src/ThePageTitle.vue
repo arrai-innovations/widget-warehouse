@@ -1,5 +1,5 @@
 <script setup>
-import LoadingSpinnerInline from "@vueda/components/LoadingSpinnerInline.vue";
+import LoadingSpinnerInline from "@vueda/display/loading/LoadingSpinnerInline.vue";
 import { usePageTitle } from "@vueda/use/usePageTitle.js";
 import { computed, ref } from "vue";
 
