@@ -46,7 +46,7 @@ async function handleSignOut() {
     } catch {
         return;
     }
-    router.push({ name: "landing" });
+    router.push({ name: "sign-in" });
 }
 
 const models = [
