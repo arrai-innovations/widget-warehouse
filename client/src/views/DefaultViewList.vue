@@ -1,5 +1,5 @@
 <script setup>
-import LinkModelView from "@vueda/components/LinkModelView.vue";
+import LinkModelView from "@vueda/navigation/link-model-view/LinkModelView.vue";
 import { useFilteredActions } from "@vueda/use/useFilteredActions.js";
 import { useModelConfig } from "@vueda/use/useModelConfig.js";
 import ViewList from "@vueda/views/ViewList.vue";

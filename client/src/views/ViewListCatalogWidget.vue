@@ -1,5 +1,5 @@
 <script setup>
-import LinkModelView from "@vueda/components/LinkModelView.vue";
+import LinkModelView from "@vueda/navigation/link-model-view/LinkModelView.vue";
 
 import DefaultViewList from "@/views/DefaultViewList.vue";
 
