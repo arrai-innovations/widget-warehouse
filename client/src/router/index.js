@@ -35,14 +35,14 @@ export function getRouter(app, pinia) {
             path: "/",
             name: "landing",
             component: () => import("@/views/ViewLanding.vue"),
-            meta: { title: "Landing" },
+            meta: { title: "Landing", guest: true },
             beforeEnter: () => requireUnauth({ name: "welcome" }, router, pinia),
         },
         {
             path: "/sign-in/",
             name: "sign-in",
             component: () => import("@/views/ViewSignIn.vue"),
-            meta: { title: "Sign In" },
+            meta: { title: "Sign In", guest: true },
             beforeEnter: () => requireUnauth({ name: "welcome" }, router, pinia),
         },
         {

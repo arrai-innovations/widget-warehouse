@@ -12,14 +12,19 @@ import SidebarTrigger from "@vueda/navigation/sidebar/SidebarTrigger.vue";
 import { storeDarkMode } from "@vueda/stores/storeDarkMode.js";
 import { usePageTitle } from "@vueda/use/usePageTitle.js";
 import throttle from "lodash-es/throttle.js";
-import { onMounted, toRef, watch } from "vue";
-import { RouterView } from "vue-router";
+import { computed, onMounted, toRef, watch } from "vue";
+import { RouterView, useRoute } from "vue-router";
 
 import NavLogo from "@/nav/NavLogo.vue";
 
 // Establish the page-title context above both ThePageTitle and the routed views, so each view can
 // contribute its title via usePageTitle and its page actions via PageActions.
 usePageTitle();
+
+// Guest routes (landing, sign-in) have no nav to show and nothing to break out of, so they skip the
+// sidebar shell entirely and render the routed view directly.
+const route = useRoute();
+const isGuestRoute = computed(() => route.meta.guest === true);
 
 const darkModeStore = storeDarkMode();
 const removeNoTransition = () => {
@@ -48,7 +53,10 @@ onMounted(() => {
 </script>
 
 <template>
-    <SidebarProvider>
+    <div v-if="isGuestRoute" class="min-h-svh bg-background text-foreground">
+        <RouterView />
+    </div>
+    <SidebarProvider v-else>
         <TheNav />
         <SidebarInset>
             <header class="flex h-12 shrink-0 items-center gap-2 border-b bg-sidebar px-4">
