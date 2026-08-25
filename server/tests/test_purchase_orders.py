@@ -77,6 +77,10 @@ def catalog(db):
 @pytest.fixture
 def seeded_roles(db):
     call_command("seed_demo_users", verbosity=0)
+    # The order is workflow-enabled, and reading one asks for the transitions its reader
+    # may run. With no workflow rows at all that ask is refused, so every purchase order
+    # request 403s until the workflow is seeded, whatever the role.
+    call_command("seed_workflows", verbosity=0)
 
 
 def client_for(email):
