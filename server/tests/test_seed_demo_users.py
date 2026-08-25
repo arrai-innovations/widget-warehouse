@@ -42,7 +42,7 @@ def test_demo_users_can_authenticate_with_the_published_password(seeded):
 
 
 @pytest.mark.django_db
-def test_roles_are_read_only_and_scoped_apart(seeded):
+def test_roles_are_scoped_apart(seeded):
     clerk = get_user_model().objects.get(email="clerk@widgetwarehouse.com")
     associate = get_user_model().objects.get(email="associate@widgetwarehouse.com")
     accountant = get_user_model().objects.get(email="accountant@widgetwarehouse.com")
@@ -56,12 +56,34 @@ def test_roles_are_read_only_and_scoped_apart(seeded):
     assert accountant.has_perm("catalog.list_supplier")
     assert accountant.has_perm("catalog.list_promotion")
 
-    # No role writes anything yet: every write in the role table is a purchase order or
-    # sales order write, and neither model exists.
+    # The catalog itself stays read-only for everyone. Every write in the role table is a
+    # purchase order or sales order write.
     for user in (clerk, associate, accountant):
         for model in ("widget", "supplier", "promotion", "inventoryrecord"):
             for action in ("create", "update", "delete"):
                 assert not user.has_perm(f"catalog.{action}_{model}")
+
+
+@pytest.mark.django_db
+def test_only_the_inventory_roles_write_purchase_orders(seeded):
+    users = {role["group"]: get_user_model().objects.get(email=role["email"]) for role in DEMO_ROLES}
+
+    for model in ("purchaseorder", "purchaseorderline"):
+        # The clerk drafts and edits orders; narrowing that to draft-state orders is the
+        # workflow's StatePermission job, not a baseline permission.
+        assert users["inventory-clerk"].has_perm(f"catalog.create_{model}")
+        assert users["inventory-clerk"].has_perm(f"catalog.update_{model}")
+        assert not users["inventory-clerk"].has_perm(f"catalog.delete_{model}")
+
+        # Deleting an order outright is what the supervisor has over the clerk.
+        assert users["inventory-supervisor"].has_perm(f"catalog.delete_{model}")
+
+        # The accountant reads orders without writing them; sales does neither.
+        assert users["accountant"].has_perm(f"catalog.list_{model}")
+        assert not users["accountant"].has_perm(f"catalog.create_{model}")
+        for group in ("sales-associate", "sales-manager"):
+            assert not users[group].has_perm(f"catalog.list_{model}")
+            assert not users[group].has_perm(f"catalog.create_{model}")
 
 
 @pytest.mark.django_db
