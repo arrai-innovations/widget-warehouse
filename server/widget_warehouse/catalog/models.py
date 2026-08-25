@@ -3,6 +3,7 @@ import uuid
 from django.contrib.postgres import fields as pg_fields
 from django.db import models
 from vueda.core.models import BaseModelMeta, Lookup, VuedaModel
+from vueda.workflow.models import HasWorkflowModelMixin
 
 
 class WidgetCategory(Lookup):
@@ -184,8 +185,15 @@ class Promotion(VuedaModel):
         ordering = ("-created_at", "id")
 
 
-class PurchaseOrder(VuedaModel):
-    """An inbound order placed with a supplier for delivery into a warehouse."""
+class PurchaseOrder(HasWorkflowModelMixin, VuedaModel):
+    """
+    An inbound order placed with a supplier for delivery into a warehouse.
+
+    ``HasWorkflowModelMixin`` precedes ``VuedaModel`` so its ``save()`` runs last and can
+    create the order's workflow state row once the base save has given the order an id.
+    The mixin contributes no columns, only a generic relation, so it needs no migration
+    of its own; the transition permissions below do.
+    """
 
     formatted_name = None
     formatted_name_lookup_expression = "reference"
@@ -217,6 +225,17 @@ class PurchaseOrder(VuedaModel):
 
     class Meta(BaseModelMeta):
         ordering = ("-order_date", "-reference")
+        # One permission per transition, so the workflow's TransitionPermission rows and a
+        # group's grants line up one to one and a role's transitions can be read straight
+        # off the group. These are ordinary Django permissions on this model's content
+        # type, which is also what lets a StatePermission rule override one per state.
+        permissions = (
+            ("submit_purchaseorder", "Can submit purchase orders for approval"),
+            ("approve_purchaseorder", "Can approve submitted purchase orders"),
+            ("reject_purchaseorder", "Can reject submitted purchase orders back to draft"),
+            ("receive_purchaseorder", "Can receive approved purchase orders into a warehouse"),
+            ("cancel_purchaseorder", "Can cancel purchase orders"),
+        )
 
 
 class PurchaseOrderLine(VuedaModel):

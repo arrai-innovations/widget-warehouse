@@ -5,10 +5,11 @@ Groups, their permission grants, and one user per group are defined here as data
 rather than as fixtures or through the DEBUG-only permission overview UI, so the
 whole role matrix reproduces on a deployed instance by running this command.
 
-Only baseline CRUDL permissions are granted. Workflow permissions (WorkflowPermission,
-TransitionPermission, StatePermission) arrive with the purchase order workflow and are
-seeded alongside it; nothing in the catalog has a workflow to attach them to yet, so the
-inventory roles can currently write a purchase order in any state.
+Baseline CRUDL permissions and the per-transition permissions are granted here, because
+both are ordinary Django permissions on a group. The workflow rows that consume them
+(WorkflowPermission, TransitionPermission, StatePermission) belong to the workflow
+definition and are seeded by ``seed_workflows``, which has to run after this command
+because it looks these groups up by name.
 """
 
 from django.contrib.auth import get_user_model
@@ -51,11 +52,12 @@ BASELINE_PERMISSIONS = (
 
 # name, email, and permission scopes per role, mirroring the walkthrough's role table
 # narrowed to the models that exist today. "write" grants create and update, "delete"
-# grants delete; the sales roles stay read-only until the sales order arrives.
+# grants delete, "transitions" grants one permission per named transition; the sales
+# roles stay read-only until the sales order arrives.
 #
-# These are baseline permissions, so a purchase order write is granted here regardless of
-# what state the order is in. Narrowing the clerk to draft orders only is the job of the
-# StatePermission deny rule that arrives with the workflow.
+# The write scopes are baseline permissions, so a purchase order write is granted here
+# regardless of what state the order is in. Narrowing the clerk to draft orders only is
+# the job of the StatePermission deny rules in seed_workflows.
 DEMO_ROLES = [
     {
         "group": "inventory-clerk",
@@ -64,6 +66,7 @@ DEMO_ROLES = [
         "read": CATALOG_MODELS + INVENTORY_MODELS + INBOUND_MODELS + LOCATION_MODELS + PURCHASE_MODELS,
         "write": PURCHASE_MODELS,
         "delete": (),
+        "transitions": ("submit",),
     },
     {
         "group": "inventory-supervisor",
@@ -71,9 +74,12 @@ DEMO_ROLES = [
         "name": "Sam Supervisor",
         "read": CATALOG_MODELS + INVENTORY_MODELS + INBOUND_MODELS + LOCATION_MODELS + PURCHASE_MODELS,
         "write": PURCHASE_MODELS,
-        # The supervisor is the role that can retire an order outright. This is what
-        # "PO any state" buys them over the clerk before the workflow exists.
+        # The supervisor is the role that can retire an order outright, both by deleting
+        # it and, now that the workflow exists, by cancelling it. Cancel is not in the
+        # role table's Transitions column because the table lists the approval path;
+        # someone has to be able to end an order off that path, and it is this role.
         "delete": PURCHASE_MODELS,
+        "transitions": ("submit", "approve", "reject", "receive", "cancel"),
     },
     {
         "group": "sales-associate",
@@ -82,6 +88,7 @@ DEMO_ROLES = [
         "read": CATALOG_MODELS + INVENTORY_MODELS + OUTBOUND_MODELS + LOCATION_MODELS,
         "write": (),
         "delete": (),
+        "transitions": (),
     },
     {
         "group": "sales-manager",
@@ -90,6 +97,7 @@ DEMO_ROLES = [
         "read": CATALOG_MODELS + INVENTORY_MODELS + OUTBOUND_MODELS + LOCATION_MODELS,
         "write": (),
         "delete": (),
+        "transitions": (),
     },
     {
         "group": "accountant",
@@ -98,11 +106,24 @@ DEMO_ROLES = [
         "read": ALL_MODELS,
         "write": (),
         "delete": (),
+        "transitions": (),
     },
 ]
 
 READ_ACTIONS = ("list", "read")
 WRITE_ACTIONS = ("create", "update")
+
+# Transition permissions are per transition, so a role's Transitions column is granted
+# here one codename at a time. Holding one is not enough on its own to run the
+# transition: the order also has to be in a state the transition starts from, and the
+# workflow's own gate permission has to be held. See seed_workflows.
+TRANSITION_PERMISSIONS = {
+    "submit": "submit_purchaseorder",
+    "approve": "approve_purchaseorder",
+    "reject": "reject_purchaseorder",
+    "receive": "receive_purchaseorder",
+    "cancel": "cancel_purchaseorder",
+}
 
 
 def codenames_for(role):
@@ -111,6 +132,7 @@ def codenames_for(role):
         {("catalog", f"{action}_{model}") for model in role["read"] for action in READ_ACTIONS}
         | {("catalog", f"{action}_{model}") for model in role["write"] for action in WRITE_ACTIONS}
         | {("catalog", f"delete_{model}") for model in role["delete"]}
+        | {("catalog", TRANSITION_PERMISSIONS[transition]) for transition in role["transitions"]}
         | set(BASELINE_PERMISSIONS)
     )
 
