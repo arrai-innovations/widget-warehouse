@@ -4,6 +4,7 @@ import {
     faCloudMoon,
     faCodeBranch,
     faCog,
+    faFileImport,
     faHandshake,
     faLayerGroup,
     faRightFromBracket,
@@ -58,6 +59,7 @@ async function handleSignOut() {
 const models = [
     { title: "Inventory Records", model: "inventoryrecord", icon: faBoxesStacked },
     { title: "Promotions", model: "promotion", icon: faTag },
+    { title: "Purchase Orders", model: "purchaseorder", icon: faFileImport },
     { title: "Suppliers", model: "supplier", icon: faHandshake },
     { title: "Warehouses", model: "warehouse", icon: faWarehouse },
     { title: "Widgets", model: "widget", icon: faCog },
