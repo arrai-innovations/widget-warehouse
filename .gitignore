@@ -26,3 +26,6 @@ server/gunicorn.conf.py
 # Environment
 .env.local
 .env.*.local
+
+# Agent process docs (gitignored, see docs/temp/)
+docs/temp/
