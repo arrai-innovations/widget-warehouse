@@ -7,6 +7,8 @@ from django.core.management.base import BaseCommand
 from widget_warehouse.catalog.models import (
     InventoryRecord,
     Promotion,
+    PurchaseOrder,
+    PurchaseOrderLine,
     Supplier,
     Warehouse,
     Widget,
@@ -27,6 +29,7 @@ class Command(BaseCommand):
         self._seed_warehouses()
         self._seed_inventory()
         self._seed_promotions()
+        self._seed_purchase_orders()
         self.stdout.write(self.style.SUCCESS("Seed complete."))
 
     def _seed_categories(self):
@@ -607,3 +610,72 @@ class Command(BaseCommand):
                 promo.widgets.set(entry["widgets"])
             status = "created" if created else "exists"
             self.stdout.write(f"  Promotion {entry['code']}: {status}")
+
+    def _seed_purchase_orders(self):
+        self.stdout.write("Seeding purchase orders...")
+        today = date.today()
+
+        # Dates are relative to the seed run so a long-lived deployed instance keeps
+        # orders that are plausibly in flight rather than all historical.
+        # (reference, supplier_slug, warehouse_code, ordered_days_ago, arrival_in_days, lines)
+        purchase_orders_data = [
+            (
+                "PO-1041",
+                "precision-parts-co",
+                "SYD-DC",
+                21,
+                -7,
+                [("SPR-100-SM", 120, "12.50"), ("SPR-100-MD", 80, "14.50")],
+            ),
+            (
+                "PO-1042",
+                "precision-parts-co",
+                "SYD-DC",
+                10,
+                8,
+                [("SPR-200-SS", 80, "32.99"), ("GR-024-STL", 60, "18.00")],
+            ),
+            (
+                "PO-1043",
+                "eurobearings-gmbh",
+                "MEL-OVF",
+                3,
+                18,
+                [("BRG-6204-2RS", 200, "10.40"), ("BRG-6204-ZZ", 150, "9.70")],
+            ),
+            (
+                "PO-1044",
+                "pacific-fasteners",
+                "SYD-DC",
+                0,
+                None,
+                [("FST-HB8-ZN", 1000, "0.45"), ("FST-HB8-SS", 400, "0.60")],
+            ),
+        ]
+
+        for reference, supplier_slug, warehouse_code, ordered_days_ago, arrival_in_days, lines in purchase_orders_data:
+            order, created = PurchaseOrder.objects.update_or_create(
+                reference=reference,
+                defaults={
+                    "supplier": self.supplier_objs[supplier_slug],
+                    "destination_warehouse": self.warehouse_objs[warehouse_code],
+                    "order_date": today - timedelta(days=ordered_days_ago),
+                    "expected_arrival_date": (
+                        today + timedelta(days=arrival_in_days) if arrival_in_days is not None else None
+                    ),
+                },
+            )
+            status = "created" if created else "exists"
+            self.stdout.write(f"  Purchase order {reference}: {status}")
+
+            for variant_key, quantity, unit_price in lines:
+                variant = self.variant_objs.get(variant_key)
+                if not variant:
+                    continue
+                _, line_created = PurchaseOrderLine.objects.update_or_create(
+                    purchase_order=order,
+                    variant=variant,
+                    defaults={"quantity_ordered": quantity, "unit_price": Decimal(unit_price)},
+                )
+                line_status = "created" if line_created else "exists"
+                self.stdout.write(f"    Line {variant_key} x{quantity}: {line_status}")
