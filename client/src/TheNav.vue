@@ -28,6 +28,7 @@ import SidebarRail from "@vueda/navigation/sidebar/SidebarRail.vue";
 import SidebarUserBlock from "@vueda/navigation/sidebar/SidebarUserBlock.vue";
 import { getCRUDForTo } from "@vueda/router/getCrud.js";
 import { storeDarkMode } from "@vueda/stores/storeDarkMode.js";
+import { storeModelInfo } from "@vueda/stores/storeModelInfo.js";
 import { storeUser } from "@vueda/stores/storeUser.js";
 import { computedAsync } from "@vueuse/core";
 import { unref } from "vue";
@@ -36,6 +37,7 @@ import { RouterLink, useRoute, useRouter } from "vue-router";
 import NavLogo from "@/nav/NavLogo.vue";
 
 const darkModeStore = storeDarkMode();
+const modelInfoStore = storeModelInfo();
 const userStore = storeUser();
 const router = useRouter();
 const route = useRoute();
@@ -46,6 +48,10 @@ async function handleSignOut() {
     } catch {
         return;
     }
+    // Model info is permission-filtered per user but cached by app.model, and VUEDA does
+    // not invalidate that cache when the session ends. Without this reset, signing in as
+    // the next role in the same tab rebuilds the nav from the previous role's metadata.
+    modelInfoStore.$reset();
     router.push({ name: "sign-in" });
 }
 
@@ -66,8 +72,14 @@ const models = [
     // have a session; those 403s would otherwise poison storeModelInfo's error
     // cache (its self-DDoS guard), leaving the nav stuck on skeletons even after
     // login until a full page reload.
-    to: computedAsync(() => {
+    to: computedAsync(async () => {
         if (!userStore.loggedIn) return undefined;
+        // Model info reports only the actions the signed-in user is permitted, so a role
+        // without list on this model resolves to null and the item is skipped. This is the
+        // whole difference between the roles on screen: the same nav, built per user from
+        // the server's own permission answer, rather than a hard-coded per-role menu.
+        const info = await modelInfoStore.fetchModelInfo({ app: "catalog", model: m.model });
+        if (!info.actions?.some((action) => action.name === "list")) return null;
         return getCRUDForTo({ app: "catalog", model: m.model, view: "list" });
     }),
 }));
