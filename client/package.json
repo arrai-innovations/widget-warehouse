@@ -13,7 +13,8 @@
         "prettier": "prettier --write ."
     },
     "dependencies": {
-        "@arrai-innovations/reactive-helpers": "^21.1.0",
+        "@arrai-innovations/reactive-helpers": "^24.1.0",
+        "@arrai-innovations/vue-sonner": "^2.0.11",
         "@arrai-innovations/vueda": "link:../../vueda/client",
         "@fontsource-variable/inter": "^5.2.8",
         "@fontsource-variable/jetbrains-mono": "^5.2.8",
@@ -30,8 +31,7 @@
         "tailwindcss": "^4.2.2",
         "vue": "^3.5.32",
         "vue-draggable-next": "^2.3.0",
-        "vue-router": "^4.6.4",
-        "vue-sonner": "^2.0.9"
+        "vue-router": "^4.6.4"
     },
     "devDependencies": {
         "@trivago/prettier-plugin-sort-imports": "^4.3.0",
