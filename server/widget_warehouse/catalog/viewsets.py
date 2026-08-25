@@ -5,6 +5,7 @@ from vueda.core.viewsets import VuedaViewSet
 from widget_warehouse.catalog.filtersets import (
     InventoryRecordFilterSet,
     PromotionFilterSet,
+    PurchaseOrderFilterSet,
     SupplierFilterSet,
     WarehouseFilterSet,
     WidgetCategoryFilterSet,
@@ -14,6 +15,7 @@ from widget_warehouse.catalog.filtersets import (
 from widget_warehouse.catalog.models import (
     InventoryRecord,
     Promotion,
+    PurchaseOrder,
     Supplier,
     Warehouse,
     Widget,
@@ -23,6 +25,7 @@ from widget_warehouse.catalog.models import (
 from widget_warehouse.catalog.serializers import (
     InventoryRecordSerializer,
     PromotionSerializer,
+    PurchaseOrderSerializer,
     SupplierSerializer,
     WarehouseSerializer,
     WidgetCategorySerializer,
@@ -96,3 +99,29 @@ class PromotionViewSet(VuedaViewSet):
     queryset = Promotion.objects.all()
     serializer_class = PromotionSerializer
     filterset_class = PromotionFilterSet
+
+
+class PurchaseOrderViewSet(VuedaViewSet):
+    queryset = PurchaseOrder.objects.all()
+    serializer_class = PurchaseOrderSerializer
+    filterset_class = PurchaseOrderFilterSet
+    # "lines" is here so a list request can expand the inline as well: without it,
+    # flex-fields refuses the expand on list and the create/update forms are the only
+    # place the child rows are reachable.
+    permit_list_expands: ClassVar[list[str]] = ["supplier", "destination_warehouse", "lines"]
+    ordering_fields: ClassVar[list[str]] = [
+        "reference",
+        "supplier",
+        "destination_warehouse",
+        "order_date",
+        "expected_arrival_date",
+        "created_at",
+        "updated_at",
+    ]
+    search_fields: ClassVar[list[str]] = [
+        "reference",
+        "supplier__name",
+        "supplier__slug",
+        "destination_warehouse__code",
+        "destination_warehouse__name",
+    ]

@@ -7,6 +7,8 @@ from vueda.core.serializers import VuedaLookupSerializer, VuedaSerializer
 from widget_warehouse.catalog.models import (
     InventoryRecord,
     Promotion,
+    PurchaseOrder,
+    PurchaseOrderLine,
     Supplier,
     Warehouse,
     Widget,
@@ -154,3 +156,71 @@ class PromotionSerializer(VuedaSerializer):
             *VuedaSerializer.Meta.fields,
         )
         read_only_fields = ("created_at",)
+
+
+class PurchaseOrderLineSerializer(VuedaSerializer):
+    """
+    Child serializer for the purchase order's writable inline.
+
+    ``purchase_order`` is deliberately absent: the parent sets the foreign key when it
+    saves its own lines, and a required parent field could never be satisfied on create.
+    Lines are therefore only reachable through ``PurchaseOrderSerializer``.
+    """
+
+    class Meta(VuedaSerializer.Meta):
+        model = PurchaseOrderLine
+        # No formatted_name: it would render as a second, read-only variant column beside
+        # the variant picker in the inline, which is the same value twice.
+        fields = (
+            "id",
+            "variant",
+            "quantity_ordered",
+            "unit_price",
+            "available_actions",
+        )
+        expandable_fields: ClassVar[dict] = {
+            "variant": (
+                WidgetVariantSerializer,
+                {
+                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                },
+            ),
+        }
+        expandable_fields.update(VuedaSerializer.Meta.expandable_fields)
+
+
+class PurchaseOrderSerializer(VuedaSerializer):
+    class Meta(VuedaSerializer.Meta):
+        model = PurchaseOrder
+        fields = (
+            "id",
+            "reference",
+            "supplier",
+            "destination_warehouse",
+            "order_date",
+            "expected_arrival_date",
+            "lines",
+            "created_at",
+            "updated_at",
+            *VuedaSerializer.Meta.fields,
+        )
+        read_only_fields = ("created_at", "updated_at")
+        expandable_fields: ClassVar[dict] = {
+            "supplier": (
+                SupplierSerializer,
+                {
+                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                },
+            ),
+            "destination_warehouse": (
+                WarehouseSerializer,
+                {
+                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                },
+            ),
+            # Writable inline. Expanding "lines" on a write request is what makes the
+            # nested payload deserialize as objects rather than primary keys, and an
+            # existing line left out of that payload is deleted.
+            "lines": (PurchaseOrderLineSerializer, {"many": True}),
+        }
+        expandable_fields.update(VuedaSerializer.Meta.expandable_fields)

@@ -182,3 +182,65 @@ class Promotion(VuedaModel):
 
     class Meta(BaseModelMeta):
         ordering = ("-created_at", "id")
+
+
+class PurchaseOrder(VuedaModel):
+    """An inbound order placed with a supplier for delivery into a warehouse."""
+
+    formatted_name = None
+    formatted_name_lookup_expression = "reference"
+
+    reference = models.CharField(
+        max_length=32,
+        unique=True,
+        help_text="Purchase order number, e.g. PO-1042.",
+    )
+    supplier = models.ForeignKey(
+        Supplier,
+        on_delete=models.PROTECT,
+        related_name="purchase_orders",
+    )
+    destination_warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.PROTECT,
+        related_name="inbound_purchase_orders",
+        help_text="Warehouse the ordered stock is delivered to.",
+    )
+    order_date = models.DateField(help_text="Date the order was placed with the supplier.")
+    expected_arrival_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date the supplier expects to deliver the order.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta(BaseModelMeta):
+        ordering = ("-order_date", "-reference")
+
+
+class PurchaseOrderLine(VuedaModel):
+    """A single variant, quantity, and price on a purchase order."""
+
+    formatted_name = None
+    formatted_name_lookup_expression = "variant__formatted_name"
+
+    purchase_order = models.ForeignKey(
+        PurchaseOrder,
+        on_delete=models.CASCADE,
+        related_name="lines",
+    )
+    variant = models.ForeignKey(
+        WidgetVariant,
+        on_delete=models.PROTECT,
+        related_name="purchase_order_lines",
+    )
+    quantity_ordered = models.PositiveIntegerField()
+    unit_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Price agreed with the supplier, which may differ from the widget's list price.",
+    )
+
+    class Meta(BaseModelMeta):
+        ordering = ("purchase_order", "id")

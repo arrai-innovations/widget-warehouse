@@ -4,6 +4,7 @@ from vueda.core.filters import VuedaFilterSet
 from widget_warehouse.catalog.models import (
     InventoryRecord,
     Promotion,
+    PurchaseOrder,
     Supplier,
     Warehouse,
     Widget,
@@ -59,3 +60,16 @@ class PromotionFilterSet(VuedaFilterSet):
     class Meta:
         model = Promotion
         fields = ("id", "name", "code", "is_active")
+
+
+class PurchaseOrderFilterSet(VuedaFilterSet):
+    reference = rest_framework.CharFilter(field_name="reference", label="Reference", lookup_expr="icontains")
+    order_date = rest_framework.DateFromToRangeFilter(field_name="order_date", label="Order date")
+    expected_arrival_date = rest_framework.DateFromToRangeFilter(
+        field_name="expected_arrival_date",
+        label="Expected arrival",
+    )
+
+    class Meta:
+        model = PurchaseOrder
+        fields = ("id", "reference", "supplier", "destination_warehouse", "order_date", "expected_arrival_date")
