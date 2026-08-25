@@ -7,7 +7,8 @@ whole role matrix reproduces on a deployed instance by running this command.
 
 Only baseline CRUDL permissions are granted. Workflow permissions (WorkflowPermission,
 TransitionPermission, StatePermission) arrive with the purchase order workflow and are
-seeded alongside it; nothing in the catalog has a workflow to attach them to yet.
+seeded alongside it; nothing in the catalog has a workflow to attach them to yet, so the
+inventory roles can currently write a purchase order in any state.
 """
 
 from django.contrib.auth import get_user_model
@@ -25,60 +26,92 @@ INVENTORY_MODELS = ("inventoryrecord",)
 INBOUND_MODELS = ("supplier",)
 OUTBOUND_MODELS = ("promotion",)
 LOCATION_MODELS = ("warehouse",)
+# The order and its lines are always granted together: lines are only reachable as the
+# order's writable inline, so a role that can change an order changes its lines too.
+PURCHASE_MODELS = ("purchaseorder", "purchaseorderline")
 
-ALL_MODELS = CATALOG_MODELS + INVENTORY_MODELS + INBOUND_MODELS + OUTBOUND_MODELS + LOCATION_MODELS
+ALL_MODELS = CATALOG_MODELS + INVENTORY_MODELS + INBOUND_MODELS + OUTBOUND_MODELS + LOCATION_MODELS + PURCHASE_MODELS
 
-# VUEDA serves model metadata from a ContentType viewset guarded by the standard CRUDL
-# permission classes, so without this the client cannot fetch model info for any model and
-# every screen fails before the domain permissions above are ever consulted. Granted to all
-# demo groups; it carries no domain access of its own, and model info still reports only
-# the actions each role's catalog permissions allow.
-BASELINE_PERMISSIONS = (("contenttypes", "read_contenttype"),)
+# Permissions every group needs before any screen works at all. Neither carries domain
+# access of its own, and model info still reports only the actions each role's catalog
+# permissions allow.
+#
+# contenttypes.read_contenttype: VUEDA serves model metadata from a ContentType viewset
+# guarded by the standard CRUDL permission classes, so without it the client cannot fetch
+# model info for any model.
+#
+# vueda_workflow.read_workflow: every list view asks the workflow API for the model's
+# permitted transitions, and that viewset requires workflow read for any request, including
+# one about a model that has no workflow. Without it the request 403s and the list renders
+# empty, whether or not the model is in a workflow.
+BASELINE_PERMISSIONS = (
+    ("contenttypes", "read_contenttype"),
+    ("vueda_workflow", "read_workflow"),
+)
 
-# name, email, and read scope per role. The scopes are the "Reads" column of the
-# walkthrough's role table, narrowed to the models that exist today. Every role is
-# read-only at this point: the writes in that table are all purchase order and sales
-# order writes, and neither model exists yet.
+# name, email, and permission scopes per role, mirroring the walkthrough's role table
+# narrowed to the models that exist today. "write" grants create and update, "delete"
+# grants delete; the sales roles stay read-only until the sales order arrives.
+#
+# These are baseline permissions, so a purchase order write is granted here regardless of
+# what state the order is in. Narrowing the clerk to draft orders only is the job of the
+# StatePermission deny rule that arrives with the workflow.
 DEMO_ROLES = [
     {
         "group": "inventory-clerk",
         "email": "clerk@widgetwarehouse.com",
         "name": "Ilse Clerk",
-        "read": CATALOG_MODELS + INVENTORY_MODELS + INBOUND_MODELS + LOCATION_MODELS,
+        "read": CATALOG_MODELS + INVENTORY_MODELS + INBOUND_MODELS + LOCATION_MODELS + PURCHASE_MODELS,
+        "write": PURCHASE_MODELS,
+        "delete": (),
     },
     {
         "group": "inventory-supervisor",
         "email": "supervisor@widgetwarehouse.com",
         "name": "Sam Supervisor",
-        "read": CATALOG_MODELS + INVENTORY_MODELS + INBOUND_MODELS + LOCATION_MODELS,
+        "read": CATALOG_MODELS + INVENTORY_MODELS + INBOUND_MODELS + LOCATION_MODELS + PURCHASE_MODELS,
+        "write": PURCHASE_MODELS,
+        # The supervisor is the role that can retire an order outright. This is what
+        # "PO any state" buys them over the clerk before the workflow exists.
+        "delete": PURCHASE_MODELS,
     },
     {
         "group": "sales-associate",
         "email": "associate@widgetwarehouse.com",
         "name": "Ana Associate",
         "read": CATALOG_MODELS + INVENTORY_MODELS + OUTBOUND_MODELS + LOCATION_MODELS,
+        "write": (),
+        "delete": (),
     },
     {
         "group": "sales-manager",
         "email": "manager@widgetwarehouse.com",
         "name": "Mo Manager",
         "read": CATALOG_MODELS + INVENTORY_MODELS + OUTBOUND_MODELS + LOCATION_MODELS,
+        "write": (),
+        "delete": (),
     },
     {
         "group": "accountant",
         "email": "accountant@widgetwarehouse.com",
         "name": "Ada Accountant",
         "read": ALL_MODELS,
+        "write": (),
+        "delete": (),
     },
 ]
 
 READ_ACTIONS = ("list", "read")
+WRITE_ACTIONS = ("create", "update")
 
 
 def codenames_for(role):
-    """Expand a role's model scope into the (app_label, codename) pairs it grants."""
-    return {("catalog", f"{action}_{model}") for model in role["read"] for action in READ_ACTIONS} | set(
-        BASELINE_PERMISSIONS
+    """Expand a role's model scopes into the (app_label, codename) pairs it grants."""
+    return (
+        {("catalog", f"{action}_{model}") for model in role["read"] for action in READ_ACTIONS}
+        | {("catalog", f"{action}_{model}") for model in role["write"] for action in WRITE_ACTIONS}
+        | {("catalog", f"delete_{model}") for model in role["delete"]}
+        | set(BASELINE_PERMISSIONS)
     )
 
 
