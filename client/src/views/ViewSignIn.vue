@@ -10,9 +10,9 @@ import WidgetTextInput from "@vueda/widgets/WidgetTextInput.vue";
  * slot-based customization surface without re-implementing the sign-in flow.
  *
  * The demo credential panel is added through AuthorizingForm's forwarded `suffix` slot,
- * and fills the form through the `form-object` event rather than through a second copy
- * of the form state. Widget Warehouse is a public demo, so the panel is not gated on
- * DEBUG: an evaluator on the deployed instance needs it to switch roles.
+ * and fills the form through the context emitted by `form-context` rather than through
+ * a second copy of the form state. Widget Warehouse is a public demo, so the panel is
+ * not gated on DEBUG: an evaluator on the deployed instance needs it to switch roles.
  */
 
 // Mirrors the roles in server/widget_warehouse/catalog/management/commands/seed_demo_users.py.
@@ -26,26 +26,23 @@ const DEMO_ACCOUNTS = [
     { role: "Accountant", email: "accountant@widgetwarehouse.com" },
 ];
 
-// AuthorizingForm emits a ref to its live form values on mount. Holding that ref is what
-// lets a credential row write into the real form state instead of shadowing it. A plain
-// binding rather than a ref: the click handler reads it imperatively, and a ref assigned
-// into another ref's value is not unwrapped, which would bury the form values one level
-// deeper than the writes below expect.
-let formValues = null;
+// ViewSignIn emits its form context on mount. The context keeps state readonly for
+// observation and exposes mutation methods for controlled programmatic updates.
+let formContext = null;
 
-function handleFormObject(values) {
-    formValues = values;
+function handleFormContext(context) {
+    formContext = context;
 }
 
 function useAccount(email) {
-    if (!formValues?.value) return;
-    formValues.value.email = email;
-    formValues.value.password = DEMO_PASSWORD;
+    if (!formContext) return;
+    formContext.updateValue("email", email);
+    formContext.updateValue("password", DEMO_PASSWORD);
 }
 </script>
 
 <template>
-    <ViewSignIn @form-object="handleFormObject">
+    <ViewSignIn @form-context="handleFormContext">
         <template #widget(email)="slotProps">
             <WidgetTextInput v-bind="slotProps" class="font-mono" />
         </template>
