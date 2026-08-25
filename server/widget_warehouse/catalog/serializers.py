@@ -3,6 +3,7 @@ from typing import ClassVar
 from django.conf import settings
 from vueda.core.fields.serializers import FileField, ImageField, RangeField
 from vueda.core.serializers import VuedaLookupSerializer, VuedaSerializer
+from vueda.workflow.serializers import HasWorkflowSerializerMixin
 
 from widget_warehouse.catalog.models import (
     InventoryRecord,
@@ -189,7 +190,15 @@ class PurchaseOrderLineSerializer(VuedaSerializer):
         expandable_fields.update(VuedaSerializer.Meta.expandable_fields)
 
 
-class PurchaseOrderSerializer(VuedaSerializer):
+class PurchaseOrderSerializer(HasWorkflowSerializerMixin, VuedaSerializer):
+    """
+    Read/write serializer for the order and its lines.
+
+    ``HasWorkflowSerializerMixin`` adds the current state and the transitions this
+    request's user may run on this row, so a list response carries both the state to
+    display and the affordances to offer without a second call per row.
+    """
+
     class Meta(VuedaSerializer.Meta):
         model = PurchaseOrder
         fields = (
@@ -203,6 +212,7 @@ class PurchaseOrderSerializer(VuedaSerializer):
             "created_at",
             "updated_at",
             *VuedaSerializer.Meta.fields,
+            *HasWorkflowSerializerMixin.Meta.fields,
         )
         read_only_fields = ("created_at", "updated_at")
         expandable_fields: ClassVar[dict] = {
