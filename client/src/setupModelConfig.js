@@ -26,6 +26,46 @@ export function setupModelConfig(pinia) {
     );
 
     modelConfigStore.setConfig(
+        { app: "catalog", model: "widgetvariant" },
+        {
+            expand: [],
+        },
+        {
+            list: {
+                expand: ["widget"],
+                expandDetails: {
+                    widget: {
+                        formatted: "widget.formatted_name",
+                        value: "widget.id",
+                    },
+                },
+            },
+        },
+    );
+
+    modelConfigStore.setConfig(
+        { app: "catalog", model: "inventoryrecord" },
+        {
+            expand: [],
+        },
+        {
+            list: {
+                expand: ["variant", "warehouse"],
+                expandDetails: {
+                    variant: {
+                        formatted: "variant.formatted_name",
+                        value: "variant.id",
+                    },
+                    warehouse: {
+                        formatted: "warehouse.formatted_name",
+                        value: "warehouse.id",
+                    },
+                },
+            },
+        },
+    );
+
+    modelConfigStore.setConfig(
         { app: "catalog", model: "purchaseorder" },
         {
             // Expand the lines everywhere and nothing else. An expanded foreign key renders

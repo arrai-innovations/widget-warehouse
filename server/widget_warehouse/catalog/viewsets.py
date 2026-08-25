@@ -83,6 +83,7 @@ class WidgetVariantViewSet(VuedaViewSet):
     queryset = WidgetVariant.objects.all()
     serializer_class = WidgetVariantSerializer
     filterset_class = WidgetVariantFilterSet
+    permit_list_expands: ClassVar[list[str]] = ["widget"]
 
 
 class WarehouseViewSet(VuedaViewSet):
@@ -95,6 +96,7 @@ class InventoryRecordViewSet(VuedaViewSet):
     queryset = InventoryRecord.objects.all()
     serializer_class = InventoryRecordSerializer
     filterset_class = InventoryRecordFilterSet
+    permit_list_expands: ClassVar[list[str]] = ["variant", "warehouse"]
 
 
 class PromotionViewSet(VuedaViewSet):

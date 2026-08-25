@@ -102,6 +102,15 @@ class WidgetVariantSerializer(VuedaSerializer):
             "stock_quantity",
             *VuedaSerializer.Meta.fields,
         )
+        expandable_fields: ClassVar[dict] = {
+            "widget": (
+                WidgetSerializer,
+                {
+                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                },
+            ),
+        }
+        expandable_fields.update(VuedaSerializer.Meta.expandable_fields)
 
 
 class WarehouseSerializer(VuedaSerializer):
@@ -137,6 +146,21 @@ class InventoryRecordSerializer(VuedaSerializer):
             "notes",
             "available_actions",
         )
+        expandable_fields: ClassVar[dict] = {
+            "variant": (
+                WidgetVariantSerializer,
+                {
+                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                },
+            ),
+            "warehouse": (
+                WarehouseSerializer,
+                {
+                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                },
+            ),
+        }
+        expandable_fields.update(VuedaSerializer.Meta.expandable_fields)
 
 
 class PromotionSerializer(VuedaSerializer):
