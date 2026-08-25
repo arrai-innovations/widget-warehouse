@@ -48,10 +48,11 @@ view lists them so an evaluator can switch roles without leaving the page.
 | `sales-manager`        | manager@widgetwarehouse.com    | catalog, inventory, warehouses, promotions, customers | sales orders in any state    | `submit`, `approve`, `reject`, `ship`    |
 | `accountant`           | accountant@widgetwarehouse.com | everything                                            | nothing                      | none, plus a bulk export action          |
 
-Customers, purchase orders, and sales orders are not modelled yet. Each role grants
-what the table says for every model that does exist, which leaves all five read-only for
-now, and leaves the two inventory roles granting the same access as each other, as do
-the two sales roles.
+Customers and sales orders are not modelled yet, so the two sales roles are still
+read-only and grant the same access as each other. Purchase orders are modelled: the
+clerk and the supervisor both create and edit them, and only the supervisor can delete
+one. Narrowing the clerk to draft orders is the workflow's job, so until that lands the
+clerk can edit an order in any state.
 
 What is live today is the Reads column. Sign in as the clerk and the sales associate in
 turn: both get the same widgets, categories, variants, inventory records, and
@@ -60,3 +61,12 @@ The navigation is not built per role in client code. It asks VUEDA for each mode
 metadata, and VUEDA reports only the actions the signed-in user is permitted, so the
 menu, the row actions, and the API all answer from one permission decision. Sign in as
 the superuser to see the same screens with create, update, and delete restored.
+
+## Purchase Orders
+
+A purchase order carries its lines as a writable inline, so one request creates or
+updates the order and its line rows together. The client sends the `lines` expand on
+create and update, which is what makes the nested payload deserialize as objects rather
+than as ids; a line left out of an update is deleted. Sign in as the clerk and edit
+`PO-1042` to see it. The list view deliberately does not expand the lines: it shows the
+supplier and destination warehouse instead.
