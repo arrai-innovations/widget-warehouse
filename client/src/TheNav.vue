@@ -49,10 +49,10 @@ async function handleSignOut() {
     } catch {
         return;
     }
-    // Model info is permission-filtered per user but cached by app.model, and VUEDA does
-    // not invalidate that cache when the session ends. Without this reset, signing in as
-    // the next role in the same tab rebuilds the nav from the previous role's metadata.
-    modelInfoStore.$reset();
+    // VUEDA drops every permission-filtered cache itself when the principal changes,
+    // including the change to an anonymous session, so nothing to clear here. Do not
+    // use $reset: Pinia substitutes a new object for each nested container, which
+    // detaches the toRef handles VUEDA composables hold into them.
     router.push({ name: "sign-in" });
 }
 
