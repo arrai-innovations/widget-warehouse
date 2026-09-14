@@ -24,8 +24,11 @@ importers:
   client:
     dependencies:
       '@arrai-innovations/reactive-helpers':
-        specifier: ^21.1.0
-        version: 21.1.0(@vueuse/core@13.9.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2))
+        specifier: ^25.0.0
+        version: 25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2))
+      '@arrai-innovations/vue-sonner':
+        specifier: ^2.0.11
+        version: 2.0.11
       '@arrai-innovations/vueda':
         specifier: link:../../vueda/client
         version: link:../../vueda/client
@@ -54,8 +57,8 @@ importers:
         specifier: ^4.2.2
         version: 4.2.2(vite@6.4.2(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0))
       '@vueuse/core':
-        specifier: ^13.9.0
-        version: 13.9.0(vue@3.5.32(typescript@6.0.2))
+        specifier: ^14.0.0
+        version: 14.4.0(vue@3.5.32(typescript@6.0.2))
       lodash-es:
         specifier: ^4.18.1
         version: 4.18.1
@@ -77,9 +80,6 @@ importers:
       vue-router:
         specifier: ^4.6.4
         version: 4.6.4(vue@3.5.32(typescript@6.0.2))
-      vue-sonner:
-        specifier: ^2.0.9
-        version: 2.0.9
     devDependencies:
       '@trivago/prettier-plugin-sort-imports':
         specifier: ^4.3.0
@@ -120,12 +120,27 @@ packages:
   '@arrai-innovations/commitlint-config@2.1.0':
     resolution: {integrity: sha512-+sgs7R5aV7TcVZrw9297OEIcTANSCGOlzFCkAmfLlgtxK1UIm6lIFBEtB3hzat6qzmy4pzVe1rgSKP7r3dquyQ==}
 
-  '@arrai-innovations/reactive-helpers@21.1.0':
-    resolution: {integrity: sha512-TJPoReGG+AiDamFkV49Xq/1CcZ43VDEpaQEtqRRhGTHPa5ZCtqhlElzpul0Zmc4eJdD+0au2PI5zToqgCn88og==}
+  '@arrai-innovations/reactive-helpers@25.0.0':
+    resolution: {integrity: sha512-WHcynykOJ17U6Pi1U+54gfAUOJe7hvGU0ddQgw3AfKYeUf+QpsBTcDpNXP35zk/MjVt8Fz4vTAffdFP5Brr/+w==}
+    engines: {node: '>=22'}
     peerDependencies:
-      '@vueuse/core': ^13.0.0
-      lodash-es: ^4.17.21
+      '@vueuse/core': ^14.0.0
+      lodash-es: ^4.17.23
       vue: ^3.5.13
+
+  '@arrai-innovations/vue-sonner@2.0.11':
+    resolution: {integrity: sha512-+JfXWEGDWxWoR12NPU/9g+Z4xY2xB2MYoxMMWV4sDZYgFKImV0GxujZfS1BcMqShlE+hiXGu132ektQMBktiCA==}
+    peerDependencies:
+      '@nuxt/kit': ^4.0.3
+      '@nuxt/schema': ^4.0.3
+      nuxt: ^4.0.3
+    peerDependenciesMeta:
+      '@nuxt/kit':
+        optional: true
+      '@nuxt/schema':
+        optional: true
+      nuxt:
+        optional: true
 
   '@babel/code-frame@7.29.0':
     resolution: {integrity: sha512-9NhCeYjq9+3uxgdtp20LSiJXJvN0FeCtNGpJxuMFZ1Kv3cWUNb6DOhJwUvcVCzKGR66cw4njwM6hrJLqgOwbcw==}
@@ -1099,16 +1114,16 @@ packages:
   '@vue/shared@3.5.32':
     resolution: {integrity: sha512-ksNyrmRQzWJJ8n3cRDuSF7zNNontuJg1YHnmWRJd2AMu8Ij2bqwiiri2lH5rHtYPZjj4STkNcgcmiQqlOjiYGg==}
 
-  '@vueuse/core@13.9.0':
-    resolution: {integrity: sha512-ts3regBQyURfCE2BcytLqzm8+MmLlo5Ln/KLoxDVcsZ2gzIwVNnQpQOL/UKV8alUqjSZOlpFZcRNsLRqj+OzyA==}
+  '@vueuse/core@14.4.0':
+    resolution: {integrity: sha512-X4WHz1HlCzCBoYXesUkifzzWBAcZgXG8Fi5iNPQg/epdzOB3gu8Fawj3hvuwYR1nGcXGnvxwYYcUC/71++svtQ==}
     peerDependencies:
       vue: ^3.5.0
 
-  '@vueuse/metadata@13.9.0':
-    resolution: {integrity: sha512-1AFRvuiGphfF7yWixZa0KwjYH8ulyjDCC0aFgrGRz8+P4kvDFSdXLVfTk5xAN9wEuD1J6z4/myMoYbnHoX07zg==}
+  '@vueuse/metadata@14.4.0':
+    resolution: {integrity: sha512-swx/255R6JyHZFJhx845iz5CRWDZdCfvkZOpACWc5+c5WHcG24mv8gUT1WIdFQaHt6dq79rvILd9QnCWiyVm9g==}
 
-  '@vueuse/shared@13.9.0':
-    resolution: {integrity: sha512-e89uuTLMh0U5cZ9iDpEI2senqPGfbPRTHM/0AaQkcxnpqjkZqDYP8rpfm7edOz8s+pOCOROEy1PIveSW8+fL5g==}
+  '@vueuse/shared@14.4.0':
+    resolution: {integrity: sha512-JRgY90Sz8DDtPMsaDflvPMp9xYk69JZAmbuDvAquUVXKr2gEjqtzGNTTthLfckH0BzBqvnu31gb4a8TGLRe79g==}
     peerDependencies:
       vue: ^3.5.0
 
@@ -2708,9 +2723,6 @@ packages:
       jsdom:
         optional: true
 
-  vue-deepunref@1.0.1:
-    resolution: {integrity: sha512-cZNaEBvG1O0RtdcxLf1icqOe6UhrAPzsByyhJ85nRSA/PnGh0VKoI9+T8S5mcoI3pgz0T6ci2PCn2zy4PATRjg==}
-
   vue-draggable-next@2.3.0:
     resolution: {integrity: sha512-ymbY0UIwfSdg0iDN/iyNNwUrTqZ/6KbPryzsvTNXBLuDCuOBdNijSK8yynNtmiSj6RapTPQfjLGQdJrZkzBd2w==}
     peerDependencies:
@@ -2727,20 +2739,6 @@ packages:
     resolution: {integrity: sha512-Hz9q5sa33Yhduglwz6g9skT8OBPii+4bFn88w6J+J4MfEo4KRRpmiNG/hHHkdbRFlLBOqxN8y8gf2Fb0MTUgVg==}
     peerDependencies:
       vue: ^3.5.0
-
-  vue-sonner@2.0.9:
-    resolution: {integrity: sha512-i6BokNlNDL93fpzNxN/LZSn6D6MzlO+i3qXt6iVZne3x1k7R46d5HlFB4P8tYydhgqOrRbIZEsnRd3kG7qGXyw==}
-    peerDependencies:
-      '@nuxt/kit': ^4.0.3
-      '@nuxt/schema': ^4.0.3
-      nuxt: ^4.0.3
-    peerDependenciesMeta:
-      '@nuxt/kit':
-        optional: true
-      '@nuxt/schema':
-        optional: true
-      nuxt:
-        optional: true
 
   vue@3.5.32:
     resolution: {integrity: sha512-vM4z4Q9tTafVfMAK7IVzmxg34rSzTFMyIe0UUEijUCkn9+23lj0WRfA83dg7eQZIUlgOSGrkViIaCfqSAUXsMw==}
@@ -2814,17 +2812,16 @@ snapshots:
     dependencies:
       '@commitlint/config-conventional': 19.8.1
 
-  '@arrai-innovations/reactive-helpers@21.1.0(@vueuse/core@13.9.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2))':
+  '@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2))':
     dependencies:
       '@jcoreio/async-throttle': 1.7.0
-      '@vueuse/core': 13.9.0(vue@3.5.32(typescript@6.0.2))
+      '@vueuse/core': 14.4.0(vue@3.5.32(typescript@6.0.2))
       browser-util-inspect: 0.2.0
       flexsearch: 0.7.21
       lodash-es: 4.18.1
       vue: 3.5.32(typescript@6.0.2)
-      vue-deepunref: 1.0.1(typescript@6.0.2)
-    transitivePeerDependencies:
-      - typescript
+
+  '@arrai-innovations/vue-sonner@2.0.11': {}
 
   '@babel/code-frame@7.29.0':
     dependencies:
@@ -3738,16 +3735,16 @@ snapshots:
 
   '@vue/shared@3.5.32': {}
 
-  '@vueuse/core@13.9.0(vue@3.5.32(typescript@6.0.2))':
+  '@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2))':
     dependencies:
       '@types/web-bluetooth': 0.0.21
-      '@vueuse/metadata': 13.9.0
-      '@vueuse/shared': 13.9.0(vue@3.5.32(typescript@6.0.2))
+      '@vueuse/metadata': 14.4.0
+      '@vueuse/shared': 14.4.0(vue@3.5.32(typescript@6.0.2))
       vue: 3.5.32(typescript@6.0.2)
 
-  '@vueuse/metadata@13.9.0': {}
+  '@vueuse/metadata@14.4.0': {}
 
-  '@vueuse/shared@13.9.0(vue@3.5.32(typescript@6.0.2))':
+  '@vueuse/shared@14.4.0(vue@3.5.32(typescript@6.0.2))':
     dependencies:
       vue: 3.5.32(typescript@6.0.2)
 
@@ -5523,12 +5520,6 @@ snapshots:
       - tsx
       - yaml
 
-  vue-deepunref@1.0.1(typescript@6.0.2):
-    dependencies:
-      vue: 3.5.32(typescript@6.0.2)
-    transitivePeerDependencies:
-      - typescript
-
   vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)):
     dependencies:
       sortablejs: 1.15.7
@@ -5550,8 +5541,6 @@ snapshots:
     dependencies:
       '@vue/devtools-api': 6.6.4
       vue: 3.5.32(typescript@6.0.2)
-
-  vue-sonner@2.0.9: {}
 
   vue@3.5.32(typescript@6.0.2):
     dependencies:
