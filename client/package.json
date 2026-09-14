@@ -15,7 +15,7 @@
     "dependencies": {
         "@arrai-innovations/reactive-helpers": "^25.0.0",
         "@arrai-innovations/vue-sonner": "^2.0.11",
-        "@arrai-innovations/vueda": "link:../../vueda/client",
+        "@arrai-innovations/vueda": "^3.0.0-alpha.2",
         "@fontsource-variable/inter": "^5.2.8",
         "@fontsource-variable/jetbrains-mono": "^5.2.8",
         "@fontsource/barlow-condensed": "^5.2.8",
