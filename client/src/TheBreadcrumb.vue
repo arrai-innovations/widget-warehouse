@@ -8,6 +8,7 @@ import BreadcrumbPage from "@vueda/navigation/breadcrumb/BreadcrumbPage.vue";
 import BreadcrumbSeparator from "@vueda/navigation/breadcrumb/BreadcrumbSeparator.vue";
 import { getCRUDForTo } from "@vueda/router/getCrud.js";
 import { storeModelInfo } from "@vueda/stores/storeModelInfo.js";
+import { storeUser } from "@vueda/stores/storeUser.js";
 import { memoizedStartCase } from "@vueda/utils/case.js";
 import { computedAsync } from "@vueuse/core";
 import { computed, unref } from "vue";
@@ -15,6 +16,7 @@ import { RouterLink, useRoute } from "vue-router";
 
 const route = useRoute();
 const modelInfoStore = storeModelInfo();
+const userStore = storeUser();
 
 // Until the initial navigation resolves, `route` is Vue Router's START_LOCATION
 // (name: undefined, empty params). The CRUD `beforeEnter` guard (requireModelInfo)
@@ -29,19 +31,39 @@ const model = computed(() => route.params.model);
 const action = computed(() => route.params.action);
 const pk = computed(() => route.params.pk);
 
-const modelInfo = computedAsync(async () => {
-    if (!isCrudRoute.value) {
-        return null;
-    }
-    return await modelInfoStore.fetchModelInfo({ app: app.value, model: model.value });
-}, null);
+// Model info is permission-filtered, so there is nothing to ask for without a session.
+// Reading loggedIn synchronously keeps both computeds reactive to sign-in and sign-out.
+// It matters most on sign-out: VUEDA empties its caches key by key, VueUse 14 flushes
+// computedAsync synchronously, and an unguarded fetch here re-runs between two of those
+// deletions and refills the cache VUEDA is still clearing, once per deletion.
+const canFetchMetadata = computed(() => isCrudRoute.value && userStore.loggedIn);
 
-const modelListTo = computedAsync(async () => {
-    if (!isCrudRoute.value) {
-        return null;
-    }
-    return await getCRUDForTo({ app: app.value, model: model.value, view: "list" });
-}, null);
+// The view reports its own metadata failure. Here the cost is the verbose model name,
+// and modelTitle already falls back to the model slug, so there is nothing more to say.
+// VueUse 14 otherwise defaults onError to reportError, which logs an uncaught error.
+const ignoreMetadataError = () => {};
+
+const modelInfo = computedAsync(
+    async () => {
+        if (!canFetchMetadata.value) {
+            return null;
+        }
+        return await modelInfoStore.fetchModelInfo({ app: app.value, model: model.value });
+    },
+    null,
+    { onError: ignoreMetadataError },
+);
+
+const modelListTo = computedAsync(
+    async () => {
+        if (!canFetchMetadata.value) {
+            return null;
+        }
+        return await getCRUDForTo({ app: app.value, model: model.value, view: "list" });
+    },
+    null,
+    { onError: ignoreMetadataError },
+);
 
 const routeTitle = computed(
     () => route.meta?.titles?.view || route.meta?.title || memoizedStartCase(String(route.name || "")),
