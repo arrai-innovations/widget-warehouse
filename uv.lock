@@ -1673,7 +1673,8 @@ wheels = [
 
 [[package]]
 name = "vueda"
-source = { editable = "../vueda/server" }
+version = "3.0.0a1.post1"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ansicolors" },
     { name = "argparse-color-formatter" },
@@ -1709,64 +1710,9 @@ dependencies = [
     { name = "twilio" },
     { name = "urllib3" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "ansicolors", specifier = ">=1.1.8,<2" },
-    { name = "argparse-color-formatter", specifier = ">=2.0.0.post1,<3" },
-    { name = "asgi-cors-middleware", specifier = ">=0.0.2,<0.1" },
-    { name = "celery", specifier = ">=5.5.3" },
-    { name = "channels", specifier = ">=4.2.0,<5" },
-    { name = "cryptography", specifier = ">=48.0.1" },
-    { name = "dj-database-url", specifier = ">=2.2.0,<3" },
-    { name = "dj-email-url", specifier = ">=1.0.6,<2" },
-    { name = "dj-rest-auth", specifier = ">=7.0.0,<8.0" },
-    { name = "django", specifier = ">=5.2.14,<6.2" },
-    { name = "django-allauth", extras = ["mfa"], specifier = ">=65.14.1" },
-    { name = "django-anymail", extras = ["mailgun", "sendgrid", "sparkpost"], specifier = ">=15.0,<16" },
-    { name = "django-cache-url", specifier = ">=3.4.5,<4" },
-    { name = "django-cors-headers", specifier = ">=4.9.0,<5" },
-    { name = "django-extensions", specifier = ">=4.0.0,<5" },
-    { name = "django-filter", specifier = ">=23.5" },
-    { name = "django-pghistory", specifier = ">=3.9.2,<4" },
-    { name = "django-pgtrigger", specifier = ">=4.17,<5" },
-    { name = "django-phonenumber-field", extras = ["phonenumberslite"], specifier = ">=8.1.0" },
-    { name = "django-private-storage", specifier = ">=3.1.1,<4" },
-    { name = "djangorestframework", specifier = ">=3.15.2,<4" },
-    { name = "drf-flex-fields", specifier = ">=1.0.2,<2" },
-    { name = "drf-writable-nested", specifier = ">=0.7.0,<1" },
-    { name = "hashids", specifier = ">=1.3.1,<1.4" },
-    { name = "ordered-set", specifier = ">=4.1.0,<5" },
-    { name = "phonenumbers", specifier = ">=9.0.15" },
-    { name = "pwned-passwords-django", specifier = ">=5.1.0,<6" },
-    { name = "rest-framework-generic-relations", specifier = ">=2.1.0,<3" },
-    { name = "sentry-sdk", specifier = ">=2.62.0,<3" },
-    { name = "starlette", specifier = ">=1.3.1" },
-    { name = "swapper", specifier = ">=1.4.0" },
-    { name = "twilio", specifier = ">=9.8.0" },
-    { name = "urllib3", specifier = ">=2.7.0,<3" },
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3b/55/e2cbe9e132a408cb68271f1b462fde3162db961790cba1f9fa43f9b5892e/vueda-3.0.0a1.post1-py3-none-any.whl", hash = "sha256:ea206ce0e44a52559e6d6a1813f6b70f008e2231f966fb9311ffe972eff99d85", size = 356350, upload-time = "2026-09-14T23:31:36.516Z" },
 ]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "coverage", specifier = ">=7.14.1" },
-    { name = "django-extensions", specifier = "==4.0.0" },
-    { name = "django-view-manager", specifier = "==2.0.0" },
-    { name = "drf-spectacular", specifier = ">=0.28.0,<0.29" },
-    { name = "gunicorn", specifier = ">=26.0.0" },
-    { name = "ipdb", specifier = ">=0.13.13" },
-    { name = "jinja2", specifier = ">=3.1.6" },
-    { name = "psycopg", extras = ["binary"], specifier = ">=3.3.3" },
-    { name = "pytest", specifier = ">=7.4.3" },
-    { name = "pytest-cov", specifier = ">=4.1.0" },
-    { name = "pytest-django", specifier = ">=4.7.0" },
-    { name = "pytest-order", specifier = ">=1.2.0" },
-    { name = "pytest-sugar", specifier = ">=0.9.7" },
-    { name = "pytest-watcher", specifier = ">=0.4.3" },
-    { name = "pytest-xdist", specifier = ">=3.8.0" },
-    { name = "python-dateutil", specifier = ">=2.9.0.post0,<3" },
-]
-docs = [{ name = "pdoc", specifier = ">=16.0.0" }]
 
 [[package]]
 name = "wcwidth"
@@ -1800,7 +1746,7 @@ requires-dist = [
     { name = "gunicorn", specifier = ">=26.0.0,<27" },
     { name = "pillow", specifier = ">=12.2.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.0,<4" },
-    { name = "vueda", editable = "../vueda/server" },
+    { name = "vueda", specifier = ">=3.0.0a1.post1,<4" },
 ]
 
 [package.metadata.requires-dev]
