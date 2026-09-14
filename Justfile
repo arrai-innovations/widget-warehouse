@@ -32,7 +32,7 @@ test-server:
   cd {{justfile_directory()}}/server && uv run --no-sync pytest
 
 test-client:
-  cd {{justfile_directory()}}/client && pnpm test run
+  cd {{justfile_directory()}}/client && pnpm test
 
 build: build-client
 
