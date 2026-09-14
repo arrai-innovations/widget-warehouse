@@ -32,7 +32,7 @@ import { storeDarkMode } from "@vueda/stores/storeDarkMode.js";
 import { storeModelInfo } from "@vueda/stores/storeModelInfo.js";
 import { storeUser } from "@vueda/stores/storeUser.js";
 import { computedAsync } from "@vueuse/core";
-import { unref } from "vue";
+import { computed, unref } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 
 import NavLogo from "@/nav/NavLogo.vue";
@@ -55,6 +55,27 @@ async function handleSignOut() {
     // detaches the toRef handles VUEDA composables hold into them.
     router.push({ name: "sign-in" });
 }
+
+// The signed-in user's own who-is response carries the name and the Django groups behind
+// every permission decision on screen, so the footer block names the account actually in
+// use rather than a fixed label. Groups are the demo roles: hyphenated slugs such as
+// "inventory-supervisor", rendered here the way the sign-in panel lists them.
+function humanizeRole(group) {
+    const words = group.replace(/[-_]/g, " ").trim();
+    return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+const userName = computed(() => userStore.loggedInUser?.name || userStore.loggedInUser?.email || "");
+
+const userRole = computed(() => {
+    const groups = userStore.loggedInUser?.groups ?? [];
+    if (groups.length) {
+        return groups.map(humanizeRole).join(", ");
+    }
+    // A developer superuser holds every permission without joining a demo role, so say that
+    // instead of leaving the line blank.
+    return userStore.loggedInUser?.is_superuser ? "Superuser" : "";
+});
 
 const models = [
     { title: "Inventory Records", model: "inventoryrecord", icon: faBoxesStacked },
@@ -124,8 +145,8 @@ function isModelActive(modelName) {
         <SidebarFooter>
             <SidebarUserBlock
                 v-if="userStore.loggedIn"
-                name="Warehouse Admin"
-                role="Widget Warehouse"
+                :name="userName"
+                :role="userRole"
                 class="rounded-vueda-control p-2"
             />
             <SidebarMenu>
