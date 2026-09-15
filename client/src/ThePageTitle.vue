@@ -27,7 +27,7 @@ page.bindActionZone(actionZone);
 <template>
     <header
         v-if="title || loading"
-        class="flex items-baseline justify-between gap-2 border-b bg-background px-4 py-3 md:gap-4"
+        class="flex items-baseline justify-between gap-2 border-b-hairline bg-background px-4 py-3 md:gap-4"
     >
         <h1 class="text-xl font-semibold leading-tight tracking-tight">
             {{ title }}

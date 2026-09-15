@@ -50,7 +50,8 @@ function useAccount(email) {
             <WidgetTextInput v-bind="slotProps" class="font-mono" />
         </template>
         <template #suffix>
-            <div class="mt-4 rounded hairline hairline-border bg-muted/25 p-4">
+            <!-- A rule, not a nested card: the panel already sits inside AuthorizingForm's card. -->
+            <div class="mt-4 border-t-hairline pt-4">
                 <p class="text-[length:var(--vueda-text-supporting)] font-medium">Demo accounts</p>
                 <p class="mt-1 text-[length:var(--vueda-text-supporting)] leading-[1.4] text-muted-foreground">
                     Every account below uses the password
@@ -59,14 +60,12 @@ function useAccount(email) {
                 </p>
                 <ul class="mt-3 flex flex-col gap-1">
                     <li v-for="account in DEMO_ACCOUNTS" :key="account.email">
-                        <Button
-                            emphasis="ghost"
-                            type="button"
-                            class="w-full justify-between gap-3 text-left"
-                            @click="useAccount(account.email)"
-                        >
-                            <span>{{ account.role }}</span>
-                            <span class="font-mono text-muted-foreground">{{ account.email }}</span>
+                        <Button emphasis="ghost" type="button" class="w-full" @click="useAccount(account.email)">
+                            <!-- Button centers its content; an inner row spreads role and email to the edges. -->
+                            <span class="flex w-full items-center justify-between gap-3 text-left">
+                                <span>{{ account.role }}</span>
+                                <span class="font-mono text-muted-foreground">{{ account.email }}</span>
+                            </span>
                         </Button>
                     </li>
                 </ul>
