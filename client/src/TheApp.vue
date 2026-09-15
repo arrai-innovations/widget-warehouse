@@ -56,7 +56,7 @@ onMounted(() => {
 <template>
     <div v-if="isGuestRoute" class="relative min-h-svh bg-background text-foreground">
         <header
-            class="absolute inset-x-0 top-0 z-10 flex h-12 items-center justify-between gap-2 border-b bg-sidebar px-4"
+            class="absolute inset-x-0 top-0 z-10 flex h-12 items-center justify-between gap-2 border-b-hairline bg-sidebar px-4"
         >
             <NavLogo class="min-w-0 whitespace-nowrap" />
             <Button emphasis="ghost" size="icon-sm" aria-label="Toggle color mode" @click="darkModeStore.toggle()">
@@ -68,7 +68,7 @@ onMounted(() => {
     <SidebarProvider v-else>
         <TheNav />
         <SidebarInset>
-            <header class="flex h-12 shrink-0 items-center gap-2 border-b bg-sidebar px-4">
+            <header class="flex h-12 shrink-0 items-center gap-2 border-b-hairline bg-sidebar px-4">
                 <SidebarTrigger>
                     <template #icon>
                         <FontAwesomeIcon :icon="faBars" fixed-width />
@@ -79,7 +79,7 @@ onMounted(() => {
                     <TheBreadcrumb />
                 </div>
             </header>
-            <div class="border-b bg-background px-4 py-2 md:hidden">
+            <div class="border-b-hairline bg-background px-4 py-2 md:hidden">
                 <TheBreadcrumb />
             </div>
             <StickyStackProvider>
