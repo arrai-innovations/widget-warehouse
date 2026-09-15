@@ -23,6 +23,10 @@ server/config.local.toml
 # Local gunicorn overrides (machine-specific paths, e.g. TLS cert/key)
 server/gunicorn.conf.py
 
+# Logs. config.settings.production routes the root logger to a rotating file in
+# LOGS_FOLDER, which defaults to the working directory.
+django.log*
+
 # Environment
 .env.local
 .env.*.local

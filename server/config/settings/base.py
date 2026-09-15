@@ -27,6 +27,10 @@ CACHES = {
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
+# The client reads this cookie by name through VITE_CSRF_COOKIE_NAME, so every settings
+# module has to agree on it.
+CSRF_COOKIE_NAME = "widget-warehouse-csrf-token"
+
 # Imported after get_defaults() so PERMISSION_NAMES_MAPPING is already set. If you
 # override PERMISSION_NAMES_MAPPING in a child settings module (e.g. local.py,
 # production.py), re-import patch_django there after the customization.

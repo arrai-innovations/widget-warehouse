@@ -34,6 +34,10 @@ MEDIA_ROOT = "/srv/widgetwarehouse/media"
 # has to outlive the deploy. A /tmp path is a development convenience only.
 DATABASE_BACKUP_DIR = "/srv/widgetwarehouse/backups"
 
+# The rotating file handler writes django.log here. The default is the current
+# directory, which would put it in the deployment checkout.
+LOGS_FOLDER = "/srv/widgetwarehouse/logs"
+
 # Required by config.settings.production. SENTRY_TRACES_SAMPLE_RATE affects
 # performance traces only; errors are always reported.
 SENTRY_DSN = "https://examplekey@o0.ingest.us.sentry.io/0"
