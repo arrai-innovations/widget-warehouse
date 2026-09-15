@@ -124,20 +124,24 @@ function isModelActive(modelName) {
                 <SidebarGroupLabel>Catalog</SidebarGroupLabel>
                 <SidebarGroupContent>
                     <SidebarMenu>
-                        <SidebarMenuItem v-for="model in models" :key="model.title">
-                            <SidebarMenuSkeleton v-if="unref(model.to) === undefined" :show-icon="!!model.icon" />
-                            <SidebarMenuButton
-                                v-else-if="unref(model.to)"
-                                as-child
-                                :is-active="isModelActive(model.model)"
-                                :tooltip="model.title"
-                            >
-                                <RouterLink :to="unref(model.to)">
-                                    <FontAwesomeIcon v-if="model.icon" :icon="model.icon" />
-                                    <span>{{ model.title }}</span>
-                                </RouterLink>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
+                        <!-- Skip the whole item for a model the role cannot list. An empty item would
+                             still take a slot in the menu's gap rhythm and leave a visible hole. -->
+                        <template v-for="model in models" :key="model.title">
+                            <SidebarMenuItem v-if="unref(model.to) !== null">
+                                <SidebarMenuSkeleton v-if="unref(model.to) === undefined" :show-icon="!!model.icon" />
+                                <SidebarMenuButton
+                                    v-else
+                                    as-child
+                                    :is-active="isModelActive(model.model)"
+                                    :tooltip="model.title"
+                                >
+                                    <RouterLink :to="unref(model.to)">
+                                        <FontAwesomeIcon v-if="model.icon" :icon="model.icon" />
+                                        <span>{{ model.title }}</span>
+                                    </RouterLink>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </template>
                     </SidebarMenu>
                 </SidebarGroupContent>
             </SidebarGroup>
@@ -165,7 +169,7 @@ function isModelActive(modelName) {
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton variant="outline" tooltip="Toggle color mode" @click="darkModeStore.toggle()">
+                    <SidebarMenuButton tooltip="Toggle color mode" @click="darkModeStore.toggle()">
                         <FontAwesomeIcon v-if="darkModeStore.isDark" :icon="faSunBright" fixed-width />
                         <FontAwesomeIcon v-else :icon="faCloudMoon" fixed-width />
                         <span>Switch to {{ darkModeStore.isDark ? "light" : "dark" }} mode</span>
