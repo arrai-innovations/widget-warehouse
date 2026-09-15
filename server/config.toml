@@ -1,13 +1,16 @@
 # Shared config (safe to commit).
 #
-# These defaults target the public production domain. Override in config.local.toml or
-# a deployment-specific config layer as needed.
+# These are development defaults. Every deployment overrides what it needs in
+# config.local.toml, including a developer's machine: local development is one
+# more deployment of this project, not a special case. See
+# config.local.toml.example for the keys a deployment supplies, with values
+# shaped for the public production deployment.
+#
+# SECRET_KEY and DATABASE_URL are deliberately absent. Neither has a default in
+# VUEDA, so a deployment that omits one fails at startup instead of running on a
+# published key or migrating whichever database it happened to reach.
 
-ALLOWED_HOSTS = ["widgetwarehouse.com"]
 TIME_ZONE = "UTC"
-
-FRONTEND_DOMAIN = "https://widgetwarehouse.com"
-FRONTEND_LOGIN_URL = "/login"
 
 SITE_NAME = "Widget Warehouse"
 SUPPORT_EMAIL = "support@widgetwarehouse.com"
@@ -15,10 +18,14 @@ SUPPORT_EMAIL = "support@widgetwarehouse.com"
 AUTH_USER_MODEL = "users.User"
 LOCAL_APPS = ["widget_warehouse.users"]
 
+FRONTEND_LOGIN_URL = "/login"
+
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+FRONTEND_DOMAIN = "http://localhost:8080"
+CSRF_TRUSTED_ORIGINS = ["http://localhost:8080"]
+CORS_ALLOWED_ORIGINS = ["http://localhost:8080"]
+
 STATIC_ROOT = "/tmp/static"
 STATICFILES_DIRS = []
-
-CSRF_TRUSTED_ORIGINS = ["https://widgetwarehouse.com"]
-CORS_ALLOWED_ORIGINS = ["https://widgetwarehouse.com"]
 
 DATABASE_BACKUP_DIR = "/tmp/db-backups"

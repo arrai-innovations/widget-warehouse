@@ -1,0 +1,50 @@
+# Deployment config. Copy to config.local.toml and edit.
+#
+# config.toml holds development defaults. This file is the layer that overrides
+# them per deployment, and the only layer that holds secrets. config.local.toml
+# is gitignored, so nothing here reaches the repository.
+#
+# The values below describe the public production deployment at
+# widgetwarehouse.com. A developer needs only the two required keys and can
+# delete the rest, since config.toml already targets localhost.
+
+# Required in every deployment.
+SECRET_KEY = "replace-with-a-unique-random-50-character-value"
+DATABASE_URL = "postgres://widget_warehouse@localhost:5432/widget_warehouse"
+
+# Public hostname and the origins the client is served from. ALLOWED_HOSTS takes
+# a bare host, with no scheme and no port. The origins take both.
+ALLOWED_HOSTS = ["widgetwarehouse.com"]
+FRONTEND_DOMAIN = "https://widgetwarehouse.com"
+CSRF_TRUSTED_ORIGINS = ["https://widgetwarehouse.com"]
+CORS_ALLOWED_ORIGINS = ["https://widgetwarehouse.com"]
+
+# The web server serves both of these directly; Django does not serve either
+# outside DEBUG. STATIC_ROOT receives collectstatic output on every server
+# deploy. MEDIA_ROOT holds uploaded datasheets and images, so it must survive a
+# deploy and belongs in whatever gets backed up.
+#
+# Neither is the built client. The deployer unpacks that into its own CLIENT_DIR,
+# configured on the deployer rather than here.
+STATIC_ROOT = "/srv/widgetwarehouse/static"
+MEDIA_ROOT = "/srv/widgetwarehouse/media"
+
+# `vueda update` writes a pg_dump here before it migrates, and deletes dumps
+# older than a week. It runs on every server deploy, so this path needs room and
+# has to outlive the deploy. A /tmp path is a development convenience only.
+DATABASE_BACKUP_DIR = "/srv/widgetwarehouse/backups"
+
+# Required by config.settings.production. SENTRY_TRACES_SAMPLE_RATE affects
+# performance traces only; errors are always reported.
+SENTRY_DSN = "https://examplekey@o0.ingest.us.sentry.io/0"
+SENTRY_ENVIRONMENT = "production"
+SENTRY_TRACES_SAMPLE_RATE = 0.1
+
+# Optional. Mail prints to the console by default, which is enough for a demo
+# whose accounts are seeded with published passwords. Password reset needs a real
+# backend, and naming the anymail backend makes all four keys below required.
+# EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
+# ANYMAIL_MAILGUN_API_KEY = ""
+# ANYMAIL_MAILGUN_SENDER_DOMAIN = "widgetwarehouse.com"
+# ANYMAIL_MAILGUN_WEBHOOK_SIGNING_KEY = ""
+# ANYMAIL_WEBHOOK_SECRET = ""
