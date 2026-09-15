@@ -2,8 +2,6 @@ from config.settings.base import *  # noqa: F403
 
 DEBUG = True
 
-CSRF_COOKIE_NAME = "widget-warehouse-csrf-token"
-
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_COOKIE_SECURE = False
