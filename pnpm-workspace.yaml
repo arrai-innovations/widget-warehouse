@@ -1,3 +1,4 @@
 packages:
   - client
-
+allowBuilds:
+  vue-demi: true
