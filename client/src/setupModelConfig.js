@@ -9,7 +9,32 @@ export function setupModelConfig(pinia) {
             expand: [],
         },
         {
+            // The list shows the columns an operator scans by. Slug, description, file fields,
+            // the warranty duration, and the specifications JSON stay on the read view: in a
+            // list they are mostly empty or raw, and they push the grid into horizontal scroll.
             list: {
+                displayFields: [
+                    "name",
+                    "sku",
+                    "category",
+                    "supplier",
+                    "unit_price",
+                    "weight_kg",
+                    "is_active",
+                    "release_date",
+                    "updated_at",
+                ],
+                fetchFields: [
+                    "name",
+                    "sku",
+                    "category",
+                    "supplier",
+                    "unit_price",
+                    "weight_kg",
+                    "is_active",
+                    "release_date",
+                    "updated_at",
+                ],
                 expand: ["category", "supplier"],
                 expandDetails: {
                     category: {

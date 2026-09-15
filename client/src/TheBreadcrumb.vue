@@ -69,14 +69,17 @@ const routeTitle = computed(
     () => route.meta?.titles?.view || route.meta?.title || memoizedStartCase(String(route.name || "")),
 );
 const appTitle = computed(() => memoizedStartCase(app.value || ""));
-const modelTitle = computed(() => modelInfo.value?.verboseNamePlural || memoizedStartCase(model.value || ""));
+// storeModelInfo camelCases only nested sections (fields, filtering, expand); root keys such as
+// verbose_name_plural keep the server's snake_case spelling. Django verbose names are lowercase, so
+// title-case them the way ViewList titles its page ("List Purchase Orders").
+const modelTitle = computed(() => memoizedStartCase(modelInfo.value?.verbose_name_plural || model.value || ""));
 
 const actionTitle = computed(() => {
     if (action.value === "list") {
         return modelTitle.value;
     }
     if (action.value === "create") {
-        return `New ${modelInfo.value?.verboseName || memoizedStartCase(model.value || "")}`;
+        return `New ${memoizedStartCase(modelInfo.value?.verbose_name || model.value || "")}`;
     }
     if (action.value === "read" && pk.value) {
         return `Record ${pk.value}`;

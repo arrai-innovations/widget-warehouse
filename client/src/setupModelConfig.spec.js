@@ -58,4 +58,23 @@ describe("setupModelConfig", () => {
             },
         });
     });
+
+    it("limits the Widget list to scannable columns and fetches only those", () => {
+        setupModelConfig({});
+
+        const [, , viewConfigs] = mocks.setConfig.mock.calls.find(([target]) => target.model === "widget");
+
+        expect(viewConfigs.list.displayFields).toEqual([
+            "name",
+            "sku",
+            "category",
+            "supplier",
+            "unit_price",
+            "weight_kg",
+            "is_active",
+            "release_date",
+            "updated_at",
+        ]);
+        expect(viewConfigs.list.fetchFields).toEqual(viewConfigs.list.displayFields);
+    });
 });
