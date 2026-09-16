@@ -2,7 +2,6 @@ version: 2.1
 
 orbs:
     github: arrai/github@5.0.0
-    utils: arrai/utils@1.23.3
     vueda: arrai/vueda@1.1.1
 
 # Both parameters are declared in both continued configs. A change touching client/ and
@@ -23,11 +22,8 @@ executors:
 
 commands:
     client-install:
-        description: "Install workspace packages. The Font Awesome scopes come from npm.arrai.dev, whose registry mapping is in the committed .npmrc; only the token is added here."
+        description: "Install workspace packages. Every dependency resolves from the public registry, so this needs no credentials and a fork's pipeline works unchanged."
         steps:
-            - utils/add_npm_config:
-                  registry: npm.arrai.dev
-                  token: $NPM_ARRAI_DEV_TOKEN
             - run:
                   name: Install packages
                   command: pnpm install --frozen-lockfile
@@ -101,8 +97,8 @@ workflows:
                           only: /^client-v.*/
                       branches:
                           ignore: /.*/
-            # arrai-global carries GITHUB_TOKEN for the release. NPM_ARRAI_DEV_TOKEN and
-            # DEPLOYER_KEY are project environment variables.
+            # arrai-global carries GITHUB_TOKEN for the release. DEPLOYER_KEY is a project
+            # environment variable.
             - client-release:
                   name: client-release-production
                   context: arrai-global

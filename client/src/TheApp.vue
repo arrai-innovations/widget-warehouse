@@ -2,8 +2,7 @@
 import TheBreadcrumb from "./TheBreadcrumb.vue";
 import TheNav from "./TheNav.vue";
 import ThePageTitle from "./ThePageTitle.vue";
-import { faBars, faCloudMoon, faSunBright } from "@fortawesome/sharp-duotone-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import { PhCloudMoon, PhList, PhSun } from "@phosphor-icons/vue";
 import Button from "@vueda/controls/button/Button.vue";
 import Sonner from "@vueda/feedback/toast/Sonner.vue";
 import SidebarInset from "@vueda/navigation/sidebar/SidebarInset.vue";
@@ -60,7 +59,8 @@ onMounted(() => {
         >
             <NavLogo class="min-w-0 whitespace-nowrap" />
             <Button emphasis="ghost" size="icon-sm" aria-label="Toggle color mode" @click="darkModeStore.toggle()">
-                <FontAwesomeIcon :icon="darkModeStore.isDark ? faSunBright : faCloudMoon" fixed-width />
+                <PhSun v-if="darkModeStore.isDark" weight="duotone" />
+                <PhCloudMoon v-else weight="duotone" />
             </Button>
         </header>
         <RouterView />
@@ -71,7 +71,7 @@ onMounted(() => {
             <header class="flex h-12 shrink-0 items-center gap-2 border-b-hairline bg-sidebar px-4">
                 <SidebarTrigger>
                     <template #icon>
-                        <FontAwesomeIcon :icon="faBars" fixed-width />
+                        <PhList weight="duotone" />
                     </template>
                 </SidebarTrigger>
                 <NavLogo class="md:hidden" />

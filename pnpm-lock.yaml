@@ -31,7 +31,7 @@ importers:
         version: 2.0.11
       '@arrai-innovations/vueda':
         specifier: ^3.0.0-alpha.2
-        version: 3.0.0-alpha.2(@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2)))(@arrai-innovations/vue-sonner@2.0.11)(@floating-ui/dom@1.8.0)(@fortawesome/fontawesome-svg-core@7.2.0)(@fortawesome/vue-fontawesome@3.2.0(@fortawesome/fontawesome-svg-core@7.2.0)(vue@3.5.32(typescript@6.0.2)))(@sentry/vue@9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2)))(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(luxon@3.7.2)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(typescript@6.0.2)(vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)))(vue-router@4.6.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))
+        version: 3.0.0-alpha.2(@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2)))(@arrai-innovations/vue-sonner@2.0.11)(@floating-ui/dom@1.8.0)(@sentry/vue@9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2)))(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(luxon@3.7.2)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(typescript@6.0.2)(vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)))(vue-router@4.6.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))
       '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
@@ -41,15 +41,9 @@ importers:
       '@fontsource/barlow-condensed':
         specifier: ^5.2.8
         version: 5.2.8
-      '@fortawesome/fontawesome-svg-core':
-        specifier: ^7.2.0
-        version: 7.2.0
-      '@fortawesome/sharp-duotone-solid-svg-icons':
-        specifier: ^7.2.0
-        version: 7.2.0
-      '@fortawesome/vue-fontawesome':
-        specifier: ^3.2.0
-        version: 3.2.0(@fortawesome/fontawesome-svg-core@7.2.0)(vue@3.5.32(typescript@6.0.2))
+      '@phosphor-icons/vue':
+        specifier: ^2.2.1
+        version: 2.2.1(vue@3.5.32(typescript@6.0.2))
       '@sentry/vue':
         specifier: ^9.47.1
         version: 9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))
@@ -532,24 +526,6 @@ packages:
   '@fontsource/barlow-condensed@5.2.8':
     resolution: {integrity: sha512-cmCWNfh7oCmfarGDlhiJRkl4HOgt9aOqki7IYtDOaI3qLCeEO/8VjiZeAx/2PEPf4K36YxXDjAlOWwW/anQUZA==}
 
-  '@fortawesome/fontawesome-common-types@7.2.0':
-    resolution: {integrity: sha512-IpR0bER9FY25p+e7BmFH25MZKEwFHTfRAfhOyJubgiDnoJNsSvJ7nigLraHtp4VOG/cy8D7uiV0dLkHOne5Fhw==}
-    engines: {node: '>=6'}
-
-  '@fortawesome/fontawesome-svg-core@7.2.0':
-    resolution: {integrity: sha512-6639htZMjEkwskf3J+e6/iar+4cTNM9qhoWuRfj9F3eJD6r7iCzV1SWnQr2Mdv0QT0suuqU8BoJCZUyCtP9R4Q==}
-    engines: {node: '>=6'}
-
-  '@fortawesome/sharp-duotone-solid-svg-icons@7.2.0':
-    resolution: {integrity: sha512-lhk4wen6fmHuxDgOkcfTWXNXGdKDThR7EJtTrBtyd/pjXuDzOUmlO95CMCZMHOaqo/Xxa7hyl32Pep171DN0vQ==}
-    engines: {node: '>=6'}
-
-  '@fortawesome/vue-fontawesome@3.2.0':
-    resolution: {integrity: sha512-7BwGjTZn8QDvVEIu8fvkHhsDRRv//tq7jtsldaDhF3dE1fyWLIQcEg3zvIzy33su7kcppWsZZ6XRYP5wp3UCgQ==}
-    peerDependencies:
-      '@fortawesome/fontawesome-svg-core': ~1 || ~6 || ~7
-      vue: '>= 3.0.0 < 4'
-
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
     engines: {node: '>=18.18.0'}
@@ -619,6 +595,12 @@ packages:
 
   '@package-json/types@0.0.12':
     resolution: {integrity: sha512-uu43FGU34B5VM9mCNjXCwLaGHYjXdNincqKLaraaCW+7S2+SmiBg1Nv8bPnmschrIfZmfKNY9f3fC376MRrObw==}
+
+  '@phosphor-icons/vue@2.2.1':
+    resolution: {integrity: sha512-3RNg1utc2Z5RwPKWFkW3eXI/0BfQAwXgtFxPUPeSzi55jGYUq16b+UqcgbKLazWFlwg5R92OCLKjDiJjeiJcnA==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      vue: '>=3.2.39'
 
   '@rollup/rollup-android-arm-eabi@4.60.1':
     resolution: {integrity: sha512-d6FinEBLdIiK+1uACUttJKfgZREXrF0Qc2SmLII7W2AD8FfiZ9Wjd+rD/iRuf5s5dWrr1GgwXCvPqOuDquOowA==}
@@ -3205,7 +3187,7 @@ snapshots:
 
   '@arrai-innovations/vue-sonner@2.0.11': {}
 
-  '@arrai-innovations/vueda@3.0.0-alpha.2(@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2)))(@arrai-innovations/vue-sonner@2.0.11)(@floating-ui/dom@1.8.0)(@fortawesome/fontawesome-svg-core@7.2.0)(@fortawesome/vue-fontawesome@3.2.0(@fortawesome/fontawesome-svg-core@7.2.0)(vue@3.5.32(typescript@6.0.2)))(@sentry/vue@9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2)))(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(luxon@3.7.2)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(typescript@6.0.2)(vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)))(vue-router@4.6.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))':
+  '@arrai-innovations/vueda@3.0.0-alpha.2(@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2)))(@arrai-innovations/vue-sonner@2.0.11)(@floating-ui/dom@1.8.0)(@sentry/vue@9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2)))(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(luxon@3.7.2)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(typescript@6.0.2)(vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)))(vue-router@4.6.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))':
     dependencies:
       '@arrai-innovations/reactive-helpers': 25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2))
       '@arrai-innovations/vue-sonner': 2.0.11
@@ -3240,9 +3222,6 @@ snapshots:
       vue-draggable-next: 2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2))
       vue-input-otp: 0.3.2(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2))
       vue-router: 4.6.4(vue@3.5.32(typescript@6.0.2))
-    optionalDependencies:
-      '@fortawesome/fontawesome-svg-core': 7.2.0
-      '@fortawesome/vue-fontawesome': 3.2.0(@fortawesome/fontawesome-svg-core@7.2.0)(vue@3.5.32(typescript@6.0.2))
     transitivePeerDependencies:
       - '@floating-ui/dom'
       - '@tiptap/core'
@@ -3629,21 +3608,6 @@ snapshots:
 
   '@fontsource/barlow-condensed@5.2.8': {}
 
-  '@fortawesome/fontawesome-common-types@7.2.0': {}
-
-  '@fortawesome/fontawesome-svg-core@7.2.0':
-    dependencies:
-      '@fortawesome/fontawesome-common-types': 7.2.0
-
-  '@fortawesome/sharp-duotone-solid-svg-icons@7.2.0':
-    dependencies:
-      '@fortawesome/fontawesome-common-types': 7.2.0
-
-  '@fortawesome/vue-fontawesome@3.2.0(@fortawesome/fontawesome-svg-core@7.2.0)(vue@3.5.32(typescript@6.0.2))':
-    dependencies:
-      '@fortawesome/fontawesome-svg-core': 7.2.0
-      vue: 3.5.32(typescript@6.0.2)
-
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.7':
@@ -3716,6 +3680,10 @@ snapshots:
   '@nolyfill/is-core-module@1.0.39': {}
 
   '@package-json/types@0.0.12': {}
+
+  '@phosphor-icons/vue@2.2.1(vue@3.5.32(typescript@6.0.2))':
+    dependencies:
+      vue: 3.5.32(typescript@6.0.2)
 
   '@rollup/rollup-android-arm-eabi@4.60.1':
     optional: true
