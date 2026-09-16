@@ -39,6 +39,35 @@ orders that have none, which is what backfills orders seeded before the workflow
 `seed_demo_users` resets each demo password on every run, so the credentials on the
 sign-in view always work.
 
+## Reset the Demo
+
+```bash
+just manage reset_demo
+```
+
+Reseeding restores what it seeded, but it cannot undo. A row an evaluator created stays, an
+uploaded datasheet stays, and an order walked from draft to approved stays approved, since
+`seed_workflows` only gives a starting state to orders that have none. A public instance
+therefore runs out of drafts to submit, which is the moment the walkthrough is built around.
+
+`reset_demo` is the undo half. It discards every catalog row, the purchase orders and their
+workflow states, the history behind them, and the uploaded files, then runs the three seeds
+in order. The seeded ids are stable from one reset to the next, so a bookmarked detail URL
+still resolves afterwards. Accounts outside the five demo users are left alone, including
+the superuser, and so is the workflow definition, which `seed_workflows` converges on
+anyway.
+
+Pass `--noinput` to skip the confirmation prompt. That is how a scheduled reset of the
+public instance runs it, from the server's deployment checkout (`SERVER_DIR` on the
+deployer):
+
+```cron
+0 4 * * * cd $SERVER_DIR && DJANGO_SETTINGS_MODULE=config.settings.production uv run --no-sync python server/manage.py reset_demo --noinput
+```
+
+A deploy does not reset. `update.sh` runs the three seeds so a fresh deployment has a demo
+to sign in to, and leaves an evaluator part way through an order alone.
+
 ## Demo Roles
 
 Five groups and one user per group are seeded as data by `seed_demo_users`, not as
