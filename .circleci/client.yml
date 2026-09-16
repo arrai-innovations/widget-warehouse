@@ -1,0 +1,115 @@
+version: 2.1
+
+orbs:
+    github: arrai/github@5.0.0
+    utils: arrai/utils@1.23.3
+    vueda: arrai/vueda@1.1.1
+
+# Both parameters are declared in both continued configs. A change touching client/ and
+# server/ together merges the two files into one configuration, and an undeclared parameter
+# referenced by the other half would fail that pipeline.
+parameters:
+    run-client-workflows:
+        type: boolean
+        default: false
+    run-server-workflows:
+        type: boolean
+        default: false
+
+executors:
+    client-node-lts:
+        docker:
+            - image: cimg/node:lts
+
+commands:
+    client-install:
+        description: "Install workspace packages. The Font Awesome scopes come from npm.arrai.dev, whose registry mapping is in the committed .npmrc; only the token is added here."
+        steps:
+            - utils/add_npm_config:
+                  registry: npm.arrai.dev
+                  token: $NPM_ARRAI_DEV_TOKEN
+            - run:
+                  name: Install packages
+                  command: pnpm install --frozen-lockfile
+
+jobs:
+    client-test:
+        executor: client-node-lts
+        resource_class: medium
+        circleci_ip_ranges: true
+        steps:
+            - checkout
+            - client-install
+            - run:
+                  name: Run tests
+                  command: pnpm -C client test
+
+    client-release:
+        executor: client-node-lts
+        resource_class: medium
+        circleci_ip_ranges: true
+        steps:
+            - checkout
+            - client-install
+            - run:
+                  name: Build the client
+                  command: |
+                      VITE_PACKAGE_VERSION="${CIRCLE_TAG#client-v}" pnpm -C client run build
+            - run:
+                  name: Package the client
+                  command: |
+                      mkdir -p ~/artifacts
+                      cd client/dist
+                      # The deployer keeps the previous build's assets by deleting only the
+                      # files this manifest does not list, so a session already running keeps
+                      # its hashed chunks through a deploy. Creating the file before find runs
+                      # is what puts manifest.json in its own listing; without that the next
+                      # deploy deletes it and preservation silently stops.
+                      echo '[]' > manifest.json
+                      find . -type f -printf '%P\n' | jq -R -s 'split("\n")[:-1]' > manifest.json
+                      zip -r ~/artifacts/dist.zip *
+            - store_artifacts:
+                  path: ~/artifacts/dist.zip
+            - github/install_github_cli
+            # The deployer fetches dist.zip from this release by tag, so the asset name is
+            # part of the contract with GITHUB_RELEASE_FILENAME on the deployer.
+            - github/create_release:
+                  files: ~/artifacts/dist.zip
+                  prerelease: false
+            - vueda/deploy:
+                  deploy_url: "https://widgetwarehouse.com/deploy/client"
+                  deploy_to: "Production"
+                  deploy_type: tag
+
+workflows:
+    client-test:
+        jobs:
+            - client-test:
+                  name: client-test
+                  filters:
+                      branches:
+                          only: /.*/
+
+    # A release runs the suite again in its own workflow, because `requires` only reaches
+    # jobs in the same workflow.
+    client-release:
+        jobs:
+            - client-test:
+                  name: client-release-test
+                  filters:
+                      tags:
+                          only: /^client-v.*/
+                      branches:
+                          ignore: /.*/
+            # arrai-global carries GITHUB_TOKEN for the release. NPM_ARRAI_DEV_TOKEN and
+            # DEPLOYER_KEY are project environment variables.
+            - client-release:
+                  name: client-release-production
+                  context: arrai-global
+                  requires:
+                      - client-release-test
+                  filters:
+                      tags:
+                          only: /^client-v.*/
+                      branches:
+                          ignore: /.*/

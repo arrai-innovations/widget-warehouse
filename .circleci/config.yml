@@ -1,0 +1,58 @@
+version: 2.1
+
+# A setup config, so the two halves of the monorepo run as separate pipelines. Continuation
+# selects the configs for the work at hand: a push continues into the configs whose paths
+# changed, and a release tag continues into just that half's config.
+setup: true
+
+orbs:
+    continuation: circleci/continuation@1.0.0
+    path-filtering: circleci/path-filtering@3.0.0
+
+workflows:
+    server-release-on-tag:
+        jobs:
+            - continuation/continue:
+                  name: server-release-on-tag
+                  configuration_path: .circleci/server.yml
+                  parameters: '{"run-server-workflows": true}'
+                  filters:
+                      tags:
+                          only: /^server-v.*/
+                      branches:
+                          ignore: /.*/
+    client-release-on-tag:
+        jobs:
+            - continuation/continue:
+                  name: client-release-on-tag
+                  configuration_path: .circleci/client.yml
+                  parameters: '{"run-client-workflows": true}'
+                  filters:
+                      tags:
+                          only: /^client-v.*/
+                      branches:
+                          ignore: /.*/
+    detect-code-changes:
+        jobs:
+            # Every matched row's config file is merged into one continuation, so a change
+            # touching both halves runs both. That shared namespace is why each config
+            # declares both parameters and prefixes its jobs and executors.
+            - path-filtering/filter:
+                  name: detect-code-changes
+                  mapping: |
+                      server/.* run-server-workflows true .circleci/server.yml
+                      client/.* run-client-workflows true .circleci/client.yml
+                      update\.sh$ run-server-workflows true .circleci/server.yml
+                      uv\.lock$ run-server-workflows true .circleci/server.yml
+                      pyproject\.toml$ run-server-workflows true .circleci/server.yml
+                      pnpm-lock\.yaml$ run-client-workflows true .circleci/client.yml
+                      pnpm-workspace\.yaml$ run-client-workflows true .circleci/client.yml
+                      package\.json$ run-client-workflows true .circleci/client.yml
+                      \.npmrc$ run-client-workflows true .circleci/client.yml
+                  base-revision: main
+                  config-path: .circleci/no-changes.yml
+                  filters:
+                      tags:
+                          ignore:
+                              - /^server-v.*/
+                              - /^client-v.*/

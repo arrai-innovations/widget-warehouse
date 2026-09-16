@@ -1,0 +1,62 @@
+version: 2.1
+
+orbs:
+    pytest: arrai/pytest@11.0.0
+    vueda: arrai/vueda@1.1.1
+
+# Both parameters are declared in both continued configs. A change touching client/ and
+# server/ together merges the two files into one configuration, and an undeclared parameter
+# referenced by the other half would fail that pipeline.
+parameters:
+    run-client-workflows:
+        type: boolean
+        default: false
+    run-server-workflows:
+        type: boolean
+        default: false
+
+executors:
+    server-python311-pg:
+        docker:
+            - image: cimg/python:3.11
+            - image: cimg/postgres:15.12
+
+workflows:
+    server-test-and-deploy:
+        jobs:
+            - pytest/pytest:
+                  name: server-pytest
+                  executor: server-python311-pg
+                  context: arrai-global
+                  wd: server
+                  pytest_args: -n2 --dist loadgroup
+                  # Badges need a host to publish to, which this project does not have yet.
+                  create_status_badge: false
+                  create_coverage_badge: false
+                  build_coverage: false
+                  config:
+                      - run:
+                            name: Configure tests
+                            command: |
+                                cd server
+                                cp config.circleci.toml config.local.toml
+                  filters:
+                      branches:
+                          only: /.*/
+                      tags:
+                          only: /^server-v.*/
+            # Checks out the tag on the server and runs update.sh there, which installs from
+            # the lockfile, collects static files, and migrates. The tag is the only payload,
+            # signed with DEPLOYER_KEY, a project environment variable.
+            - vueda/deploy:
+                  name: server-deploy-production
+                  requires:
+                      - server-pytest
+                  deploy_url: "https://widgetwarehouse.com/deploy/server"
+                  deploy_to: "Production"
+                  deploy_type: tag
+                  filters:
+                      tags:
+                          only: /^server-v.*/
+                      branches:
+                          ignore: /.*/
