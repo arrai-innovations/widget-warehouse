@@ -1,19 +1,18 @@
 <script setup>
 import {
-    faBoxesStacked,
-    faCloudMoon,
-    faCodeBranch,
-    faCog,
-    faFileImport,
-    faHandshake,
-    faLayerGroup,
-    faRightFromBracket,
-    faRightToBracket,
-    faSunBright,
-    faTag,
-    faWarehouse,
-} from "@fortawesome/sharp-duotone-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+    PhCloudMoon,
+    PhFileArrowUp,
+    PhGear,
+    PhGitBranch,
+    PhHandshake,
+    PhSignIn,
+    PhSignOut,
+    PhSquaresFour,
+    PhStack,
+    PhSun,
+    PhTag,
+    PhWarehouse,
+} from "@phosphor-icons/vue";
 import Sidebar from "@vueda/navigation/sidebar/Sidebar.vue";
 import SidebarContent from "@vueda/navigation/sidebar/SidebarContent.vue";
 import SidebarFooter from "@vueda/navigation/sidebar/SidebarFooter.vue";
@@ -32,7 +31,7 @@ import { storeDarkMode } from "@vueda/stores/storeDarkMode.js";
 import { storeModelInfo } from "@vueda/stores/storeModelInfo.js";
 import { storeUser } from "@vueda/stores/storeUser.js";
 import { computedAsync } from "@vueuse/core";
-import { computed, unref } from "vue";
+import { computed, markRaw, unref } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 
 import NavLogo from "@/nav/NavLogo.vue";
@@ -78,17 +77,19 @@ const userRole = computed(() => {
 });
 
 const models = [
-    { title: "Inventory Records", model: "inventoryrecord", icon: faBoxesStacked },
-    { title: "Promotions", model: "promotion", icon: faTag },
-    { title: "Purchase Orders", model: "purchaseorder", icon: faFileImport },
-    { title: "Suppliers", model: "supplier", icon: faHandshake },
-    { title: "Warehouses", model: "warehouse", icon: faWarehouse },
-    { title: "Widgets", model: "widget", icon: faCog },
-    { title: "Widget Categories", model: "widgetcategory", icon: faLayerGroup },
-    { title: "Widget Variants", model: "widgetvariant", icon: faCodeBranch },
+    { title: "Inventory Records", model: "inventoryrecord", icon: PhStack },
+    { title: "Promotions", model: "promotion", icon: PhTag },
+    { title: "Purchase Orders", model: "purchaseorder", icon: PhFileArrowUp },
+    { title: "Suppliers", model: "supplier", icon: PhHandshake },
+    { title: "Warehouses", model: "warehouse", icon: PhWarehouse },
+    { title: "Widgets", model: "widget", icon: PhGear },
+    { title: "Widget Categories", model: "widgetcategory", icon: PhSquaresFour },
+    { title: "Widget Variants", model: "widgetvariant", icon: PhGitBranch },
 ].map(({ icon = null, ...m }) => ({
     ...m,
-    icon,
+    // The icon is a component rather than a data object, so keep it out of the reactive
+    // proxy the way VUEDA's own icon registry does.
+    icon: icon && markRaw(icon),
     // Reading userStore.loggedIn synchronously makes this computedAsync react to
     // sign-in: it re-evaluates once authenticated and resolves the real route.
     // Returning early while logged out also avoids fetching model info before we
@@ -136,7 +137,7 @@ function isModelActive(modelName) {
                                     :tooltip="model.title"
                                 >
                                     <RouterLink :to="unref(model.to)">
-                                        <FontAwesomeIcon v-if="model.icon" :icon="model.icon" />
+                                        <component :is="model.icon" v-if="model.icon" weight="duotone" />
                                         <span>{{ model.title }}</span>
                                     </RouterLink>
                                 </SidebarMenuButton>
@@ -157,21 +158,21 @@ function isModelActive(modelName) {
                 <SidebarMenuItem v-if="!userStore.loggedIn">
                     <SidebarMenuButton as-child tooltip="Sign In">
                         <RouterLink to="/sign-in/">
-                            <FontAwesomeIcon :icon="faRightToBracket" fixed-width />
+                            <PhSignIn weight="duotone" />
                             <span>Sign In</span>
                         </RouterLink>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem v-else>
                     <SidebarMenuButton tooltip="Sign Out" @click="handleSignOut">
-                        <FontAwesomeIcon :icon="faRightFromBracket" fixed-width />
+                        <PhSignOut weight="duotone" />
                         <span>Sign Out</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton tooltip="Toggle color mode" @click="darkModeStore.toggle()">
-                        <FontAwesomeIcon v-if="darkModeStore.isDark" :icon="faSunBright" fixed-width />
-                        <FontAwesomeIcon v-else :icon="faCloudMoon" fixed-width />
+                        <PhSun v-if="darkModeStore.isDark" weight="duotone" />
+                        <PhCloudMoon v-else weight="duotone" />
                         <span>Switch to {{ darkModeStore.isDark ? "light" : "dark" }} mode</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
