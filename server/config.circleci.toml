@@ -1,0 +1,5 @@
+# Test configuration. The pytest job copies this over config.local.toml, which is the
+# layer config.settings.base reads after config.toml.
+
+SECRET_KEY = "circleci-not-a-secret"
+DATABASE_URL = "postgresql://postgres@127.0.0.1:5432/circle_test"
