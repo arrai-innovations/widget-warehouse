@@ -49,6 +49,8 @@ workflows:
                       pnpm-workspace\.yaml$ run-client-workflows true .circleci/client.yml
                       package\.json$ run-client-workflows true .circleci/client.yml
                       \.npmrc$ run-client-workflows true .circleci/client.yml
+                      \.circleci/.* run-server-workflows true .circleci/server.yml
+                      \.circleci/.* run-client-workflows true .circleci/client.yml
                   base-revision: main
                   config-path: .circleci/no-changes.yml
                   filters:

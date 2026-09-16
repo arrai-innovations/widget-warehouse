@@ -12,10 +12,35 @@ dependencies = [
 [dependency-groups]
 dev = [
   "ruff ==0.14.6",
+  "coverage >=7.14.1",
   "pytest >=7.0.0,<9",
+  "pytest-cov >=4.1.0",
   "pytest-django >=4.0.0,<5",
+  "pytest-xdist >=3.8.0",
 ]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.local"
 python_files = ["test_*.py", "*_test.py", "tests.py"]
+
+[tool.coverage.run]
+branch = true
+# `parallel` and `multiprocessing` keep the per-worker data files apart under pytest-xdist,
+# and match what the CI job's coverage step expects to combine.
+parallel = true
+concurrency = ["multiprocessing"]
+source = ["./widget_warehouse"]
+omit = [
+    "*/migrations/*",
+    "*tests*",
+]
+
+# The CI job uploads this directory from the repository root, not from server/.
+[tool.coverage.html]
+directory = "../htmlcov/"
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+]

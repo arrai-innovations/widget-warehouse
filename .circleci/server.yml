@@ -29,8 +29,11 @@ workflows:
                   executor: server-python311-pg
                   context: arrai-global
                   wd: server
-                  pytest_args: -n2 --dist loadgroup
-                  # Badges need a host to publish to, which this project does not have yet.
+                  pytest_args: "--cov -n2 --dist loadgroup"
+                  # The coverage report prints into the build log. Publishing it, and the
+                  # badges, waits on an ssh key for the artifacts host: rsync silently does
+                  # nothing when ~/.ssh/config has no matching entry, so turning these on
+                  # early would look like it worked.
                   create_status_badge: false
                   create_coverage_badge: false
                   build_coverage: false
