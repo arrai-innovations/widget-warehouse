@@ -9,9 +9,9 @@ const props = defineProps({
 });
 const animationClasses =
     "transition-all duration-200 ease-linear group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0";
-const widgetClassesAnimated = props.animated ? `overflow-hidden max-w-20 ${animationClasses}` : undefined;
-const warehouseClassesAnimated = props.animated ? `overflow-hidden max-w-30 pr-0.75 ${animationClasses}` : undefined;
-const comClassesAnimated = props.animated ? `overflow-hidden max-w-15 ${animationClasses}` : undefined;
+const widgetClassesAnimated = props.animated ? `${animationClasses}` : undefined;
+const warehouseClassesAnimated = props.animated ? `${animationClasses}` : undefined;
+const comClassesAnimated = props.animated ? `${animationClasses}` : undefined;
 </script>
 
 <template>

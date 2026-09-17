@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "@vueda/theme/vueda-tailwind/base.css";
 @import "@fontsource-variable/inter";
+@import "@fontsource-variable/inter/wght-italic.css";
 @import "@fontsource-variable/jetbrains-mono";
 @import "@fontsource/barlow-condensed/400.css";
 @import "@fontsource/barlow-condensed/400-italic.css";
