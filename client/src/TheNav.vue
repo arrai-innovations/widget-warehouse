@@ -115,10 +115,17 @@ function isModelActive(modelName) {
 
 <template>
     <Sidebar collapsible="icon">
-        <SidebarHeader>
-            <div class="flex items-center justify-between gap-2">
-                <NavLogo class="min-w-0 whitespace-nowrap" :animated="true" />
-            </div>
+        <SidebarHeader
+            class="h-12 items-center justify-center"
+            :theme-override="{
+                SidebarHeader: {
+                    root: {
+                        class: { 'p-2': false, 'p-0': true },
+                    },
+                },
+            }"
+        >
+            <NavLogo class="min-w-0 whitespace-nowrap" :animated="true" />
         </SidebarHeader>
         <SidebarContent>
             <SidebarGroup v-if="userStore.loggedIn">
