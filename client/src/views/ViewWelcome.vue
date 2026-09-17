@@ -6,7 +6,7 @@ import { computed } from "vue";
 const userStore = storeUser();
 const displayName = computed(() => userStore.user?.name || userStore.user?.email || "there");
 
-// Contribute this custom view's title to the layout's ThePageTitle display.
+// Contribute this custom view's title to the layout's PageTitle display.
 usePageTitle(() => ({ title: `Welcome, ${displayName.value}` }));
 </script>
 
