@@ -1,13 +1,13 @@
 <script setup>
 import TheBreadcrumb from "./TheBreadcrumb.vue";
 import TheNav from "./TheNav.vue";
-import ThePageTitle from "./ThePageTitle.vue";
 import { PhCloudMoon, PhList, PhSun } from "@phosphor-icons/vue";
 import Button from "@vueda/controls/button/Button.vue";
 import Sonner from "@vueda/feedback/toast/Sonner.vue";
 import SidebarInset from "@vueda/navigation/sidebar/SidebarInset.vue";
 import SidebarProvider from "@vueda/navigation/sidebar/SidebarProvider.vue";
 import SidebarTrigger from "@vueda/navigation/sidebar/SidebarTrigger.vue";
+import PageTitle from "@vueda/shell/page-title/PageTitle.vue";
 import StickyStackProvider from "@vueda/shell/sticky/StickyStackProvider.vue";
 import { storeDarkMode } from "@vueda/stores/storeDarkMode.js";
 import { usePageTitle } from "@vueda/use/usePageTitle.js";
@@ -17,9 +17,23 @@ import { RouterView, useRoute } from "vue-router";
 
 import NavLogo from "@/nav/NavLogo.vue";
 
-// Establish the page-title context above both ThePageTitle and the routed views, so each view can
+// Establish the page-title context above both PageTitle and the routed views, so each view can
 // contribute its title via usePageTitle and its page actions via PageActions.
-usePageTitle();
+const pageTitle = usePageTitle().current;
+const pageTitleTheme = {
+    PageTitle: {
+        root: { class: "bg-background" },
+        titleContainer: { class: { "px-5": false, "px-4": true } },
+        title: {
+            class: {
+                "text-[22px]": false,
+                "leading-[1.2]": false,
+                "tracking-[-0.005em]": false,
+                "text-xl leading-tight tracking-tight": true,
+            },
+        },
+    },
+};
 
 // Guest routes have no nav to show and nothing to break out of, so they skip the sidebar shell while
 // keeping a small amount of public chrome for branding and global controls.
@@ -84,7 +98,7 @@ onMounted(() => {
             </div>
             <StickyStackProvider>
                 <template #top>
-                    <ThePageTitle />
+                    <PageTitle v-if="pageTitle.title || pageTitle.loading" :theme-override="pageTitleTheme" />
                 </template>
                 <RouterView />
             </StickyStackProvider>
