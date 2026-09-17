@@ -29,13 +29,14 @@ page.bindActionZone(actionZone);
         v-if="title || loading"
         class="flex items-baseline justify-between gap-2 border-b-hairline bg-background px-4 py-3 md:gap-4"
     >
-        <h1 class="text-xl font-semibold leading-tight tracking-tight">
-            {{ title }}
-            <template v-if="loading">
-                &nbsp;
-                <LoadingSpinnerInline />
-            </template>
-        </h1>
+        <div class="flex items-center gap-2">
+            <h1 class="text-xl font-semibold leading-tight tracking-tight">
+                {{ title }}
+            </h1>
+            <span class="flex size-5 shrink-0 items-center justify-center text-base" data-qa="page-title-loading">
+                <LoadingSpinnerInline v-if="loading" />
+            </span>
+        </div>
         <!-- PageActions teleports the active view's buttons here. -->
         <div ref="actionZone" class="flex flex-wrap justify-end gap-1 self-center" data-qa="page-title-actions" />
     </header>
