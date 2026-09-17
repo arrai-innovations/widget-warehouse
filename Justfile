@@ -58,4 +58,4 @@ serve-server:
   cd {{justfile_directory()}}/server && uv run --no-sync gunicorn config.asgi -k asgi --reload --bind 0.0.0.0:8000
 
 serve-client:
-  cd {{justfile_directory()}}/client && pnpm run dev -- --force
+  cd {{justfile_directory()}}/client && pnpm exec vite --force
