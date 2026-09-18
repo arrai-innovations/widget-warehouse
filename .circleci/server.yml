@@ -20,6 +20,12 @@ executors:
         docker:
             - image: cimg/python:3.11
             - image: cimg/postgres:15.12
+            # Every settings module points the cache at Valkey through Django's Redis
+            # backend. No test exercises the cache yet, and the backend connects lazily,
+            # so the suite passes without this image today. It is here so the first test
+            # that does touch the cache or a cached session behaves in CI the way it does
+            # on a developer's machine, rather than failing only here.
+            - image: cimg/redis:7.2.4
 
 workflows:
     server-test-and-deploy:

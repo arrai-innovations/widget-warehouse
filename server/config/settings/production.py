@@ -18,19 +18,8 @@ locals().update(production_settings)
 # deployment config that set it true would quietly change what a deploy does.
 DEBUG = False
 
-# Share sessions, password reset cooldowns, and rate limits across worker processes.
-# Valkey uses Django's Redis backend. Deployments can override the address and key
-# prefix through CACHE_URL in config.local.toml or the environment.
-CACHES = {
-    "default": env.dj_cache_url(
-        "CACHE_URL",
-        default={
-            "BACKEND": "django.core.cache.backends.redis.RedisCache",
-            "LOCATION": "redis://127.0.0.1:6379/0",
-            "KEY_PREFIX": "widget-warehouse",
-        },
-    )
-}
+# CACHES comes from base, which reads the same CACHE_URL. Sessions move into it here:
+# base keeps database sessions so a developer's session survives a valkey restart.
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # Django's own clickjacking header, which VUEDA's default middleware list omits. Nothing in
