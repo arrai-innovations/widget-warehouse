@@ -47,10 +47,23 @@ jobs:
         steps:
             - checkout
             - client-install
+            # The built client reports the version in client/package.json, so a tag naming a
+            # different one would ship a build that misreports itself to the version check.
+            # Nothing keeps the two in step on its own, so fail here rather than at runtime.
+            - run:
+                  name: Check the tag matches the client version
+                  command: |
+                      package_version="$(node -p 'require("./client/package.json").version')"
+                      tag_version="${CIRCLE_TAG#client-v}"
+                      if [ "$package_version" != "$tag_version" ]; then
+                          echo "client/package.json is $package_version but the tag is $CIRCLE_TAG."
+                          echo "Bump client/package.json to $tag_version, or retag as client-v$package_version."
+                          exit 1
+                      fi
             - run:
                   name: Build the client
                   command: |
-                      VITE_PACKAGE_VERSION="${CIRCLE_TAG#client-v}" pnpm -C client run build
+                      pnpm -C client run build
             - run:
                   name: Package the client
                   command: |
