@@ -9,6 +9,21 @@ orbs:
     continuation: circleci/continuation@1.0.0
     path-filtering: circleci/path-filtering@3.0.0
 
+# Set on the pipeline by scripts/redeploy.py through the CircleCI API. A redeploy sends a tag
+# that is already built and released to the deployer again, so it runs no tests and builds
+# nothing. It runs on main rather than on the tag, because a tag pipeline runs the config
+# stored at that tag, which for a broken deploy step is the config that failed.
+parameters:
+    redeploy-server:
+        type: boolean
+        default: false
+    redeploy-client:
+        type: boolean
+        default: false
+    redeploy-tag:
+        type: string
+        default: ""
+
 workflows:
     server-release-on-tag:
         jobs:
@@ -32,7 +47,32 @@ workflows:
                           only: /^client-v.*/
                       branches:
                           ignore: /.*/
+
+    # Triggered through the CircleCI API, not by a tag or a push. A parameter set at trigger
+    # time already reaches the continuation config on its own, and passing the same one here
+    # would fail the continue step with "Conflicting pipeline parameters."
+    server-redeploy-on-demand:
+        when: << pipeline.parameters.redeploy-server >>
+        jobs:
+            - continuation/continue:
+                  name: server-redeploy-on-demand
+                  configuration_path: .circleci/server.yml
+                  parameters: '{"run-server-workflows": true}'
+    client-redeploy-on-demand:
+        when: << pipeline.parameters.redeploy-client >>
+        jobs:
+            - continuation/continue:
+                  name: client-redeploy-on-demand
+                  configuration_path: .circleci/client.yml
+                  parameters: '{"run-client-workflows": true}'
+
     detect-code-changes:
+        # A redeploy names its own config, so path filtering would only add a second
+        # continuation of the same file.
+        unless:
+            or:
+                - << pipeline.parameters.redeploy-server >>
+                - << pipeline.parameters.redeploy-client >>
         jobs:
             # Every matched row's config file is merged into one continuation, so a change
             # touching both halves runs both. That shared namespace is why each config

@@ -14,6 +14,18 @@ parameters:
     run-server-workflows:
         type: boolean
         default: false
+    # Set on the pipeline by scripts/redeploy.py. Parameters set at trigger time reach this
+    # config on their own, so they are declared here to be read, not passed by the setup
+    # config's continuation.
+    redeploy-server:
+        type: boolean
+        default: false
+    redeploy-client:
+        type: boolean
+        default: false
+    redeploy-tag:
+        type: string
+        default: ""
 
 executors:
     client-node-lts:
@@ -92,8 +104,37 @@ jobs:
                   deploy_to: "Production"
                   deploy_type: tag
 
+    # The deployer pulls dist.zip from the tag's GitHub release, so a redeploy rebuilds
+    # nothing. A release gets CIRCLE_TAG from the tag that started the pipeline; a redeploy
+    # runs on main and carries the tag as a parameter, so it has to put the tag in the
+    # environment itself before the orb's deploy command reads it.
+    client-redeploy:
+        executor: client-node-lts
+        resource_class: small
+        circleci_ip_ranges: true
+        steps:
+            - run:
+                  name: Set the tag to redeploy
+                  command: |
+                      tag="<< pipeline.parameters.redeploy-tag >>"
+                      if [ -z "$tag" ]; then
+                          echo "This pipeline carries no redeploy-tag."
+                          echo "Trigger a redeploy with: just redeploy <tag>"
+                          exit 1
+                      fi
+                      echo "export CIRCLE_TAG='$tag'" >> "$BASH_ENV"
+            # A tag deploy reads nothing from the working tree, and this checks out main
+            # rather than the tag. It is here because the deploy command documents a
+            # checkout as its precondition.
+            - checkout
+            - vueda/deploy:
+                  deploy_url: "https://www.widgetwarehouse.com/deploy/client"
+                  deploy_to: "Production"
+                  deploy_type: tag
+
 workflows:
     client-test:
+        unless: << pipeline.parameters.redeploy-client >>
         jobs:
             - client-test:
                   name: client-test
@@ -124,3 +165,12 @@ workflows:
                           only: /^client-v.*/
                       branches:
                           ignore: /.*/
+
+    # Sends a tag that is already tested and released to the deployer again. It needs no
+    # context: the release is already on GitHub, and DEPLOYER_KEY is a project environment
+    # variable.
+    client-redeploy:
+        when: << pipeline.parameters.redeploy-client >>
+        jobs:
+            - client-redeploy:
+                  name: client-redeploy-production
