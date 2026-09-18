@@ -61,7 +61,9 @@ workflows:
                   name: server-deploy-production
                   requires:
                       - server-pytest
-                  deploy_url: "https://widgetwarehouse.com/deploy/server"
+                  # The apex host redirects to www, and wget reissues a redirected POST as a GET,
+                  # dropping the signed body. Naming the canonical host keeps the request intact.
+                  deploy_url: "https://www.widgetwarehouse.com/deploy/server"
                   deploy_to: "Production"
                   deploy_type: tag
                   filters:

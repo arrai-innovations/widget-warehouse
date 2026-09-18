@@ -86,7 +86,9 @@ jobs:
                   files: ~/artifacts/dist.zip
                   prerelease: false
             - vueda/deploy:
-                  deploy_url: "https://widgetwarehouse.com/deploy/client"
+                  # The apex host redirects to www, and wget reissues a redirected POST as a GET,
+                  # dropping the signed body. Naming the canonical host keeps the request intact.
+                  deploy_url: "https://www.widgetwarehouse.com/deploy/client"
                   deploy_to: "Production"
                   deploy_type: tag
 
