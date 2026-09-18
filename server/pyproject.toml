@@ -5,7 +5,13 @@ requires-python = ">=3.11"
 dependencies = [
   "vueda >=3.0.0a2,<4",
   "psycopg[binary] >=3.2.0,<4",
-  "gunicorn >=26.1.0,<27",
+  # Pinned to a git tag. The ASGI worker in 26.2.0, the newest release on PyPI, drops a
+  # request pipelined on a kept-alive connection, so that connection hangs until the client
+  # gives up. Django triggers it on ordinary traffic because it omits Content-Length, which
+  # makes the worker frame responses chunked. Fixed upstream in 26.2.1 by benoitc/gunicorn#3727.
+  # gunicorn uploads to PyPI by hand, and 26.2.1 and 26.2.2 are tagged but not uploaded, so no
+  # released version carries the fix. Restore a version range once 26.2.2 or later lands there.
+  "gunicorn @ git+https://github.com/benoitc/gunicorn@26.2.2",
   "redis >=7.4.0,<8",
   "pillow>=12.2.0",
 ]
