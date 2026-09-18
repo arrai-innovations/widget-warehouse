@@ -32,3 +32,5 @@ pre-push:
     commands:
         pysentry-audit:
             run: uv run pysentry-rs --compact
+        pnpm-audit:
+            run: pnpm -C . audit
