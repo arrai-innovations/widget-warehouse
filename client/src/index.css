@@ -3,10 +3,8 @@
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/inter/wght-italic.css";
 @import "@fontsource-variable/jetbrains-mono";
-@import "@fontsource/barlow-condensed/400.css";
-@import "@fontsource/barlow-condensed/400-italic.css";
-@import "@fontsource/barlow-condensed/600.css";
-@import "@fontsource/barlow-condensed/700.css";
+@import "@fontsource-variable/archivo/wdth.css";
+@import "@fontsource-variable/archivo/wdth-italic.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -16,9 +14,12 @@
     --breakpoint-4xl: 2240px;
     --breakpoint-5xl: 2560px;
 
-    --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-    --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
-    --font-display: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+    --vueda-font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+    --vueda-font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+    --vueda-font-brand: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+    --font-brand: var(--vueda-font-brand);
+    --font-brand--font-variation-settings: "wdth" 80;
+    --color-brand: var(--vueda-brand-blue);
 }
 
 /*@layer base {*/
