@@ -18,7 +18,7 @@ const comClassesAnimated = props.animated ? `${animationClasses}` : undefined;
     <RouterLink
         to="/"
         aria-label="Widget Warehouse home"
-        class="font-brand flex items-baseline [&>span]:inline-block [&>span]:align-top text-[#0077f7] group-data-[collapsible=icon]:tracking-[-0.125em] rounded-vueda-control focus-visible:focus-ring"
+        class="font-brand flex items-baseline [&>span]:inline-block [&>span]:align-top text-brand group-data-[collapsible=icon]:tracking-[-0.125em] rounded-vueda-control focus-visible:focus-ring"
         ><span class="font-bold">W</span
         ><span class="font-bold overflow-hidden max-w-20" :class="widgetClassesAnimated">idget </span
         ><span class="italic">W</span
