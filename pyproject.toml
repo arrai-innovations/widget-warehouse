@@ -16,3 +16,4 @@ dev = [
 [tool.uv]
 default-groups = []
 exclude-newer = "1d"
+exclude-newer-package = { vueda = "0d" }
