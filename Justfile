@@ -48,6 +48,10 @@ preview-client:
 manage *args:
   cd {{justfile_directory()}}/server && uv run --no-sync python manage.py {{args}}
 
+# Send a released tag to the production deployer again. Needs a CircleCI API token.
+redeploy *args:
+  cd {{justfile_directory()}} && uv run --no-sync python scripts/redeploy.py {{args}}
+
 serve:
   pnpx concurrently -n server,client -c green,cyan "just serve-server" "just serve-client"
 
