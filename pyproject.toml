@@ -12,3 +12,6 @@ dev = [
   "md-toc >=8.2.2",
 ]
 
+[tool.uv]
+default-groups = []
+exclude-newer = "1d"
