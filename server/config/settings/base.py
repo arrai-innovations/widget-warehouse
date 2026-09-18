@@ -16,14 +16,21 @@ env = TomlEnv(
 default_settings = get_defaults(env)
 locals().update(default_settings)
 
-# WARNING: LocMemCache is per-process. ASGI servers (gunicorn, uvicorn, daphne) run
-# multiple worker processes with isolated caches. Configure a shared cache backend
-# (e.g. Redis, Memcached) for anything beyond single-process local development.
+# Valkey through Django's Redis backend, in every deployment including a developer's
+# machine. A cache here is shared state, not a local optimization: sessions, the password
+# reset cooldown, and rate limits all live in it, and LocMemCache is per-process, so an
+# ASGI server's workers would each answer from a cache the others cannot see. Running the
+# same backend locally is also what keeps a cache bug reproducible off production.
+# Deployments override the address and key prefix through CACHE_URL.
 CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "vueda-cache",
-    }
+    "default": env.dj_cache_url(
+        "CACHE_URL",
+        default={
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": "redis://127.0.0.1:6379/0",
+            "KEY_PREFIX": "widget-warehouse",
+        },
+    )
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 

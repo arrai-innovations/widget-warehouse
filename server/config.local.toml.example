@@ -12,9 +12,11 @@
 SECRET_KEY = "replace-with-a-unique-random-50-character-value"
 DATABASE_URL = "postgres://widget_warehouse@localhost:5432/widget_warehouse"
 
-# Production cache and sessions use Valkey through Django's Redis backend. This
-# is the production default; change the URL for a different address or database.
-# Use a distinct key_prefix for each deployment sharing the same database.
+# Cache and sessions use Valkey through Django's Redis backend, in every
+# deployment including a developer's machine, so a local valkey has to be
+# running. The value below is also the built-in default; change the URL for a
+# different address or database. Use a distinct key_prefix for each deployment
+# sharing the same database.
 CACHE_URL = "redis://127.0.0.1:6379/0?key_prefix=widget-warehouse"
 
 # Public hostname and the origins the client is served from. ALLOWED_HOSTS takes

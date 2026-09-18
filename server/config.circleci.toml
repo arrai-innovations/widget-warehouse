@@ -3,3 +3,7 @@
 
 SECRET_KEY = "circleci-not-a-secret"
 DATABASE_URL = "postgresql://postgres@127.0.0.1:5432/circle_test"
+
+# Served by the redis image on the job's executor. The key prefix is distinct from every
+# other deployment's so a test run cannot read or evict another one's keys.
+CACHE_URL = "redis://127.0.0.1:6379/0?key_prefix=widget-warehouse-test"
