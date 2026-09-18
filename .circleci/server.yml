@@ -14,6 +14,18 @@ parameters:
     run-server-workflows:
         type: boolean
         default: false
+    # Set on the pipeline by scripts/redeploy.py. Parameters set at trigger time reach this
+    # config on their own, so they are declared here to be read, not passed by the setup
+    # config's continuation.
+    redeploy-server:
+        type: boolean
+        default: false
+    redeploy-client:
+        type: boolean
+        default: false
+    redeploy-tag:
+        type: string
+        default: ""
 
 executors:
     server-python311-pg:
@@ -26,9 +38,43 @@ executors:
             # that does touch the cache or a cached session behaves in CI the way it does
             # on a developer's machine, rather than failing only here.
             - image: cimg/redis:7.2.4
+    # The deploy command installs semver from npm before it posts, so a redeploy runs on
+    # node rather than on the Python image the suite uses.
+    server-node-lts:
+        docker:
+            - image: cimg/node:lts
+
+jobs:
+    # A release gets CIRCLE_TAG from the tag that started the pipeline. A redeploy runs on
+    # main and carries the tag as a parameter instead, so it has to put the tag in the
+    # environment itself before the orb's deploy command reads it.
+    server-redeploy:
+        executor: server-node-lts
+        resource_class: small
+        circleci_ip_ranges: true
+        steps:
+            - run:
+                  name: Set the tag to redeploy
+                  command: |
+                      tag="<< pipeline.parameters.redeploy-tag >>"
+                      if [ -z "$tag" ]; then
+                          echo "This pipeline carries no redeploy-tag."
+                          echo "Trigger a redeploy with: just redeploy <tag>"
+                          exit 1
+                      fi
+                      echo "export CIRCLE_TAG='$tag'" >> "$BASH_ENV"
+            # A tag deploy reads nothing from the working tree, and this checks out main
+            # rather than the tag. It is here because the deploy command documents a
+            # checkout as its precondition.
+            - checkout
+            - vueda/deploy:
+                  deploy_url: "https://www.widgetwarehouse.com/deploy/server"
+                  deploy_to: "Production"
+                  deploy_type: tag
 
 workflows:
     server-test-and-deploy:
+        unless: << pipeline.parameters.redeploy-server >>
         jobs:
             - pytest/pytest:
                   name: server-pytest
@@ -71,3 +117,11 @@ workflows:
                           only: /^server-v.*/
                       branches:
                           ignore: /.*/
+
+    # Sends a tag that is already tested and released to the deployer again. DEPLOYER_KEY is
+    # a project environment variable, so this needs no context.
+    server-redeploy:
+        when: << pipeline.parameters.redeploy-server >>
+        jobs:
+            - server-redeploy:
+                  name: server-redeploy-production
