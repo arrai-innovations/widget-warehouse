@@ -18,17 +18,20 @@ locals().update(production_settings)
 # deployment config that set it true would quietly change what a deploy does.
 DEBUG = False
 
-# The password reset cooldown in vueda.user stores its marker in the default cache, and
-# gunicorn runs several worker processes. base.py configures LocMemCache, which is
-# per-process, so a caller could bypass the cooldown by reaching a different worker.
-# DatabaseCache is shared and needs no extra service. It requires
-# `manage.py createcachetable` once per deployment.
+# Share sessions, password reset cooldowns, and rate limits across worker processes.
+# Valkey uses Django's Redis backend. Deployments can override the address and key
+# prefix through CACHE_URL in config.local.toml or the environment.
 CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": "widget_warehouse_cache",
-    }
+    "default": env.dj_cache_url(
+        "CACHE_URL",
+        default={
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": "redis://127.0.0.1:6379/0",
+            "KEY_PREFIX": "widget-warehouse",
+        },
+    )
 }
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # Django's own clickjacking header, which VUEDA's default middleware list omits. Nothing in
 # this project is meant to be framed, and the built client is served by the web server
