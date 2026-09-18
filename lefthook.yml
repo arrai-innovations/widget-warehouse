@@ -28,3 +28,7 @@ pre-commit:
             glob: "*.md"
             exclude: 'AGENTS?\.md$'
             run: uv run --no-sync python -m md_toc -p github {staged_files}
+pre-push:
+    commands:
+        pysentry-audit:
+            run: uv run pysentry-rs --compact

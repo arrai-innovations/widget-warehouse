@@ -10,6 +10,7 @@ dependencies = []
 [dependency-groups]
 dev = [
   "md-toc >=8.2.2",
+  "pysentry-rs ==0.5.0",
 ]
 
 [tool.uv]
