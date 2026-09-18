@@ -10,6 +10,9 @@ resolution-markers = [
 exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
 exclude-newer-span = "P1D"
 
+[options.exclude-newer-package]
+vueda = { timestamp = "0001-01-01T00:00:00Z", span = "PT0S" }
+
 [manifest]
 members = [
     "widget-warehouse-server",
@@ -823,9 +826,9 @@ resolution-markers = [
     "python_full_version < '3.12'",
 ]
 dependencies = [
-    { name = "asgiref" },
-    { name = "sqlparse" },
-    { name = "tzdata", marker = "sys_platform == 'win32'" },
+    { name = "asgiref", marker = "python_full_version < '3.12'" },
+    { name = "sqlparse", marker = "python_full_version < '3.12'" },
+    { name = "tzdata", marker = "python_full_version < '3.12' and sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d5/d8/43e9d000519adceb189620b6869ff88031e046df91c2e9da72f8f6918399/django-5.2.17.tar.gz", hash = "sha256:9d4d93be539a18ab80d058eb515900e10951e04c537c5a6b394fc49528d3251f", size = 10889740, upload-time = "2026-08-04T15:04:03.173Z" }
 wheels = [
@@ -840,9 +843,9 @@ resolution-markers = [
     "python_full_version >= '3.12'",
 ]
 dependencies = [
-    { name = "asgiref" },
-    { name = "sqlparse" },
-    { name = "tzdata", marker = "sys_platform == 'win32'" },
+    { name = "asgiref", marker = "python_full_version >= '3.12'" },
+    { name = "sqlparse", marker = "python_full_version >= '3.12'" },
+    { name = "tzdata", marker = "python_full_version >= '3.12' and sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f8/d4/8314b5bdef20832f0ac6ae3b3e4d4924e4759fa3b4af27609dd747e7a6be/django-6.1.1.tar.gz", hash = "sha256:7ab93536d8e677aa14554c56426290c69480bf2ee68d7513d4a22f57d6bfeb84", size = 11284905, upload-time = "2026-09-02T17:20:45.621Z" }
 wheels = [
@@ -2142,7 +2145,7 @@ wheels = [
 
 [[package]]
 name = "vueda"
-version = "3.0.0a1.post1"
+version = "3.0.0a2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ansicolors" },
@@ -2181,7 +2184,7 @@ dependencies = [
     { name = "urllib3" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3b/55/e2cbe9e132a408cb68271f1b462fde3162db961790cba1f9fa43f9b5892e/vueda-3.0.0a1.post1-py3-none-any.whl", hash = "sha256:ea206ce0e44a52559e6d6a1813f6b70f008e2231f966fb9311ffe972eff99d85", size = 356350, upload-time = "2026-09-14T23:31:36.516Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/d0/4758e6205d209d6f75b33150d3ba1be7e87e186fcddba91803c46545461b/vueda-3.0.0a2-py3-none-any.whl", hash = "sha256:2e3641bb95da42656d0d68d4d4ae395e6e53775f112b3fc1bd0e1f4832c11309", size = 365935, upload-time = "2026-09-18T19:24:33.531Z" },
 ]
 
 [[package]]
@@ -2221,7 +2224,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=12.2.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.0,<4" },
     { name = "redis", specifier = ">=7.4.0,<8" },
-    { name = "vueda", specifier = ">=3.0.0a1.post1,<4" },
+    { name = "vueda", specifier = ">=3.0.0a2,<4" },
 ]
 
 [package.metadata.requires-dev]
