@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.db.models import F, Q
 from django_filters import rest_framework
 from vueda.core.filters import VuedaFilterSet
@@ -15,6 +17,10 @@ from widget_warehouse.catalog.models import (
     WidgetVariant,
 )
 
+# An order in one of these states has stopped moving, so a date in the past says nothing
+# about it. Named here rather than inline so the workflow's own codes are in one place.
+SETTLED_ORDER_STATES = ("received", "cancelled")
+
 
 class WidgetCategoryFilterSet(VuedaFilterSet):
     class Meta:
@@ -23,9 +29,29 @@ class WidgetCategoryFilterSet(VuedaFilterSet):
 
 
 class SupplierFilterSet(VuedaFilterSet):
+    """
+    ``under_review`` asks the question the generated ``is_approved`` filter cannot.
+
+    Approval is a three-state boolean: true approved, false rejected, null still under
+    review. A generated ``BooleanFilter`` over a nullable column offers the two decided
+    values and no way to ask for the undecided one, which is the only state anybody has
+    work to do about. This is the same shape as the inventory list's ``below_reorder``:
+    a declared filter whose method expresses what the column cannot.
+    """
+
+    under_review = rest_framework.BooleanFilter(
+        method="filter_under_review",
+        label="Under review",
+    )
+
+    def filter_under_review(self, queryset, name, value):
+        if value is None:
+            return queryset
+        return queryset.filter(is_approved__isnull=value)
+
     class Meta:
         model = Supplier
-        fields = ("id", "name", "slug", "country", "is_approved", "is_active")
+        fields = ("id", "name", "slug", "country", "is_approved", "is_active", "under_review")
 
 
 class WidgetFilterSet(VuedaFilterSet):
@@ -80,9 +106,25 @@ class InventoryRecordFilterSet(VuedaFilterSet):
 
 
 class PromotionFilterSet(VuedaFilterSet):
+    """
+    ``active_on`` is a containment test against a range column.
+
+    ``valid_dates`` is a ``DateRangeField``, so "which promotions run on this date" is one
+    ``__contains`` lookup rather than a pair of comparisons against two date columns, and
+    it respects the range's own bounds: the seeded ranges are half open, so a promotion
+    ending on the 30th does not run on the 30th. Nothing else in the demo exercises a
+    range field as a filter.
+    """
+
+    active_on = rest_framework.DateFilter(
+        field_name="valid_dates",
+        lookup_expr="contains",
+        label="Running on",
+    )
+
     class Meta:
         model = Promotion
-        fields = ("id", "name", "code", "is_active")
+        fields = ("id", "name", "code", "is_active", "active_on")
 
 
 class PurchaseOrderFilterSet(HasWorkflowFilterSetMixin, VuedaFilterSet):
@@ -99,10 +141,36 @@ class PurchaseOrderFilterSet(HasWorkflowFilterSetMixin, VuedaFilterSet):
         field_name="expected_arrival_date",
         label="Expected arrival",
     )
+    overdue = rest_framework.BooleanFilter(method="filter_overdue", label="Overdue")
+
+    def filter_overdue(self, queryset, name, value):
+        """
+        Orders that should have arrived and have not.
+
+        Late is two conditions, and a date comparison alone gets it wrong: an order that
+        was received last month also has an arrival date in the past, and so does a
+        cancelled one. Asking the client to combine a date filter with a state filter
+        would not work either, because the workflow state filter refuses a state no order
+        is currently in. So the question is answered here, where both halves are in reach.
+        """
+        if value is None:
+            return queryset
+        predicate = Q(expected_arrival_date__lt=date.today()) & ~Q(
+            object_states_proxy__state__code__in=SETTLED_ORDER_STATES,
+        )
+        return queryset.filter(predicate) if value else queryset.exclude(predicate)
 
     class Meta:
         model = PurchaseOrder
-        fields = ("id", "reference", "supplier", "destination_warehouse", "order_date", "expected_arrival_date")
+        fields = (
+            "id",
+            "reference",
+            "supplier",
+            "destination_warehouse",
+            "order_date",
+            "expected_arrival_date",
+            "overdue",
+        )
 
 
 class PurchaseOrderStateCountFilterSet(VuedaFilterSet):
