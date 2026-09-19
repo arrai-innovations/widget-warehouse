@@ -11,6 +11,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Read rather than imported: this config is ESM, where a JSON import needs an import
 // attribute, and the same read is how the vueda client's own version is picked up.
 const packageDetails = JSON.parse(fs.readFileSync(path.resolve(__dirname, "package.json"), "utf-8"));
+const vuedaPackageName = "@arrai-innovations/vueda";
+const vuedaPackageDetails = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, "node_modules", vuedaPackageName, "package.json"), "utf-8"),
+);
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), "");
@@ -36,6 +40,21 @@ export default defineConfig(({ mode }) => {
 
     const vueda = vuedaViteConfig({
         enableRuntimeAliases: false,
+        // VUEDA is source code, including when pnpm installs a local file dependency
+        // under node_modules. Lazy view imports must not trigger dependency rebundles.
+        optimizeDeps: {
+            exclude: ["@vueda", "@arrai-innovations/vueda"],
+            // Its runtime dependencies still need prebundling, especially CommonJS
+            // packages such as pluralize. Include lazy-view dependencies up front.
+            include: [
+                ...Object.keys(vuedaPackageDetails.dependencies || {}).map(
+                    (dependency) => `${vuedaPackageName} > ${dependency}`,
+                ),
+                ...Object.keys(vuedaPackageDetails.peerDependencies || {}).filter(
+                    (dependency) => !vuedaPackageDetails.peerDependenciesMeta?.[dependency]?.optional,
+                ),
+            ],
+        },
         extraAliases: {
             "@": path.resolve(__dirname, "src"),
         },
