@@ -2,7 +2,8 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from django.contrib.postgres.fields.ranges import Range
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
+from vueda.workflow.models import ObjectState, State, Workflow
 
 from widget_warehouse.catalog.models import (
     InventoryRecord,
@@ -15,6 +16,26 @@ from widget_warehouse.catalog.models import (
     WidgetCategory,
     WidgetVariant,
 )
+
+# Inventory hangs off variants rather than widgets, so a widget with no variant is a widget
+# no stock row can point at. Giving every bulk widget one variant is what lets inventory
+# cover the catalog instead of a tenth of it.
+BULK_VARIANT_SUFFIX = "STD"
+BULK_VARIANT_NAME = "Standard"
+
+# The generated inventory is deterministic rather than random: quantities cycle through
+# these patterns, so two seeded instances report the same restock count and a test can pin
+# it. One value in each pattern sits under the threshold, which is what puts rows in the
+# "below reorder" queue on a fresh instance. Without them the flagship restock tile reads
+# zero against seeded data.
+BULK_QUANTITIES = (180, 96, 22, 240, 132, 64, 205, 88)
+BULK_OVERFLOW_QUANTITIES = (110, 35, 74, 160)
+BULK_REORDER_THRESHOLD = 50
+BULK_MAX_STOCK = 400
+
+# Every third bulk variant is also stocked in the overflow warehouse, so the warehouse
+# filter has two sides to it and restocking is not a single-warehouse concern.
+BULK_OVERFLOW_EVERY = 3
 
 
 class Command(BaseCommand):
@@ -430,6 +451,7 @@ class Command(BaseCommand):
         }
 
         idx = 0
+        self.bulk_widget_skus = []
         for cat_key, specs_list in bulk_specs.items():
             prefix, label = cat_prefixes[cat_key]
             for i, specs in enumerate(specs_list, start=1):
@@ -456,6 +478,7 @@ class Command(BaseCommand):
                     },
                 )
                 self.widget_objs[sku] = obj
+                self.bulk_widget_skus.append(sku)
                 status = "created" if created else "exists"
                 self.stdout.write(f"  Widget {sku}: {status}")
 
@@ -490,6 +513,34 @@ class Command(BaseCommand):
             self.variant_objs[f"{parent_sku}-{suffix}"] = obj
             status = "created" if created else "exists"
             self.stdout.write(f"  Variant {parent_sku}-{suffix}: {status}")
+
+        self._seed_bulk_variants()
+
+    def _seed_bulk_variants(self):
+        """
+        Give every bulk widget a single variant to hang inventory off.
+
+        The hand-written variants above cover five widgets. The bulk widgets exist to make
+        the catalog large enough to page through, and until they had variants the stock
+        levels described five widgets out of sixty-three, which reads as a mostly empty
+        application rather than a working one.
+        """
+        self.stdout.write("Seeding bulk variants...")
+        for index, parent_sku in enumerate(self.bulk_widget_skus):
+            obj, created = WidgetVariant.objects.update_or_create(
+                widget=self.widget_objs[parent_sku],
+                sku_suffix=BULK_VARIANT_SUFFIX,
+                defaults={
+                    "name": BULK_VARIANT_NAME,
+                    "additional_price": Decimal("0.00"),
+                    # The same number the Sydney inventory row below carries, so the two
+                    # stock figures on a variant detail page agree with each other.
+                    "stock_quantity": BULK_QUANTITIES[index % len(BULK_QUANTITIES)],
+                },
+            )
+            self.variant_objs[f"{parent_sku}-{BULK_VARIANT_SUFFIX}"] = obj
+            status = "created" if created else "exists"
+            self.stdout.write(f"  Variant {parent_sku}-{BULK_VARIANT_SUFFIX}: {status}")
 
     def _seed_warehouses(self):
         self.stdout.write("Seeding warehouses...")
@@ -541,20 +592,29 @@ class Command(BaseCommand):
         mel = self.warehouse_objs["MEL-OVF"]
         now = datetime.now(tz=UTC)
 
+        # Five of these sit under their own reorder threshold, which is what the
+        # ``below_reorder`` filter is for and what the restock queue on the landing page
+        # counts. The Melbourne row for SPR-100-MD is deliberately equal to its threshold
+        # rather than under it: equal is not short, and having the boundary in the seeded
+        # data means the demo carries the case the filter's tests pin.
         inventory_data = [
             # (variant_key, warehouse, qty_on_hand, reorder_threshold, max_stock, last_stocktake, last_received)
             ("SPR-100-SM", syd, 48, 20, 100, now, date(2026, 3, 10)),
             ("SPR-100-MD", syd, 75, 30, 150, now, date(2026, 3, 10)),
-            ("SPR-100-LG", syd, 28, 15, 60, now, date(2026, 3, 10)),
-            ("SPR-200-SS", syd, 12, 10, 40, now, date(2026, 2, 28)),
+            ("SPR-100-LG", syd, 11, 15, 60, now, date(2026, 3, 10)),
+            ("SPR-200-SS", syd, 6, 10, 40, now, date(2026, 2, 28)),
             ("SPR-200-CS", syd, 38, 20, 80, now, date(2026, 2, 28)),
+            ("GR-024-BRS", syd, 22, 25, 60, now, date(2026, 3, 5)),
+            ("GR-024-STL", syd, 64, 25, 120, now, date(2026, 3, 5)),
             ("BRG-6204-2RS", syd, 95, 40, 200, now, date(2026, 3, 15)),
             ("BRG-6204-ZZ", syd, 140, 50, 250, now, date(2026, 3, 15)),
             ("FST-HB8-ZN", syd, 480, 200, 1000, now, date(2026, 3, 1)),
             ("FST-HB8-SS", syd, 195, 100, 500, now, date(2026, 3, 1)),
             ("SPR-100-SM", mel, 20, 10, 50, now, date(2026, 1, 20)),
-            ("SPR-100-MD", mel, 30, 15, 80, now, date(2026, 1, 20)),
+            ("SPR-100-MD", mel, 15, 15, 80, now, date(2026, 1, 20)),
+            ("SPR-200-CS", mel, 9, 20, 60, now, date(2026, 2, 10)),
             ("BRG-6204-2RS", mel, 40, 20, 100, now, date(2026, 2, 5)),
+            ("BRG-6204-ZZ", mel, 0, 30, 120, now, date(2026, 1, 8)),
         ]
 
         for variant_key, warehouse, qty, reorder, max_stock, stocktake, received in inventory_data:
@@ -574,6 +634,46 @@ class Command(BaseCommand):
             )
             status = "created" if created else "exists"
             self.stdout.write(f"  Inventory {variant_key} @ {warehouse.code}: {status}")
+
+        self._seed_bulk_inventory(syd, mel, now)
+
+    def _seed_bulk_inventory(self, syd, mel, now):
+        """
+        Stock the bulk variants, generated from a fixed pattern rather than listed.
+
+        Listing sixty-odd rows by hand would say nothing the ten above do not. What these
+        are for is volume: a stock list worth paging and filtering, and a restock queue
+        with a believable number in it rather than the three or four a hand-written table
+        would carry.
+        """
+        self.stdout.write("Seeding bulk inventory records...")
+        today = date.today()
+        overflow_index = 0
+
+        for index, parent_sku in enumerate(self.bulk_widget_skus):
+            variant_key = f"{parent_sku}-{BULK_VARIANT_SUFFIX}"
+            rows = [(syd, BULK_QUANTITIES[index % len(BULK_QUANTITIES)])]
+
+            if index % BULK_OVERFLOW_EVERY == 0:
+                rows.append((mel, BULK_OVERFLOW_QUANTITIES[overflow_index % len(BULK_OVERFLOW_QUANTITIES)]))
+                overflow_index += 1
+
+            for warehouse, quantity in rows:
+                _, created = InventoryRecord.objects.update_or_create(
+                    variant=self.variant_objs[variant_key],
+                    warehouse=warehouse,
+                    defaults={
+                        "quantity_on_hand": quantity,
+                        "reorder_threshold": BULK_REORDER_THRESHOLD,
+                        "max_stock_level": BULK_MAX_STOCK,
+                        "last_stocktake_at": now,
+                        # Spread across the last few months so the column sorts into
+                        # something other than one repeated date.
+                        "last_received_at": today - timedelta(days=7 + (index * 3) % 90),
+                    },
+                )
+                status = "created" if created else "exists"
+                self.stdout.write(f"  Inventory {variant_key} @ {warehouse.code}: {status}")
 
     def _seed_promotions(self):
         self.stdout.write("Seeding promotions...")
@@ -626,10 +726,18 @@ class Command(BaseCommand):
     def _seed_purchase_orders(self):
         self.stdout.write("Seeding purchase orders...")
         today = date.today()
+        workflow, states = self._purchase_order_workflow()
 
         # Dates are relative to the seed run so a long-lived deployed instance keeps
         # orders that are plausibly in flight rather than all historical.
-        # (reference, supplier_slug, warehouse_code, ordered_days_ago, arrival_in_days, lines)
+        #
+        # The state column is what makes the order list worth looking at. Left to the
+        # workflow's initial state every order sits in draft, so four of the five pipeline
+        # states hold nothing and the supervisor signs in to an empty approval queue. The
+        # spread below is three drafts for the clerk to submit, two orders awaiting
+        # approval, and two approved orders already past their expected arrival, which is
+        # the overdue work the supervisor is meant to notice.
+        # (reference, supplier, warehouse, ordered_days_ago, arrival_in_days, state, lines)
         purchase_orders_data = [
             (
                 "PO-1041",
@@ -637,6 +745,7 @@ class Command(BaseCommand):
                 "SYD-DC",
                 21,
                 -7,
+                "approved",
                 [("SPR-100-SM", 120, "12.50"), ("SPR-100-MD", 80, "14.50")],
             ),
             (
@@ -645,6 +754,7 @@ class Command(BaseCommand):
                 "SYD-DC",
                 10,
                 8,
+                "submitted",
                 [("SPR-200-SS", 80, "32.99"), ("GR-024-STL", 60, "18.00")],
             ),
             (
@@ -653,6 +763,7 @@ class Command(BaseCommand):
                 "MEL-OVF",
                 3,
                 18,
+                "draft",
                 [("BRG-6204-2RS", 200, "10.40"), ("BRG-6204-ZZ", 150, "9.70")],
             ),
             (
@@ -661,11 +772,85 @@ class Command(BaseCommand):
                 "SYD-DC",
                 0,
                 None,
+                "draft",
                 [("FST-HB8-ZN", 1000, "0.45"), ("FST-HB8-SS", 400, "0.60")],
+            ),
+            (
+                "PO-1045",
+                "sinomech-industries",
+                "SYD-DC",
+                45,
+                -24,
+                "received",
+                [("FST-HB8-ZN", 2000, "0.42")],
+            ),
+            (
+                "PO-1046",
+                "apex-components",
+                "MEL-OVF",
+                38,
+                -26,
+                "received",
+                [("GSK-B002-STD", 300, "2.05")],
+            ),
+            (
+                "PO-1047",
+                "eurobearings-gmbh",
+                "SYD-DC",
+                14,
+                2,
+                "approved",
+                [("BRG-6204-ZZ", 400, "9.55"), ("BRG-B004-STD", 120, "7.80")],
+            ),
+            (
+                "PO-1048",
+                "sinomech-industries",
+                "MEL-OVF",
+                30,
+                -3,
+                "approved",
+                [("SPR-100-LG", 150, "16.20")],
+            ),
+            (
+                "PO-1049",
+                "pacific-fasteners",
+                "SYD-DC",
+                5,
+                21,
+                "submitted",
+                [("FST-HB8-SS", 600, "0.58"), ("SPR-200-CS", 90, "24.00")],
+            ),
+            (
+                "PO-1050",
+                "apex-components",
+                "SYD-DC",
+                2,
+                30,
+                "draft",
+                [("GR-024-BRS", 40, "23.50")],
+            ),
+            (
+                "PO-1051",
+                "precision-parts-co",
+                "MEL-OVF",
+                60,
+                -41,
+                "received",
+                [("SPR-100-SM", 200, "12.20"), ("SPR-100-MD", 160, "14.10"), ("SPR-100-LG", 60, "16.00")],
+            ),
+            (
+                "PO-1052",
+                "sinomech-industries",
+                "SYD-DC",
+                26,
+                None,
+                "cancelled",
+                [("FST-HB8-ZN", 500, "0.47")],
             ),
         ]
 
-        for reference, supplier_slug, warehouse_code, ordered_days_ago, arrival_in_days, lines in purchase_orders_data:
+        for entry in purchase_orders_data:
+            reference, supplier_slug, warehouse_code, ordered_days_ago, arrival_in_days, state_code, lines = entry
             order, created = PurchaseOrder.objects.update_or_create(
                 reference=reference,
                 defaults={
@@ -680,6 +865,9 @@ class Command(BaseCommand):
             status = "created" if created else "exists"
             self.stdout.write(f"  Purchase order {reference}: {status}")
 
+            if created:
+                self._seed_order_state(workflow, states, order, state_code)
+
             for variant_key, quantity, unit_price in lines:
                 variant = self.variant_objs.get(variant_key)
                 if not variant:
@@ -691,3 +879,53 @@ class Command(BaseCommand):
                 )
                 line_status = "created" if line_created else "exists"
                 self.stdout.write(f"    Line {variant_key} x{quantity}: {line_status}")
+
+    def _purchase_order_workflow(self):
+        """
+        The purchase order workflow and its states by code, or ``(None, {})`` if unseeded.
+
+        ``seed_workflows`` runs before this command in the documented order, so the states
+        are normally here. Seeding the catalog on its own still works: every order takes
+        the workflow's initial state from ``HasWorkflowModelMixin.save()``, or no state at
+        all when no workflow exists yet, which the backfill in ``seed_workflows`` then
+        fills in. What is lost in that case is the spread, so this says so rather than
+        leaving a flat pipeline to be discovered on the dashboard.
+        """
+        workflow = Workflow.objects.filter(content_type=PurchaseOrder.get_content_type()).first()
+        if workflow is None:
+            self.stdout.write(
+                self.style.WARNING(
+                    "  No purchase order workflow yet, so orders keep their initial state. "
+                    "Run seed_workflows, then seed_catalog again on an empty database for the seeded spread."
+                )
+            )
+            return None, {}
+        return workflow, {state.code: state for state in State.objects.filter(workflow=workflow)}
+
+    def _seed_order_state(self, workflow, states, order, state_code):
+        """
+        Put a newly created order into the state the demo wants it in.
+
+        On creation only. Reseeding a working instance deliberately does not walk an order
+        back: an evaluator who submitted an order finds it still submitted afterwards, and
+        ``reset_demo`` is the undo half. A fresh database, or one just reset, therefore
+        gets the spread above; an instance somebody has been using keeps what happened to
+        it. ``HasWorkflowModelMixin.save()`` has already written the initial state row by
+        the time this runs, so this updates that row rather than adding one.
+        """
+        if workflow is None:
+            return
+
+        state = states.get(state_code)
+        if state is None:
+            raise CommandError(
+                f"{order.reference} is seeded into {state_code!r}, which the purchase order workflow "
+                "has no state for. Check the state codes in seed_workflows."
+            )
+
+        ObjectState.objects.update_or_create(
+            workflow=workflow,
+            object_id=order.id,
+            defaults={"state": state},
+        )
+        self.stdout.write(f"    State: {state_code}")
