@@ -41,19 +41,22 @@ export function getRouter(app, pinia) {
             name: "sign-in",
             component: () => import("@/views/ViewSignIn.vue"),
             meta: { title: "Sign In", guest: true },
-            beforeEnter: () => requireUnauth({ name: "welcome" }, router, pinia),
+            beforeEnter: () => requireUnauth({ name: "dashboard" }, router, pinia),
         },
         {
-            path: "/welcome/",
-            name: "welcome",
-            component: () => import("@/views/ViewWelcome.vue"),
-            meta: { title: "Welcome" },
+            // The post-sign-in landing page, and the target three other places redirect
+            // to. It replaced a static welcome page of hardcoded links; there is no
+            // /welcome/ any more, since nothing outside this app ever linked to it.
+            path: "/dashboard/",
+            name: "dashboard",
+            component: () => import("@/views/ViewDashboard.vue"),
+            meta: { title: "Dashboard" },
             beforeEnter: () => requireInitialized(router, pinia),
         },
         ...makeCRUDRoutes({
             component: async () => (await import("@vueda/views/ViewActionRouter.vue")).default,
             authRedirect: { name: "sign-in" },
-            groupsRedirect: { name: "welcome" },
+            groupsRedirect: { name: "dashboard" },
             actionRedirect: { name: "not-found" },
             groups: [],
             vueApp: app,

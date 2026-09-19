@@ -99,7 +99,7 @@ const actionTitle = computed(() => {
         <BreadcrumbList>
             <BreadcrumbItem>
                 <BreadcrumbLink as-child>
-                    <RouterLink :to="{ name: 'welcome' }">Warehouse</RouterLink>
+                    <RouterLink :to="{ name: 'dashboard' }">Warehouse</RouterLink>
                 </BreadcrumbLink>
             </BreadcrumbItem>
 
@@ -119,7 +119,7 @@ const actionTitle = computed(() => {
                 <BreadcrumbItem>
                     <BreadcrumbPage v-if="action === 'list'">{{ appTitle }}</BreadcrumbPage>
                     <BreadcrumbLink v-else as-child>
-                        <RouterLink :to="{ name: 'welcome' }">{{ appTitle }}</RouterLink>
+                        <RouterLink :to="{ name: 'dashboard' }">{{ appTitle }}</RouterLink>
                     </BreadcrumbLink>
                 </BreadcrumbItem>
 
@@ -140,7 +140,7 @@ const actionTitle = computed(() => {
                 </template>
             </template>
 
-            <template v-else-if="route.name !== 'welcome'">
+            <template v-else-if="route.name !== 'dashboard'">
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                     <BreadcrumbPage>{{ routeTitle }}</BreadcrumbPage>

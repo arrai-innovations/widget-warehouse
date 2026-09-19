@@ -111,6 +111,26 @@ menu, the row actions, and the API all answer from one permission decision. Sign
 the superuser to see every screen with create, update, and delete restored, including
 the ones no demo role writes.
 
+## The Dashboard
+
+Signing in lands on `/dashboard/`, which is the same page for everybody and a different
+page for every role. It has three bands: the work queues that need attention, the order
+pipeline by workflow state, and how much of each thing exists.
+
+The tiles are declared once, in `client/src/views/ViewDashboard.vue`, and nothing on the
+page asks who is signed in. Each tile asks VUEDA whether this account may list its model
+and disappears when the answer is no, so the sales roles get the stock and promotion
+queues while the inventory roles get the stock, order, and supplier queues, and only the
+roles that can read orders see the pipeline at all. Sign in as the supervisor and then as
+the sales associate to watch the same page come back different.
+
+Each tile is one list request for a single row: every VUEDA list response carries
+`totalRecords` for the whole filtered set, so a count costs a page of one rather than an
+endpoint of its own. The filter that produced the number is also the link the tile points
+at, so opening a tile lands on the list it counted, already filtered. The pipeline band is
+one request against the order state summary, which is a database view, so a state holding
+no orders is a bar reading zero rather than a missing bar.
+
 ## Purchase Orders
 
 A purchase order carries its lines as a writable inline, so one request creates or

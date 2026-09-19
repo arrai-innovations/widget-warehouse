@@ -9,6 +9,11 @@ import WidgetTextInput from "@vueda/widgets/WidgetTextInput.vue";
  * customizes only the input styling through the widget slots, demonstrating the
  * slot-based customization surface without re-implementing the sign-in flow.
  *
+ * `redirect` is passed explicitly. VUEDA's sign-in flow falls back to a route named
+ * `welcome` when it is not given one, and this app's landing page is the dashboard, so
+ * without it a successful sign-in pushes a route that does not exist and leaves the
+ * evaluator on the sign-in page with no visible error.
+ *
  * The demo credential panel is added through AuthorizingForm's forwarded `suffix` slot,
  * and fills the form through the context emitted by `form-context` rather than through
  * a second copy of the form state. Widget Warehouse is a public demo, so the panel is
@@ -42,7 +47,7 @@ function useAccount(email) {
 </script>
 
 <template>
-    <ViewSignIn @form-context="handleFormContext">
+    <ViewSignIn :redirect="{ name: 'dashboard' }" @form-context="handleFormContext">
         <template #widget(email)="slotProps">
             <WidgetTextInput v-bind="slotProps" class="font-mono" />
         </template>
