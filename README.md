@@ -34,10 +34,17 @@ Run them in that order the first time. `seed_workflows` attaches state permissio
 demo groups, so it needs `seed_demo_users` to have created them.
 
 All three are idempotent, so a deployed instance can be reseeded at any time. Reseeding
-does not walk an order back to draft: `seed_workflows` only gives a starting state to
-orders that have none, which is what backfills orders seeded before the workflow existed.
-`seed_demo_users` resets each demo password on every run, so the credentials on the
-sign-in view always work.
+does not walk an order back: `seed_catalog` puts an order into its seeded workflow state
+when it creates the order and not afterwards, and `seed_workflows` only gives a starting
+state to orders that have none, which is what backfills orders seeded before the workflow
+existed. `seed_demo_users` resets each demo password on every run, so the credentials on
+the sign-in view always work.
+
+The seeded orders are spread across the pipeline rather than all left in draft: three
+drafts waiting to be submitted, two waiting for approval, three approved (two of them
+already past their expected arrival), three received, and one cancelled. Some seeded stock
+sits under its own reorder threshold for the same reason. Both are shapes the demo is
+meant to show, so `server/tests/test_seed_catalog.py` pins them.
 
 ## Reset the Demo
 
@@ -110,7 +117,7 @@ A purchase order carries its lines as a writable inline, so one request creates 
 updates the order and its line rows together. The client sends the `lines` expand on
 create and update, which is what makes the nested payload deserialize as objects rather
 than as ids; a line left out of an update is deleted. Sign in as the clerk and edit
-`PO-1042` to see it. The list view deliberately does not expand the lines: it shows the
+`PO-1044`, one of the seeded drafts, to see it. The list view deliberately does not expand the lines: it shows the
 supplier and destination warehouse instead.
 
 ## The Purchase Order Workflow

@@ -3,9 +3,10 @@ Return the demo to its seeded state, discarding everything an evaluator changed.
 
 The three ``seed_*`` commands converge: every write is ``update_or_create``, so rerunning
 them restores seeded rows to their seeded values. What they cannot do is undo. A row an
-evaluator created stays, an uploaded datasheet stays, and ``seed_workflows`` only gives a
-starting state to orders that have none, so an order walked from draft to approved stays
-approved through every reseed. A public instance therefore runs out of drafts to submit,
+evaluator created stays, an uploaded datasheet stays, and an order walked from draft to
+approved stays approved through every reseed, because ``seed_catalog`` sets an order's
+seeded state only when it creates the order and ``seed_workflows`` only gives a starting
+state to orders that have none. A public instance therefore runs out of drafts to submit,
 which is the moment the walkthrough is built around. This command is the undo half, and it
 is what a scheduled reset runs.
 

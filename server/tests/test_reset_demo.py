@@ -2,12 +2,13 @@
 Behaviour tests for ``reset_demo``, the command a scheduled reset of the public demo runs.
 
 What the three ``seed_*`` commands cannot do on their own is undo, so these check the
-undoing: a row an evaluator created is gone, an order an evaluator advanced is back in
-draft, and an uploaded file is gone with it. The rest check that the reset stops there.
-It leaves accounts outside the demo alone, and it discards the catalog without writing a
-delete into the history views the demo is meant to show off.
+undoing: a row an evaluator created is gone, an order an evaluator advanced is back in the
+state the seed gave it, and an uploaded file is gone with it. The rest check that the reset
+stops there. It leaves accounts outside the demo alone, and it discards the catalog without
+writing a delete into the history views the demo is meant to show off.
 """
 
+from collections import Counter
 from datetime import date
 
 import pytest
@@ -56,20 +57,22 @@ def test_a_row_an_evaluator_created_does_not_survive_the_reset(seeded):
     assert set(PurchaseOrder.objects.values_list("reference", flat=True)) == seeded_references
 
 
-def test_an_advanced_order_comes_back_in_draft(seeded):
+def test_an_advanced_order_comes_back_in_its_seeded_state(seeded):
     # object_state reads through a database view on every access, so the row has to be held
     # in a local to be changed.
-    object_state = PurchaseOrder.objects.get(reference="PO-1041").object_state
+    object_state = PurchaseOrder.objects.get(reference="PO-1043").object_state
     object_state.state = State.objects.get(workflow=object_state.workflow, code="approved")
     object_state.save()
-    assert state_of("PO-1041") == "approved"
+    assert state_of("PO-1043") == "approved"
 
     reset()
 
     # The claim the walkthrough rests on: a public instance still has drafts to submit
-    # after the first visitor has been through it.
-    assert state_of("PO-1041") == "draft"
-    assert all(order.workflow_state.code == "draft" for order in PurchaseOrder.objects.all())
+    # after the first visitor has been through it. The seed spreads the rest of the orders
+    # across the pipeline, so the check is the seeded spread rather than "everything is a
+    # draft"; test_seed_catalog.py pins the spread itself.
+    assert state_of("PO-1043") == "draft"
+    assert Counter(order.workflow_state.code for order in PurchaseOrder.objects.all())["draft"] == 3
 
 
 def test_an_edited_seed_row_comes_back_with_its_seeded_value(seeded):
