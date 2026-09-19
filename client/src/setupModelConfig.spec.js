@@ -59,6 +59,20 @@ describe("setupModelConfig", () => {
         });
     });
 
+    it("renders the Supplier notification addresses through FieldSetMany and keeps them off the list", () => {
+        setupModelConfig({});
+
+        const [, genericConfig, viewConfigs] = mocks.setConfig.mock.calls.find(
+            ([target]) => target.model === "supplier",
+        );
+
+        expect(genericConfig).toEqual({
+            fieldComponents: { notification_emails: "FieldSetMany" },
+        });
+        expect(viewConfigs.list.displayFields).not.toContain("notification_emails");
+        expect(viewConfigs.list.fetchFields).toEqual(viewConfigs.list.displayFields);
+    });
+
     it("limits the Widget list to scannable columns and fetches only those", () => {
         setupModelConfig({});
 
