@@ -142,6 +142,7 @@ class PurchaseOrderFilterSet(HasWorkflowFilterSetMixin, VuedaFilterSet):
         label="Expected arrival",
     )
     overdue = rest_framework.BooleanFilter(method="filter_overdue", label="Overdue")
+    is_open = rest_framework.BooleanFilter(method="filter_is_open", label="Open")
 
     def filter_overdue(self, queryset, name, value):
         """
@@ -160,6 +161,23 @@ class PurchaseOrderFilterSet(HasWorkflowFilterSetMixin, VuedaFilterSet):
         )
         return queryset.filter(predicate) if value else queryset.exclude(predicate)
 
+    def filter_is_open(self, queryset, name, value):
+        """
+        Orders the warehouse is still waiting on, whatever stage they have reached.
+
+        The opposite of settled rather than a list of open states, so a state added to the
+        workflow later counts as open until somebody decides it does not. An order with no
+        state row at all is open too: it has not been received, and a row that predates the
+        workflow is not a finished order.
+
+        This is what the value tile on the dashboard totals. Counting open orders says how
+        many are in flight; summing their value says what the warehouse has committed.
+        """
+        if value is None:
+            return queryset
+        predicate = ~Q(object_states_proxy__state__code__in=SETTLED_ORDER_STATES)
+        return queryset.filter(predicate) if value else queryset.exclude(predicate)
+
     class Meta:
         model = PurchaseOrder
         fields = (
@@ -170,6 +188,7 @@ class PurchaseOrderFilterSet(HasWorkflowFilterSetMixin, VuedaFilterSet):
             "order_date",
             "expected_arrival_date",
             "overdue",
+            "is_open",
         )
 
 
