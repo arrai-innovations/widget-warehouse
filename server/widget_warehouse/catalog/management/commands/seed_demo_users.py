@@ -55,6 +55,12 @@ BASELINE_PERMISSIONS = (
 # grants delete, "transitions" grants one permission per named transition; the sales
 # roles stay read-only until the sales order arrives.
 #
+# Supplier writes follow the same split as purchase order writes: the inbound roles keep
+# the vendor list, and only the supervisor retires a vendor outright. The split cannot go
+# any finer than the model. Supplier.is_approved is a supervisor-grade decision, but a
+# permission names a model and an action, so a role that may update a supplier may set
+# every one of its fields; scoping one field would mean giving Supplier its own workflow.
+#
 # The write scopes are baseline permissions, so a purchase order write is granted here
 # regardless of what state the order is in. Narrowing the clerk to draft orders only is
 # the job of the StatePermission deny rules in seed_workflows.
@@ -64,7 +70,7 @@ DEMO_ROLES = [
         "email": "clerk@widgetwarehouse.com",
         "name": "Ilse Clerk",
         "read": CATALOG_MODELS + INVENTORY_MODELS + INBOUND_MODELS + LOCATION_MODELS + PURCHASE_MODELS,
-        "write": PURCHASE_MODELS,
+        "write": PURCHASE_MODELS + INBOUND_MODELS,
         "delete": (),
         "transitions": ("submit",),
     },
@@ -73,12 +79,13 @@ DEMO_ROLES = [
         "email": "supervisor@widgetwarehouse.com",
         "name": "Sam Supervisor",
         "read": CATALOG_MODELS + INVENTORY_MODELS + INBOUND_MODELS + LOCATION_MODELS + PURCHASE_MODELS,
-        "write": PURCHASE_MODELS,
+        "write": PURCHASE_MODELS + INBOUND_MODELS,
         # The supervisor is the role that can retire an order outright, both by deleting
         # it and, now that the workflow exists, by cancelling it. Cancel is not in the
         # role table's Transitions column because the table lists the approval path;
         # someone has to be able to end an order off that path, and it is this role.
-        "delete": PURCHASE_MODELS,
+        # Retiring a supplier is the same call, so the delete scope carries both.
+        "delete": PURCHASE_MODELS + INBOUND_MODELS,
         "transitions": ("submit", "approve", "reject", "receive", "cancel"),
     },
     {

@@ -56,10 +56,10 @@ def test_roles_are_scoped_apart(seeded):
     assert accountant.has_perm("catalog.list_supplier")
     assert accountant.has_perm("catalog.list_promotion")
 
-    # The catalog itself stays read-only for everyone. Every write in the role table is a
-    # purchase order or sales order write.
+    # The rest of the catalog stays read-only for everyone. Suppliers are the one master
+    # data model a role writes; every other write in the role table is an order write.
     for user in (clerk, associate, accountant):
-        for model in ("widget", "supplier", "promotion", "inventoryrecord"):
+        for model in ("widget", "promotion", "inventoryrecord"):
             for action in ("create", "update", "delete"):
                 assert not user.has_perm(f"catalog.{action}_{model}")
 
@@ -84,6 +84,28 @@ def test_only_the_inventory_roles_write_purchase_orders(seeded):
         for group in ("sales-associate", "sales-manager"):
             assert not users[group].has_perm(f"catalog.list_{model}")
             assert not users[group].has_perm(f"catalog.create_{model}")
+
+
+@pytest.mark.django_db
+def test_only_the_inbound_roles_write_suppliers(seeded):
+    users = {role["group"]: get_user_model().objects.get(email=role["email"]) for role in DEMO_ROLES}
+
+    # Both inbound roles maintain the vendor list, which is what makes the supplier form
+    # reachable without a superuser.
+    for group in ("inventory-clerk", "inventory-supervisor"):
+        assert users[group].has_perm("catalog.create_supplier")
+        assert users[group].has_perm("catalog.update_supplier")
+
+    # Retiring a vendor is the supervisor's, the same way deleting an order is.
+    assert not users["inventory-clerk"].has_perm("catalog.delete_supplier")
+    assert users["inventory-supervisor"].has_perm("catalog.delete_supplier")
+
+    # The accountant reads suppliers without writing them; the outbound roles do neither.
+    assert users["accountant"].has_perm("catalog.read_supplier")
+    assert not users["accountant"].has_perm("catalog.update_supplier")
+    for group in ("sales-associate", "sales-manager"):
+        assert not users[group].has_perm("catalog.read_supplier")
+        assert not users[group].has_perm("catalog.update_supplier")
 
 
 @pytest.mark.django_db

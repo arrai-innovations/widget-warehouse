@@ -33,6 +33,12 @@ class Supplier(VuedaModel):
     slug = models.SlugField(max_length=100, unique=True)
     website = models.URLField(blank=True)
     contact_email = models.EmailField()
+    notification_emails = pg_fields.ArrayField(
+        models.EmailField(),
+        default=list,
+        blank=True,
+        help_text="Additional addresses copied on purchase orders sent to this supplier.",
+    )
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=True)
     reliability_score = models.FloatField(
         null=True,

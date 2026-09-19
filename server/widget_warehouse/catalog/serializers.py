@@ -33,6 +33,7 @@ class SupplierSerializer(VuedaSerializer):
             "slug",
             "website",
             "contact_email",
+            "notification_emails",
             "country",
             "reliability_score",
             "typical_lead_days",

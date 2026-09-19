@@ -75,18 +75,25 @@ fixtures and not through the DEBUG-only permission overview UI, so the whole mat
 reproduces on deploy. Every account uses the password `widget-demo`, and the sign-in
 view lists them so an evaluator can switch roles without leaving the page.
 
-| Group                  | Sign in as                     | Reads                                                 | Writes                       | Transitions                              |
-| ---------------------- | ------------------------------ | ----------------------------------------------------- | ---------------------------- | ---------------------------------------- |
-| `inventory-clerk`      | clerk@widgetwarehouse.com      | catalog, inventory, suppliers, warehouses             | purchase order drafts        | `submit`                                 |
-| `inventory-supervisor` | supervisor@widgetwarehouse.com | catalog, inventory, suppliers, warehouses             | purchase orders in any state | `submit`, `approve`, `reject`, `receive`, `cancel` |
-| `sales-associate`      | associate@widgetwarehouse.com  | catalog, inventory, warehouses, promotions, customers | sales order drafts           | `submit`                                 |
-| `sales-manager`        | manager@widgetwarehouse.com    | catalog, inventory, warehouses, promotions, customers | sales orders in any state    | `submit`, `approve`, `reject`, `ship`    |
-| `accountant`           | accountant@widgetwarehouse.com | everything                                            | nothing                      | none, plus a bulk export action          |
+| Group                  | Sign in as                     | Reads                                                 | Writes                                  | Transitions                                        |
+| ---------------------- | ------------------------------ | ----------------------------------------------------- | --------------------------------------- | -------------------------------------------------- |
+| `inventory-clerk`      | clerk@widgetwarehouse.com      | catalog, inventory, suppliers, warehouses             | suppliers, purchase order drafts        | `submit`                                           |
+| `inventory-supervisor` | supervisor@widgetwarehouse.com | catalog, inventory, suppliers, warehouses             | suppliers, purchase orders in any state | `submit`, `approve`, `reject`, `receive`, `cancel` |
+| `sales-associate`      | associate@widgetwarehouse.com  | catalog, inventory, warehouses, promotions, customers | sales order drafts                      | `submit`                                           |
+| `sales-manager`        | manager@widgetwarehouse.com    | catalog, inventory, warehouses, promotions, customers | sales orders in any state               | `submit`, `approve`, `reject`, `ship`              |
+| `accountant`           | accountant@widgetwarehouse.com | everything                                            | nothing                                 | none, plus a bulk export action                    |
 
 Customers and sales orders are not modelled yet, so the two sales roles are still
 read-only and grant the same access as each other. Purchase orders are modelled and have
 a workflow: the clerk creates and edits drafts, the supervisor edits an order in any
 state and takes every approval decision, and only the supervisor can delete one.
+
+Suppliers follow the same split without a workflow. Both inbound roles add and edit a
+vendor, and only the supervisor can delete one. A Django permission names a model and an
+action, so the split stops there: `is_approved` reads as a supervisor decision, but a
+role that may update a supplier may set every field on it. Narrowing that to one field
+would mean giving Supplier its own workflow, which is what the purchase order already
+demonstrates.
 
 What is live today is the Reads column. Sign in as the clerk and the sales associate in
 turn: both get the same widgets, categories, variants, inventory records, and
@@ -94,7 +101,8 @@ warehouses, but only the clerk sees Suppliers and only the associate sees Promot
 The navigation is not built per role in client code. It asks VUEDA for each model's
 metadata, and VUEDA reports only the actions the signed-in user is permitted, so the
 menu, the row actions, and the API all answer from one permission decision. Sign in as
-the superuser to see the same screens with create, update, and delete restored.
+the superuser to see every screen with create, update, and delete restored, including
+the ones no demo role writes.
 
 ## Purchase Orders
 
