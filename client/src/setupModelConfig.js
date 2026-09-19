@@ -50,6 +50,44 @@ export function setupModelConfig(pinia) {
         },
     );
 
+    // notification_emails is an ArrayField of EmailField, which VUEDA reports as a many
+    // EmailField. No field type resolves to a FieldSet on its own: every field falls back
+    // to FormField, and a many field would render as one text input holding the whole
+    // list. Naming FieldSetMany here is what turns it into a row per address with add and
+    // remove buttons, because field resolution reads fieldComponents before the type
+    // mapping. The mapping still supplies the manyComponent each row is built from, which
+    // is why this needs no fieldProps beside it. Delete the override to see the default.
+    modelConfigStore.setConfig(
+        { app: "catalog", model: "supplier" },
+        {
+            fieldComponents: { notification_emails: "FieldSetMany" },
+        },
+        {
+            // A list cell has no many-aware column adapter, so an array lands on ColumnText
+            // and prints as JSON. The addresses belong on the object, not in the grid.
+            list: {
+                displayFields: [
+                    "name",
+                    "contact_email",
+                    "country",
+                    "reliability_score",
+                    "typical_lead_days",
+                    "is_approved",
+                    "is_active",
+                ],
+                fetchFields: [
+                    "name",
+                    "contact_email",
+                    "country",
+                    "reliability_score",
+                    "typical_lead_days",
+                    "is_approved",
+                    "is_active",
+                ],
+            },
+        },
+    );
+
     modelConfigStore.setConfig(
         { app: "catalog", model: "widgetvariant" },
         {
