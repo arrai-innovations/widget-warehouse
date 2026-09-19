@@ -7,6 +7,7 @@ from widget_warehouse.catalog.models import (
     InventoryRecord,
     Promotion,
     PurchaseOrder,
+    PurchaseOrderStateCount,
     Supplier,
     Warehouse,
     Widget,
@@ -102,3 +103,9 @@ class PurchaseOrderFilterSet(HasWorkflowFilterSetMixin, VuedaFilterSet):
     class Meta:
         model = PurchaseOrder
         fields = ("id", "reference", "supplier", "destination_warehouse", "order_date", "expected_arrival_date")
+
+
+class PurchaseOrderStateCountFilterSet(VuedaFilterSet):
+    class Meta:
+        model = PurchaseOrderStateCount
+        fields = ("id", "code")

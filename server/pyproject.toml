@@ -19,6 +19,12 @@ dependencies = [
 [dependency-groups]
 dev = [
   "ruff ==0.14.6",
+  # Generates the migration and the historical SQL file for a database-view-backed model,
+  # so a pull request shows a diff of the view definition rather than an opaque RunSQL
+  # blob. Only the management command needs the package; the migrations it writes read the
+  # committed .sql files, so a deployment does not install this. VUEDA carries the same
+  # pin for the same reason.
+  "django-view-manager ==2.0.0",
   "coverage >=7.14.1",
   "pytest >=9.0.0,<10",
   "pytest-cov >=4.1.0",

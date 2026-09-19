@@ -997,6 +997,18 @@ wheels = [
 ]
 
 [[package]]
+name = "django-view-manager"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django", version = "5.2.17", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "django", version = "6.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/98/49/e8f6ce93bc0780d8e80163da77c0b54e64e4ce9d45001b3c533e04e8303c/django_view_manager-2.0.0-py3-none-any.whl", hash = "sha256:fb600012b58208a347707b65565d1a65e634234550f7d999a50cb2b516c7a95d", size = 11245, upload-time = "2025-10-21T15:48:19.905Z" },
+]
+
+[[package]]
 name = "djangorestframework"
 version = "3.18.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2207,6 +2219,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "coverage" },
+    { name = "django-view-manager" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
@@ -2226,6 +2239,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "coverage", specifier = ">=7.14.1" },
+    { name = "django-view-manager", specifier = "==2.0.0" },
     { name = "pytest", specifier = ">=9.0.0,<10" },
     { name = "pytest-cov", specifier = ">=4.1.0" },
     { name = "pytest-django", specifier = ">=4.0.0,<5" },
