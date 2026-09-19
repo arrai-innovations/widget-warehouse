@@ -12,6 +12,7 @@ tile added there without a line here is a number nobody has checked.
 """
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -34,6 +35,7 @@ QUEUE_TILES = {
     "overdue": ("purchaseorder", {"overdue": "true"}),
     "review": ("supplier", {"under_review": "true"}),
     "promotions": ("promotion", {"active_on": "today"}),
+    "open-value": ("purchaseorder", {"is_open": "true"}),
 }
 
 # The scale numbers, which take no filter.
@@ -81,7 +83,7 @@ def visible_queues(email):
 
 @pytest.mark.parametrize("email", INBOUND_ROLES)
 def test_the_inbound_roles_get_the_stock_and_order_queues_but_not_promotions(demo, email):
-    assert visible_queues(email) == {"restock", "overdue", "review"}
+    assert visible_queues(email) == {"restock", "overdue", "review", "open-value"}
 
 
 @pytest.mark.parametrize("email", SALES_ROLES)
@@ -105,10 +107,15 @@ def test_the_accountant_reads_every_queue(demo):
 def test_the_queue_counts_against_the_seeded_data(demo):
     client = client_for(ACCOUNTANT)
 
-    counts = {key: count(client, model, params) for key, (model, params) in QUEUE_TILES.items() if key != "promotions"}
+    skip = {"promotions", "open-value"}
+    counts = {key: count(client, model, params) for key, (model, params) in QUEUE_TILES.items() if key not in skip}
 
     # The seed puts these numbers there deliberately; see test_seed_catalog.py.
-    assert counts == {"restock": 15, "overdue": 2, "review": 1}
+    assert counts == {
+        "restock": 15,
+        "overdue": 2,
+        "review": 1,
+    }
 
 
 def test_the_promotion_tile_counts_what_is_running_today(demo):
@@ -119,6 +126,20 @@ def test_the_promotion_tile_counts_what_is_running_today(demo):
     running = count(client_for(ACCOUNTANT), "promotion", {"active_on": date.today().isoformat()})
 
     assert running == (1 if date(2026, 9, 1) <= date.today() < date(2026, 9, 30) else 0)
+
+
+def test_the_value_tile_reads_the_total_rather_than_the_count(demo):
+    """
+    The one tile that reports a sum. It is the same request as any other tile, because the
+    viewset declares total_value in column_totals and the sum arrives in the envelope
+    beside the count: eight orders in flight, and what the warehouse has committed to them.
+    """
+    model, params = QUEUE_TILES["open-value"]
+    response = client_for(ACCOUNTANT).get(reverse(f"catalog.{model}-list"), {**params, "ps": 1})
+
+    assert response.status_code == 200, response.data
+    assert response.data["totalRecords"] == 8
+    assert response.data["columnTotals"] == {"total_value": Decimal("21238.20")}
 
 
 def test_the_scale_numbers_describe_the_whole_catalog(demo):

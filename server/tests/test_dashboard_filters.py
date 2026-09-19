@@ -1,15 +1,17 @@
 """
-Contract tests for the three filters the dashboard's work queues count with.
+Contract tests for the four filters the dashboard's work queues count with.
 
 Each tile on the landing page is a list request narrowed by a filter, so a tile is only as
-honest as the filter behind it. These three are the ones the generated filters could not
+honest as the filter behind it. These four are the ones the generated filters could not
 express: a three-state boolean asked for its undecided state, a containment test against a
-range column, and a question that spans a date column and the workflow state.
+range column, and two questions that read the workflow state, one of them alongside a date
+column.
 
 The counts themselves come from the paginated envelope's ``totalRecords``, so the tests
 read it the same way a tile does rather than counting rows on the page.
 """
 
+import json
 from datetime import date
 
 import pytest
@@ -18,8 +20,9 @@ from django.core.management import call_command
 from django.urls import reverse
 from psycopg.types.range import Range
 from rest_framework.test import APIClient
+from vueda.workflow.models import ObjectState
 
-from widget_warehouse.catalog.models import Promotion, Supplier
+from widget_warehouse.catalog.models import Promotion, PurchaseOrder, Supplier, Warehouse
 
 CLERK = "clerk@widgetwarehouse.com"
 # Promotions belong to the sales roles: the clerk cannot list them at all, which is the
@@ -182,3 +185,79 @@ def test_overdue_ignores_an_order_with_no_expected_arrival_at_all(orders):
 
     assert "PO-1044" not in {row["reference"] for row in overdue.data["results"]}
     assert "PO-1044" in {row["reference"] for row in not_overdue.data["results"]}
+
+
+def test_open_covers_everything_that_has_not_settled(orders):
+    """
+    Defined by what it excludes, so a state added to the workflow counts as open until
+    somebody says otherwise. Against the seeded pipeline that is the drafts, the submitted,
+    and the approved: eight of twelve.
+    """
+    response = list_as(SUPERVISOR, "catalog.purchaseorder-list", {"is_open": "true"})
+
+    assert response.status_code == 200, response.data
+    assert response.data["totalRecords"] == 8
+
+
+def test_open_and_settled_are_complements(orders):
+    total = list_as(SUPERVISOR, "catalog.purchaseorder-list", {}).data["totalRecords"]
+    settled = list_as(SUPERVISOR, "catalog.purchaseorder-list", {"is_open": "false"})
+
+    assert settled.data["totalRecords"] == total - 8
+    # Received and cancelled, which is the whole of "settled".
+    assert settled.data["totalRecords"] == 4
+
+
+def test_an_order_with_no_workflow_state_counts_as_open(orders):
+    """
+    A row that predates the workflow is not a finished order. This is reachable in a
+    deployment: seed_catalog run before seed_workflows leaves orders stateless until the
+    backfill, and the value tile should not quietly drop them in the meantime.
+    """
+    stateless = PurchaseOrder.objects.create(
+        reference="PO-NOSTATE",
+        supplier=Supplier.objects.first(),
+        destination_warehouse=Warehouse.objects.first(),
+        order_date=date.today(),
+    )
+    ObjectState.objects.filter(object_id=stateless.id, workflow__code="purchase-order").delete()
+    assert stateless.workflow_state is None
+
+    response = list_as(SUPERVISOR, "catalog.purchaseorder-list", {"is_open": "true"})
+
+    assert "PO-NOSTATE" in {row["reference"] for row in response.data["results"]}
+
+
+def test_the_open_value_reaches_the_client_as_a_number_it_can_render(orders):
+    """
+    The value tile reads ``columnTotals`` rather than ``totalRecords``, so what matters is
+    the rendered JSON rather than the Python object behind it. DRF encodes a Decimal as a
+    JSON number, while the per-row field is a string, so the tile formats a number and the
+    column formats a string. Pinned here because the tile would silently render
+    "undefined" if either shape changed.
+    """
+    client = APIClient()
+    client.force_authenticate(get_user_model().objects.get(email=SUPERVISOR))
+
+    response = client.get(reverse("catalog.purchaseorder-list"), {"is_open": "true", "ps": 1})
+    payload = json.loads(response.content)
+
+    assert isinstance(payload["columnTotals"]["total_value"], (int, float))
+    assert payload["columnTotals"]["total_value"] > 0
+    assert isinstance(payload["results"][0]["total_value"], str)
+
+
+def test_a_total_over_no_rows_is_null_rather_than_zero(orders):
+    """
+    ``Sum`` over an empty queryset returns NULL, which the annotation's own Coalesce does
+    not reach: that one fills in a row with no lines, not a page with no rows. The tile has
+    to read null as nothing rather than render it.
+    """
+    client = APIClient()
+    client.force_authenticate(get_user_model().objects.get(email=SUPERVISOR))
+
+    response = client.get(reverse("catalog.purchaseorder-list"), {"reference": "no-such-order"})
+    payload = json.loads(response.content)
+
+    assert payload["totalRecords"] == 0
+    assert payload["columnTotals"] == {"total_value": None}
