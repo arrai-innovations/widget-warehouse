@@ -1,5 +1,7 @@
+from django.db.models import F, Q
 from django_filters import rest_framework
 from vueda.core.filters import VuedaFilterSet
+from vueda.workflow.filtersets import HasWorkflowFilterSetMixin
 
 from widget_warehouse.catalog.models import (
     InventoryRecord,
@@ -51,9 +53,29 @@ class WarehouseFilterSet(VuedaFilterSet):
 
 
 class InventoryRecordFilterSet(VuedaFilterSet):
+    """
+    ``below_reorder`` compares two columns of the same row, which no generated filter can
+    express: the threshold is per record, not a value a request supplies. A
+    ``BooleanFilter`` with a method is the hook for that, and because it is a declared
+    filter VUEDA reports it in model info like any other, so the client renders it without
+    knowing it is special.
+    """
+
+    below_reorder = rest_framework.BooleanFilter(
+        method="filter_below_reorder",
+        label="Below reorder threshold",
+    )
+    quantity_on_hand = rest_framework.RangeFilter(field_name="quantity_on_hand", label="Quantity on hand")
+
+    def filter_below_reorder(self, queryset, name, value):
+        if value is None:
+            return queryset
+        predicate = Q(quantity_on_hand__lt=F("reorder_threshold"))
+        return queryset.filter(predicate) if value else queryset.exclude(predicate)
+
     class Meta:
         model = InventoryRecord
-        fields = ("id", "variant", "warehouse")
+        fields = ("id", "variant", "warehouse", "quantity_on_hand", "below_reorder")
 
 
 class PromotionFilterSet(VuedaFilterSet):
@@ -62,7 +84,14 @@ class PromotionFilterSet(VuedaFilterSet):
         fields = ("id", "name", "code", "is_active")
 
 
-class PurchaseOrderFilterSet(VuedaFilterSet):
+class PurchaseOrderFilterSet(HasWorkflowFilterSetMixin, VuedaFilterSet):
+    """
+    ``HasWorkflowFilterSetMixin`` contributes the ``workflow_state`` filter, which is how a
+    list request narrows to orders in a given state. The mixin narrows its own choices to
+    the states orders are actually in, so the filter's options describe this queryset
+    rather than every state the workflow defines.
+    """
+
     reference = rest_framework.CharFilter(field_name="reference", label="Reference", lookup_expr="icontains")
     order_date = rest_framework.DateFromToRangeFilter(field_name="order_date", label="Order date")
     expected_arrival_date = rest_framework.DateFromToRangeFilter(
