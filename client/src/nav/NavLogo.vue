@@ -22,7 +22,7 @@ const comClassesAnimated = props.animated ? `${animationClasses}` : undefined;
         ><span class="font-bold">W</span
         ><span class="font-bold overflow-hidden max-w-20" :class="widgetClassesAnimated">idget </span
         ><span class="italic">W</span
-        ><span class="italic overflow-hidden max-w-30 pr-0.75" :class="warehouseClassesAnimated">arehouse</span
+        ><span class="italic overflow-hidden max-w-30" :class="warehouseClassesAnimated">arehouse</span
         ><span class="text-sidebar-foreground" :class="comClassesAnimated">.com</span></RouterLink
     >
 </template>
