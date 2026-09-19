@@ -58,12 +58,36 @@ Package-specific commands:
 | `just serve-server` | Gunicorn with Uvicorn worker on port 8000 |
 | `just serve-client` | Vite dev server |
 
+## VUEDA Documentation
+
+Answer VUEDA questions from the published docs at <https://vueda.dev/v3/>, not
+from guesswork and not by assuming a VUEDA checkout sits next to this one. A
+sibling checkout is one contributor's local arrangement, so nothing committed
+here should depend on it or cite a path inside it.
+
+Useful entry points:
+
+- Architecture overview:
+  <https://vueda.dev/v3/core-concepts/architecture-overview.html>
+- Registering a model so the metadata API and client can see it:
+  <https://vueda.dev/v3/core-concepts/canonical-registration-and-discovery.html>
+- Permissions, and row level filtering:
+  <https://vueda.dev/v3/core-concepts/permission-model.html>,
+  <https://vueda.dev/v3/core-concepts/row-level-permission-filtering.html>
+- Building a CRUDL surface: <https://vueda.dev/v3/guides/create-crudl-surface.html>
+- Component, REST, and Python API reference: <https://vueda.dev/v3/reference/>
+- Glossary: <https://vueda.dev/v3/reference/glossary.html>
+
+When VUEDA behaviour surprises you, check the docs before calling it a framework
+gap. If the docs are wrong or silent, that is worth reporting as a docs issue
+rather than working around silently.
+
 ## Architecture
 
-- `server/` is a Django app using the local editable VUEDA server package from
-  `../vueda/server`.
-- `client/` is a Vue 3 and Vite app using the local linked VUEDA client package
-  from `../vueda/client`.
+- `server/` is a Django app that depends on the VUEDA server package, and
+  `client/` is a Vue 3 and Vite app that depends on the VUEDA client package.
+  Both resolve from their registries by default; a contributor working on VUEDA
+  itself may point them at a local checkout, which is a local-only change.
 - The server exposes Widget Warehouse catalog models through VUEDA serializers,
   filtersets, routers, and viewsets.
 - The client uses VUEDA CRUD routing and falls back to `DefaultView*.vue`

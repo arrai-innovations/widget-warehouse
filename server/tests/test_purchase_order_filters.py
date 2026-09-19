@@ -78,11 +78,12 @@ def test_workflow_state_filters_the_order_list(orders):
 @pytest.mark.django_db
 def test_a_state_no_order_is_in_is_rejected_rather_than_returning_nothing(orders):
     """
-    The mixin replaces the filter's queryset with the states present on the rows it was
-    given (``vueda/server/vueda/workflow/filtersets.py:26``), and a ModelChoiceFilter
-    validates against that same queryset. So asking for a state that currently holds no
-    orders is an invalid choice, not an empty result. Anything counting orders per state
-    has to handle a 400 where it expected a zero.
+    ``HasWorkflowFilterSetMixin`` replaces the filter's queryset with the states present on
+    the rows it was given, and a ModelChoiceFilter validates a submitted value against that
+    same queryset. So asking for a state that currently holds no orders is an invalid
+    choice, not an empty result, and anything counting orders per state has to handle a 400
+    where it expected a zero. This is why the pipeline summary is a database view rather
+    than one filtered request per state.
     """
     states = states_for_orders()
     assert not PurchaseOrder.objects.filter(object_states_proxy__state=states["approved"]).exists()
