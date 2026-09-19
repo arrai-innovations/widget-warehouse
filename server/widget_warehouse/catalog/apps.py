@@ -12,6 +12,7 @@ class CatalogConfig(AppConfig):
             InventoryRecordSerializer,
             PromotionSerializer,
             PurchaseOrderSerializer,
+            PurchaseOrderStateCountSerializer,
             SupplierSerializer,
             WarehouseSerializer,
             WidgetCategorySerializer,
@@ -21,6 +22,7 @@ class CatalogConfig(AppConfig):
         from .viewsets import (
             InventoryRecordViewSet,
             PromotionViewSet,
+            PurchaseOrderStateCountViewSet,
             PurchaseOrderViewSet,
             SupplierViewSet,
             WarehouseViewSet,
@@ -32,6 +34,7 @@ class CatalogConfig(AppConfig):
         register(InventoryRecordSerializer, InventoryRecordViewSet)
         register(PromotionSerializer, PromotionViewSet)
         register(PurchaseOrderSerializer, PurchaseOrderViewSet)
+        register(PurchaseOrderStateCountSerializer, PurchaseOrderStateCountViewSet)
         register(SupplierSerializer, SupplierViewSet)
         register(WarehouseSerializer, WarehouseViewSet)
         register(WidgetCategorySerializer, WidgetCategoryViewSet)

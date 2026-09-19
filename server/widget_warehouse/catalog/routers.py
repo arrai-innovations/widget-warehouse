@@ -3,6 +3,7 @@ from vueda.core.routers import VuedaRouter
 from widget_warehouse.catalog.viewsets import (
     InventoryRecordViewSet,
     PromotionViewSet,
+    PurchaseOrderStateCountViewSet,
     PurchaseOrderViewSet,
     SupplierViewSet,
     WarehouseViewSet,
@@ -20,4 +21,5 @@ router.register(r"warehouse", WarehouseViewSet)
 router.register(r"inventoryrecord", InventoryRecordViewSet)
 router.register(r"promotion", PromotionViewSet)
 router.register(r"purchaseorder", PurchaseOrderViewSet)
+router.register(r"purchaseorderstatecount", PurchaseOrderStateCountViewSet)
 urlpatterns = router.urls

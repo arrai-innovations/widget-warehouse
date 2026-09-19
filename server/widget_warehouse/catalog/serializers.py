@@ -10,6 +10,7 @@ from widget_warehouse.catalog.models import (
     Promotion,
     PurchaseOrder,
     PurchaseOrderLine,
+    PurchaseOrderStateCount,
     Supplier,
     Warehouse,
     Widget,
@@ -259,3 +260,30 @@ class PurchaseOrderSerializer(HasWorkflowSerializerMixin, VuedaSerializer):
             "lines": (PurchaseOrderLineSerializer, {"many": True}),
         }
         expandable_fields.update(VuedaSerializer.Meta.expandable_fields)
+
+
+class PurchaseOrderStateCountSerializer(VuedaSerializer):
+    """
+    Read-only by construction: the model is backed by a view over an aggregate, so there is
+    nothing to write back to. Every field is listed in ``read_only_fields`` rather than the
+    viewset simply refusing writes, so the refusal shows up in model info and the client
+    never offers a create or update form for it.
+    """
+
+    class Meta(VuedaSerializer.Meta):
+        model = PurchaseOrderStateCount
+        fields = (
+            "id",
+            "state",
+            "code",
+            "name",
+            "position",
+            "order_count",
+            # Not *VuedaSerializer.Meta.fields. A view cannot carry the stored
+            # formatted_name column, and object_revision needs a history table this model
+            # does not have, so listing them would serialize two permanent nulls.
+            # InventoryRecord, which also opts out of formatted_name, names the one field
+            # it wants the same way.
+            "available_actions",
+        )
+        read_only_fields = ("id", "state", "code", "name", "position", "order_count")

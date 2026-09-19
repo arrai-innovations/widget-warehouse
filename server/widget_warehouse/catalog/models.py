@@ -269,3 +269,55 @@ class PurchaseOrderLine(VuedaModel):
 
     class Meta(BaseModelMeta):
         ordering = ("purchase_order", "id")
+
+
+class PurchaseOrderStateCount(VuedaModel):
+    """
+    One row per purchase order workflow state, carrying how many orders sit in it.
+
+    Backed by a database view rather than a table (``managed = False``, with the SQL in
+    ``catalog/sql/``), which is how this project answers "how many, grouped by what"
+    without a bespoke endpoint. VUEDA has no aggregate surface beyond summing a column of
+    a list, so the alternative was one filtered list request per state. That does not work
+    here anyway: the workflow state filter rejects a state no order is currently in, so
+    four of five requests would 400 rather than return zero. A view left-joins from the
+    state table instead, so a state with no orders is a row with a count of zero.
+
+    Nothing about consuming it is special. It is an ordinary model behind an ordinary
+    VUEDA serializer, viewset, and route, with its own CRUDL permissions, so a role either
+    holds ``list_purchaseorderstatecount`` or does not see the numbers at all.
+
+    The one thing it does not inherit is row visibility. ``filter_rows_for_user`` and the
+    workflow state permission overlay apply to purchase orders, not to this model, so these
+    counts describe every order rather than the orders the caller may list. That is true
+    today because no state rule narrows ``list_purchaseorder``; ww's only state rules deny
+    ``update_purchaseorder`` to the clerk outside draft. Add a rule that hides orders from a
+    list and this view has to reimplement it, or be replaced by a custom action that can
+    reuse the queryset filter.
+    """
+
+    # A GeneratedField is a stored column, which a view cannot have. The value comes from
+    # get_formatted_name instead, the same way InventoryRecord does it.
+    formatted_name = None
+
+    def get_formatted_name(self):
+        return self.name
+
+    state = models.ForeignKey(
+        "vueda_workflow.State",
+        on_delete=models.DO_NOTHING,
+        related_name="+",
+        help_text="The workflow state this row counts.",
+    )
+    code = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    position = models.PositiveSmallIntegerField(
+        help_text="Order to display the states in, following the workflow rather than the alphabet.",
+    )
+    order_count = models.PositiveIntegerField()
+
+    class Meta(BaseModelMeta):
+        managed = False
+        db_table = "catalog_purchaseorderstatecount"
+        ordering = ("position", "id")
+        verbose_name = "purchase order state count"

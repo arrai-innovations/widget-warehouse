@@ -8,6 +8,7 @@ from widget_warehouse.catalog.filtersets import (
     InventoryRecordFilterSet,
     PromotionFilterSet,
     PurchaseOrderFilterSet,
+    PurchaseOrderStateCountFilterSet,
     SupplierFilterSet,
     WarehouseFilterSet,
     WidgetCategoryFilterSet,
@@ -18,6 +19,7 @@ from widget_warehouse.catalog.models import (
     InventoryRecord,
     Promotion,
     PurchaseOrder,
+    PurchaseOrderStateCount,
     Supplier,
     Warehouse,
     Widget,
@@ -28,6 +30,7 @@ from widget_warehouse.catalog.serializers import (
     InventoryRecordSerializer,
     PromotionSerializer,
     PurchaseOrderSerializer,
+    PurchaseOrderStateCountSerializer,
     SupplierSerializer,
     WarehouseSerializer,
     WidgetCategorySerializer,
@@ -164,3 +167,19 @@ class PurchaseOrderViewSet(HasWorkflowViewMixin, VuedaViewSet):
         if holds_a_state_grant:
             return super().check_permissions(request)
         return super(HasWorkflowViewMixin, self).check_permissions(request)
+
+
+class PurchaseOrderStateCountViewSet(VuedaViewSet):
+    """
+    The order pipeline as data: one row per workflow state with its order count, in one
+    request. The model is a database view, so this is an ordinary list endpoint with
+    ordinary CRUDL permissions rather than a bespoke summary action.
+
+    It reports the whole pipeline, not the caller's slice of it. See the model docstring
+    for why, and for what would have to change if a state rule ever hid orders from a list.
+    """
+
+    queryset = PurchaseOrderStateCount.objects.all()
+    serializer_class = PurchaseOrderStateCountSerializer
+    filterset_class = PurchaseOrderStateCountFilterSet
+    column_totals: ClassVar[list[str]] = ["order_count"]
