@@ -178,8 +178,13 @@ class PurchaseOrderViewSet(HasWorkflowViewMixin, VuedaViewSet):
         annotated one: the alias replaces the annotation it is summing, so the wrapping
         subquery stops selecting it and PostgreSQL reports ``column "total_value" does not
         exist``. Aggregating under a different alias and renaming the key back produces the
-        same response in one query. Logged upstream as DASH-2; remove this override when
-        VUEDA aliases its own aggregates.
+        same response in one query.
+
+        The upstream fix is already written, in VUEDA PR 313, which aliases its own
+        aggregates for exactly this reason. Remove this override when that lands, and
+        expect to migrate with it: that change also makes ``column_totals`` a mapping of
+        client-facing name to ORM path, puts totals behind a ``ct`` request parameter, and
+        totals an empty result as zero rather than null.
         """
         if not self.column_totals:
             return {}
