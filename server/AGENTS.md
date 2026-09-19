@@ -1,7 +1,8 @@
 # Widget Warehouse Server Guide
 
 This directory contains the Widget Warehouse Django server. It consumes the
-local editable VUEDA server package from `../../vueda/server`.
+VUEDA server package. VUEDA questions are answered from
+<https://vueda.dev/v3/>; see the root guide's VUEDA Documentation section.
 
 ## Commands
 

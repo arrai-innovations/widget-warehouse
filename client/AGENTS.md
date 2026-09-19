@@ -1,7 +1,8 @@
 # Widget Warehouse Client Guide
 
 This directory contains the Widget Warehouse Vue 3 client. It is a Vite app
-that consumes the linked VUEDA client package from `../../vueda/client`.
+that consumes the VUEDA client package. VUEDA questions are answered from
+<https://vueda.dev/v3/>; see the root guide's VUEDA Documentation section.
 
 ## Commands
 
