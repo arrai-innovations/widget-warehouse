@@ -28,11 +28,15 @@ fix-client:
 test:
   pnpx concurrently -n server,client -c green,cyan "just test-server" "just test-client"
 
-test-server:
-  cd {{justfile_directory()}}/server && uv run --no-sync pytest
+# Extra arguments go to pytest; paths are relative to server/.
+[positional-arguments]
+test-server *args:
+  cd {{justfile_directory()}}/server && uv run --no-sync pytest "$@"
 
-test-client:
-  cd {{justfile_directory()}}/client && pnpm test
+# Extra arguments go to vitest; paths are relative to client/.
+[positional-arguments]
+test-client *args:
+  cd {{justfile_directory()}}/client && pnpm test "$@"
 
 build: build-client
 

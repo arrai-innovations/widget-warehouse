@@ -58,6 +58,16 @@ Package-specific commands:
 | `just serve-server` | Gunicorn with Uvicorn worker on port 8000 |
 | `just serve-client` | Vite dev server |
 
+`test-server` and `test-client` accept extra arguments, which are forwarded to
+the underlying test runner (pytest or vitest). Paths must be relative to the
+package directory, not the repo root.
+
+```bash
+just test-server tests/test_widget_filters.py
+just test-server -k below_reorder
+just test-client src/setupModelConfig.spec.js
+```
+
 ## VUEDA Documentation
 
 Answer VUEDA questions from the published docs at <https://vueda.dev/v3/>, not
