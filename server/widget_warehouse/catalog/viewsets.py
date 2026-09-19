@@ -93,10 +93,18 @@ class WarehouseViewSet(VuedaViewSet):
 
 
 class InventoryRecordViewSet(VuedaViewSet):
+    """
+    ``column_totals`` is VUEDA's server-side aggregate hook: the listed columns are summed
+    over the filtered queryset and returned alongside the page, so the list footer totals
+    every matching row rather than the ten on screen. Filter the list down to one warehouse
+    and the total follows the filter.
+    """
+
     queryset = InventoryRecord.objects.all()
     serializer_class = InventoryRecordSerializer
     filterset_class = InventoryRecordFilterSet
     permit_list_expands: ClassVar[list[str]] = ["variant", "warehouse"]
+    column_totals: ClassVar[list[str]] = ["quantity_on_hand"]
 
 
 class PromotionViewSet(VuedaViewSet):
