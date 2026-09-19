@@ -1,5 +1,6 @@
 from typing import ClassVar
 
+from django.db.models import Sum
 from vueda.core.viewsets import VuedaViewSet
 from vueda.workflow.models import StatePermission
 from vueda.workflow.views import HasWorkflowViewMixin
@@ -121,11 +122,19 @@ class PurchaseOrderViewSet(HasWorkflowViewMixin, VuedaViewSet):
     ``HasWorkflowViewMixin`` defers the model-level permission check to object level when
     the workflow carries state permissions, because a state rule can only be decided
     against a row.
+
+    ``column_totals`` here totals money rather than a stored column. ``total_value`` is not
+    a field on the model: ``get_queryset`` annotates it from the order's lines, the
+    serializer declares a decimal field of the same name, and VUEDA sums that name over the
+    filtered queryset. Filter the list to one supplier and the footer reports what is owed
+    to that supplier. This is the shape to copy for any aggregate a list should carry, and
+    it needs all three parts: annotate it, serialize it, declare it.
     """
 
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
     filterset_class = PurchaseOrderFilterSet
+    column_totals: ClassVar[list[str]] = ["total_value"]
     # "lines" is here so a list request can expand the inline as well: without it,
     # flex-fields refuses the expand on list and the create/update forms are the only
     # place the child rows are reachable.
@@ -136,6 +145,9 @@ class PurchaseOrderViewSet(HasWorkflowViewMixin, VuedaViewSet):
         "destination_warehouse",
         "order_date",
         "expected_arrival_date",
+        # Sortable because the annotation is a database expression rather than something
+        # computed after the page is chosen: ordering by it sorts every order, not ten.
+        "total_value",
         "created_at",
         "updated_at",
     ]
@@ -146,6 +158,35 @@ class PurchaseOrderViewSet(HasWorkflowViewMixin, VuedaViewSet):
         "destination_warehouse__code",
         "destination_warehouse__name",
     ]
+
+    def get_queryset(self):
+        """
+        Annotate every read with the order's value.
+
+        On ``get_queryset`` rather than on the class attribute, so detail reads carry it
+        too: ``get_object`` filters this queryset, and a serializer field with no attribute
+        behind it would fail the detail view while the list worked.
+        """
+        return super().get_queryset().with_total_value()
+
+    def get_column_info(self, queryset):
+        """
+        Total the annotated column under a private alias.
+
+        VUEDA aggregates each total under the column's own name
+        (``{column: Sum(column)}``), which works for a stored column and fails for an
+        annotated one: the alias replaces the annotation it is summing, so the wrapping
+        subquery stops selecting it and PostgreSQL reports ``column "total_value" does not
+        exist``. Aggregating under a different alias and renaming the key back produces the
+        same response in one query. Logged upstream as DASH-2; remove this override when
+        VUEDA aliases its own aggregates.
+        """
+        if not self.column_totals:
+            return {}
+
+        alias = "column_total__{}".format
+        totals = queryset.aggregate(**{alias(column): Sum(column) for column in self.column_totals})
+        return {column: totals[alias(column)] for column in self.column_totals}
 
     def check_permissions(self, request):
         """

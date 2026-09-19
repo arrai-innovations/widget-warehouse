@@ -91,4 +91,19 @@ describe("setupModelConfig", () => {
         ]);
         expect(viewConfigs.list.fetchFields).toEqual(viewConfigs.list.displayFields);
     });
+
+    it("keeps the PurchaseOrder total_value column in the list so its server total can render", () => {
+        setupModelConfig({});
+
+        const [, , viewConfigs] = mocks.setConfig.mock.calls.find(([target]) => target.model === "purchaseorder");
+
+        // The server declares total_value in column_totals, but ViewList renders the totals
+        // row cell by cell across the displayed fields and reads each total by field name.
+        // Drop the column and the total is in the response and nowhere on the page.
+        expect(viewConfigs.list.displayFields).toContain("total_value");
+        expect(viewConfigs.list.fetchFields).toEqual(viewConfigs.list.displayFields);
+        // The lines stay out of the list: the value column is what the order is worth,
+        // which is the reason the rows were expensive to show.
+        expect(viewConfigs.list.displayFields).not.toContain("lines");
+    });
 });

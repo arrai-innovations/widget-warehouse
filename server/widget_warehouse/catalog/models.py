@@ -1,9 +1,23 @@
 import uuid
+from decimal import Decimal
 
 from django.contrib.postgres import fields as pg_fields
 from django.db import models
-from vueda.core.models import BaseModelMeta, Lookup, VuedaModel
+from django.db.models.functions import Coalesce
+from vueda.core.models import BaseModelMeta, FormattedNameManager, Lookup, VuedaModel
 from vueda.workflow.models import HasWorkflowModelMixin
+
+# The money an order is worth is a sum over its lines, so it is neither a column nor a
+# GeneratedField: it is an annotation the viewset adds, a serializer field that reads it,
+# and the column VUEDA's ``column_totals`` sums for the list footer. One output field is
+# shared by the subquery, the annotation, and the serializer so the three agree on
+# precision rather than each guessing.
+TOTAL_VALUE_MAX_DIGITS = 12
+TOTAL_VALUE_DECIMAL_PLACES = 2
+
+
+def total_value_output_field():
+    return models.DecimalField(max_digits=TOTAL_VALUE_MAX_DIGITS, decimal_places=TOTAL_VALUE_DECIMAL_PLACES)
 
 
 class WidgetCategory(Lookup):
@@ -191,6 +205,45 @@ class Promotion(VuedaModel):
         ordering = ("-created_at", "id")
 
 
+class PurchaseOrderQuerySet(models.QuerySet):
+    """Queryset for purchase orders, carrying the order value annotation."""
+
+    def with_total_value(self):
+        """
+        Annotate each order with the value of its lines.
+
+        A correlated subquery rather than ``annotate(Sum("lines__..."))``. The join form
+        would fan the order out to one row per line, and anything else joining a
+        multi-valued relation onto the same queryset (row-level permission filtering and
+        the workflow state overlay both can) would then multiply the sum. A subquery
+        aggregates in its own scope, so the number is the same whatever else the viewset
+        has joined.
+
+        ``Coalesce`` to zero rather than leaving the null through: an order with no lines
+        is worth nothing, and ``Sum`` over the column for the list footer would otherwise
+        have to treat one null row as different from an empty page.
+        """
+        line_value = (
+            PurchaseOrderLine.objects.filter(purchase_order=models.OuterRef("pk"))
+            .order_by()
+            .values("purchase_order")
+            .annotate(
+                value=models.Sum(
+                    models.F("quantity_ordered") * models.F("unit_price"),
+                    output_field=total_value_output_field(),
+                )
+            )
+            .values("value")
+        )
+        return self.annotate(
+            total_value=Coalesce(
+                models.Subquery(line_value, output_field=total_value_output_field()),
+                Decimal("0.00"),
+                output_field=total_value_output_field(),
+            )
+        )
+
+
 class PurchaseOrder(HasWorkflowModelMixin, VuedaModel):
     """
     An inbound order placed with a supplier for delivery into a warehouse.
@@ -228,6 +281,26 @@ class PurchaseOrder(HasWorkflowModelMixin, VuedaModel):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Built on FormattedNameManager rather than PurchaseOrderQuerySet.as_manager(). A
+    # model whose formatted_name comes from a lookup expression, as this one's does from
+    # ``reference``, depends on its default manager annotating that expression onto every
+    # queryset; a plain manager shadows it and formatted_name stops resolving outside the
+    # viewset. vueda_info.E009 reports it at startup, which is how this was caught.
+    objects = FormattedNameManager.from_queryset(PurchaseOrderQuerySet)()
+
+    def calculate_total_value(self):
+        """
+        The same number ``with_total_value`` annotates, computed in Python.
+
+        A write response serializes the instance the write returned, which no queryset
+        annotated, so the serializer falls back to this. It reads through ``lines``, which
+        on a create or update has just been saved in the same transaction.
+        """
+        return sum(
+            (line.quantity_ordered * line.unit_price for line in self.lines.all()),
+            Decimal("0.00"),
+        )
 
     class Meta(BaseModelMeta):
         ordering = ("-order_date", "-reference")

@@ -117,8 +117,17 @@ A purchase order carries its lines as a writable inline, so one request creates 
 updates the order and its line rows together. The client sends the `lines` expand on
 create and update, which is what makes the nested payload deserialize as objects rather
 than as ids; a line left out of an update is deleted. Sign in as the clerk and edit
-`PO-1044`, one of the seeded drafts, to see it. The list view deliberately does not expand the lines: it shows the
-supplier and destination warehouse instead.
+`PO-1044`, one of the seeded drafts, to see it. The list view deliberately does not expand
+the lines: it shows the supplier and destination warehouse instead.
+
+The list also carries an `Order value` column and totals it in the footer. The value is not
+a column on the order: the viewset annotates it as a sum over the order's lines, the
+serializer declares a field of the same name and describes its type through
+`get_field_model_info`, and VUEDA's `column_totals` sums it over the filtered queryset. So
+the footer answers "what is this list worth" rather than "what is this page worth". Filter
+by supplier and the total follows, and the column sorts on the server because the value is
+a database expression rather than something computed per row. The inventory list totals
+`quantity_on_hand` the same way.
 
 ## The Purchase Order Workflow
 
