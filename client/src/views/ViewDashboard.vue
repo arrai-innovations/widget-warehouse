@@ -6,6 +6,7 @@ import {
     PhGear,
     PhGitBranch,
     PhHandshake,
+    PhReceipt,
     PhSealQuestion,
     PhStackMinus,
     PhWarehouse,
@@ -87,6 +88,19 @@ const queues = [
         params: { active_on: today },
         icon: PhCalendarCheck,
     },
+    {
+        key: "open-value",
+        title: "Open order value",
+        description: "Ordered and not yet received or cancelled",
+        model: "purchaseorder",
+        params: { is_open: "true" },
+        // The one tile that reports a sum rather than a count. Naming a column here reads
+        // columnTotals instead of totalRecords, which is the same request either way: the
+        // viewset declares total_value in column_totals, so the sum over every matching
+        // order arrives in the envelope beside the count.
+        total: "total_value",
+        icon: PhReceipt,
+    },
 ];
 
 // The same shape again, with no filter: how much of each thing exists. These make the app
@@ -98,6 +112,12 @@ const scale = [
     { key: "warehouses", title: "Warehouses", model: "warehouse", params: {}, icon: PhWarehouse },
     { key: "orders", title: "Purchase orders", model: "purchaseorder", params: {}, icon: PhFileArrowUp },
 ];
+
+// No currency symbol. Nothing in the catalog records a denomination, so the page shows the
+// number the server computed rather than inventing one. Grouping and two decimal places
+// come from the viewer's own locale.
+const amountFormat = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const countFormat = new Intl.NumberFormat();
 
 function queryString(params) {
     return `?${new URLSearchParams(params).toString()}`;
@@ -111,12 +131,12 @@ async function mayList(model) {
 }
 
 /**
- * Resolve one tile: may this user see it, how many rows match, and where does it point.
+ * Resolve one tile: may this user see it, what is its number, and where does it point.
  *
  * Three states, the same three the sidebar uses: `undefined` while resolving, `null` for a
  * model this user cannot list, and an object once it has a number.
  */
-function resolveTile({ model, params }) {
+function resolveTile({ model, params, total }) {
     return computedAsync(async () => {
         // Read synchronously so this re-evaluates on sign-in. Fetching model info while
         // logged out would also cache a 403 in the info store's error guard, leaving the
@@ -132,8 +152,13 @@ function resolveTile({ model, params }) {
         // than a bespoke endpoint.
         const query = queryString({ ...params, [PAGE_SIZE_PARAM]: 1 });
         const page = await fetchHelper(getListUrl({ app: APP, model, query }), {}, `Counting ${model}`);
+        // A column total over no rows is null rather than zero: the database returns NULL
+        // for a SUM of nothing, and the annotation's own fallback fills in a row with no
+        // lines, not a page with no rows. Read it as nothing to add up.
+        const value = total ? (page.columnTotals?.[total] ?? 0) : page.totalRecords;
         return {
-            count: page.totalRecords,
+            display: total ? amountFormat.format(value) : countFormat.format(value),
+            empty: !value,
             to: await getCRUDForTo({ app: APP, model, view: "list", query: params }),
         };
     });
@@ -151,6 +176,12 @@ function withResolution(tiles) {
 
 const queueTiles = withResolution(queues);
 const scaleTiles = withResolution(scale);
+
+// A band with nothing in it renders nothing, heading included. No demo role loses a whole
+// band today, but a narrower one would, and a bare heading over empty space reads as a
+// page that failed to load rather than one with nothing to say.
+const hasQueues = computed(() => queueTiles.some((tile) => unref(tile.state) !== null));
+const hasScale = computed(() => scaleTiles.some((tile) => unref(tile.state) !== null));
 
 // The pipeline is one request for the whole band. The counts come from a database view
 // with a row per state, so a state holding no orders is a zero rather than a missing bar,
@@ -208,7 +239,7 @@ const greeting = computed(() => userStore.loggedInUser?.name || userStore.logged
             </p>
         </header>
 
-        <section class="flex flex-col gap-3">
+        <section v-if="hasQueues" class="flex flex-col gap-3">
             <h2 class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">Needs attention</h2>
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <template v-for="tile in queueTiles" :key="tile.key">
@@ -225,15 +256,19 @@ const greeting = computed(() => userStore.loggedInUser?.name || userStore.logged
                             <CardDescription>{{ tile.description }}</CardDescription>
                         </CardHeader>
                         <CardContent class="mt-auto flex items-end justify-between gap-3">
+                            <!-- Sized for the widest thing a tile can hold, which is a
+                                 money total rather than a count, and the link never wraps:
+                                 "Open list" broken across two lines is the first thing a
+                                 wide value costs. -->
                             <span
-                                class="text-3xl font-semibold"
-                                :class="unref(tile.state).count ? 'text-foreground' : 'text-muted-foreground'"
+                                class="truncate text-2xl font-semibold"
+                                :class="unref(tile.state).empty ? 'text-muted-foreground' : 'text-foreground'"
                             >
-                                {{ unref(tile.state).count }}
+                                {{ unref(tile.state).display }}
                             </span>
                             <RouterLink
                                 :to="unref(tile.state).to"
-                                class="text-primary-text hover:text-primary-text-active text-sm underline-offset-4 hover:underline"
+                                class="text-primary-text hover:text-primary-text-active shrink-0 text-sm whitespace-nowrap underline-offset-4 hover:underline"
                             >
                                 Open list
                             </RouterLink>
@@ -278,7 +313,7 @@ const greeting = computed(() => userStore.loggedInUser?.name || userStore.logged
             </Card>
         </section>
 
-        <section class="flex flex-col gap-3">
+        <section v-if="hasScale" class="flex flex-col gap-3">
             <h2 class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">In the warehouse</h2>
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
                 <template v-for="tile in scaleTiles" :key="tile.key">
@@ -290,7 +325,7 @@ const greeting = computed(() => userStore.loggedInUser?.name || userStore.logged
                                 {{ tile.title }}
                             </span>
                             <RouterLink :to="unref(tile.state).to" class="text-xl font-semibold hover:underline">
-                                {{ unref(tile.state).count }}
+                                {{ unref(tile.state).display }}
                             </RouterLink>
                         </CardContent>
                     </Card>

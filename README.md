@@ -131,6 +131,12 @@ at, so opening a tile lands on the list it counted, already filtered. The pipeli
 one request against the order state summary, which is a database view, so a state holding
 no orders is a bar reading zero rather than a missing bar.
 
+One tile reports a sum rather than a count. "Open order value" reads `columnTotals` from
+the same envelope, because the order viewset declares `total_value` in `column_totals`, so
+what the warehouse has committed to orders in flight arrives beside how many there are. It
+shows a plain number: nothing in the catalog records a currency, so the page does not
+invent one.
+
 ## Purchase Orders
 
 A purchase order carries its lines as a writable inline, so one request creates or

@@ -2,6 +2,7 @@
 import {
     PhCloudMoon,
     PhFileArrowUp,
+    PhGauge,
     PhGear,
     PhGitBranch,
     PhHandshake,
@@ -128,6 +129,25 @@ function isModelActive(modelName) {
             <NavLogo class="min-w-0 whitespace-nowrap" :animated="true" />
         </SidebarHeader>
         <SidebarContent>
+            <SidebarGroup v-if="userStore.loggedIn">
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <!-- Above the catalog and outside its group: the dashboard is a
+                             place rather than a model, and it takes no permission check
+                             because every signed-in user may see the page. What they see
+                             on it is decided tile by tile, by the same model info the
+                             items below are resolved from. -->
+                        <SidebarMenuItem>
+                            <SidebarMenuButton as-child :is-active="route.name === 'dashboard'" tooltip="Dashboard">
+                                <RouterLink :to="{ name: 'dashboard' }">
+                                    <PhGauge weight="duotone" />
+                                    <span>Dashboard</span>
+                                </RouterLink>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
             <SidebarGroup v-if="userStore.loggedIn">
                 <SidebarGroupLabel>Catalog</SidebarGroupLabel>
                 <SidebarGroupContent>
