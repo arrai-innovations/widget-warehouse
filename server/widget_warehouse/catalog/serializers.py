@@ -1,11 +1,14 @@
 from typing import ClassVar
 
 from django.conf import settings
+from rest_framework import serializers
 from vueda.core.fields.serializers import FileField, ImageField, RangeField
 from vueda.core.serializers import VuedaLookupSerializer, VuedaSerializer
 from vueda.workflow.serializers import HasWorkflowSerializerMixin
 
 from widget_warehouse.catalog.models import (
+    TOTAL_VALUE_DECIMAL_PLACES,
+    TOTAL_VALUE_MAX_DIGITS,
     InventoryRecord,
     Promotion,
     PurchaseOrder,
@@ -223,7 +226,51 @@ class PurchaseOrderSerializer(HasWorkflowSerializerMixin, VuedaSerializer):
     ``HasWorkflowSerializerMixin`` adds the current state and the transitions this
     request's user may run on this row, so a list response carries both the state to
     display and the affordances to offer without a second call per row.
+
+    ``total_value`` is the serializer half of an aggregate column. The viewset annotates
+    the queryset and declares the same name in ``column_totals``, but a declared total is
+    only rendered where a column of that name is, because the list footer draws one cell
+    per displayed field and looks the total up by field name. Declaring it here is what
+    gives the total somewhere to land.
     """
+
+    total_value = serializers.DecimalField(
+        max_digits=TOTAL_VALUE_MAX_DIGITS,
+        decimal_places=TOTAL_VALUE_DECIMAL_PLACES,
+        read_only=True,
+        label="Order value",
+        help_text="Quantity times unit price across the order's lines.",
+    )
+
+    def get_field_model_info(self, fields):
+        """
+        Tell the metadata what ``total_value`` is, since nothing can infer it.
+
+        VUEDA derives each field's type from the model column behind it. There is no column
+        here: the value is a queryset annotation, so the resolution finds nothing, the
+        client would be handed a column with no type to render or align, and
+        ``manage.py check`` reports ``vueda_info.W001`` naming this field. This hook is the
+        documented correction for a field that is genuinely not model-backed, and it both
+        fixes the metadata and settles the check.
+        """
+        fields = super().get_field_model_info(fields)
+        if "total_value" in fields:
+            fields["total_value"]["type_db"] = "DecimalField"
+            fields["total_value"]["type_model"] = "DecimalField"
+        return fields
+
+    def to_representation(self, instance):
+        """
+        Fill in ``total_value`` for an instance no queryset annotated.
+
+        List and detail responses come from the viewset's annotated queryset. A create or
+        update response serializes the instance the write returned, which carries no
+        annotation, and a read-only field with nothing behind it is an error rather than a
+        blank. Computing it here keeps the write response and the next list agreeing.
+        """
+        if not hasattr(instance, "total_value"):
+            instance.total_value = instance.calculate_total_value()
+        return super().to_representation(instance)
 
     class Meta(VuedaSerializer.Meta):
         model = PurchaseOrder
@@ -234,13 +281,14 @@ class PurchaseOrderSerializer(HasWorkflowSerializerMixin, VuedaSerializer):
             "destination_warehouse",
             "order_date",
             "expected_arrival_date",
+            "total_value",
             "lines",
             "created_at",
             "updated_at",
             *VuedaSerializer.Meta.fields,
             *HasWorkflowSerializerMixin.Meta.fields,
         )
-        read_only_fields = ("created_at", "updated_at")
+        read_only_fields = ("created_at", "updated_at", "total_value")
         expandable_fields: ClassVar[dict] = {
             "supplier": (
                 SupplierSerializer,

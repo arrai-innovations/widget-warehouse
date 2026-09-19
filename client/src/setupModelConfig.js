@@ -146,6 +146,11 @@ export function setupModelConfig(pinia) {
             // inline. The list instead expands the two foreign keys, so their columns show a
             // name rather than an id, and drops the lines: displayed they are a cell full of
             // row ids, and fetched they cost a query per row for a column nobody reads.
+            //
+            // "total_value" is the server's column_totals column, and it is listed here for
+            // more than the column itself: ViewList draws the totals row by walking the
+            // displayed fields and looking each total up by field name, so a total whose
+            // column is not displayed is fetched and then never rendered.
             list: {
                 displayFields: [
                     "reference",
@@ -153,6 +158,7 @@ export function setupModelConfig(pinia) {
                     "destination_warehouse",
                     "order_date",
                     "expected_arrival_date",
+                    "total_value",
                     "created_at",
                     "updated_at",
                 ],
@@ -162,6 +168,7 @@ export function setupModelConfig(pinia) {
                     "destination_warehouse",
                     "order_date",
                     "expected_arrival_date",
+                    "total_value",
                     "created_at",
                     "updated_at",
                 ],
