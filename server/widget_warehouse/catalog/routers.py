@@ -5,6 +5,7 @@ from widget_warehouse.catalog.viewsets import (
     PromotionViewSet,
     PurchaseOrderStateCountViewSet,
     PurchaseOrderViewSet,
+    SupplierPriceViewSet,
     SupplierViewSet,
     WarehouseViewSet,
     WidgetCategoryViewSet,
@@ -22,4 +23,5 @@ router.register(r"inventoryrecord", InventoryRecordViewSet)
 router.register(r"promotion", PromotionViewSet)
 router.register(r"purchaseorder", PurchaseOrderViewSet)
 router.register(r"purchaseorderstatecount", PurchaseOrderStateCountViewSet)
+router.register(r"supplierprice", SupplierPriceViewSet)
 urlpatterns = router.urls

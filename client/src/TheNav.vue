@@ -81,6 +81,7 @@ const models = [
     { title: "Inventory Records", model: "inventoryrecord", icon: PhStack },
     { title: "Promotions", model: "promotion", icon: PhTag },
     { title: "Purchase Orders", model: "purchaseorder", icon: PhFileArrowUp },
+    { title: "Supplier Prices", model: "supplierprice", icon: PhTag },
     { title: "Suppliers", model: "supplier", icon: PhHandshake },
     { title: "Warehouses", model: "warehouse", icon: PhWarehouse },
     { title: "Widgets", model: "widget", icon: PhGear },

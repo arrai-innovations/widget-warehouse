@@ -1,7 +1,9 @@
 import uuid
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.postgres import fields as pg_fields
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.functions import Coalesce
 from vueda.core.models import BaseModelMeta, FormattedNameManager, Lookup, VuedaModel
@@ -159,13 +161,23 @@ class InventoryRecord(VuedaModel):
     """Stock levels for a widget variant at a specific warehouse."""
 
     formatted_name = None
+    # The manager applies these to every queryset, so the name below costs no extra query
+    # wherever a record is read: a list page, a lookup's choices, or a management command.
+    formatted_name_select_related = ("variant__widget", "warehouse")
 
     def get_formatted_name(self):
-        return f"{self.variant} @ {self.warehouse.code}"
+        # Through the widget's SKU rather than the variant alone. A variant is named for
+        # its shape ("Standard"), and that name repeats across the whole catalogue, so a
+        # record named for it is indistinguishable from dozens of others. The SKU is what
+        # a person reads off a shelf.
+        return f"{self.variant.widget.sku}-{self.variant.sku_suffix} @ {self.warehouse.code}"
 
     variant = models.ForeignKey(WidgetVariant, on_delete=models.CASCADE, related_name="inventory")
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="inventory")
     quantity_on_hand = models.PositiveIntegerField(default=0)
+    # A committed replenishment changes this row so repeatable-read transactions
+    # cannot both purchase against the same snapshot after taking its lock.
+    replenishment_revision = models.PositiveIntegerField(default=0, editable=False)
     reorder_threshold = models.PositiveSmallIntegerField(
         default=0,
         help_text="Reorder stock when quantity on hand falls below this level.",
@@ -181,12 +193,43 @@ class InventoryRecord(VuedaModel):
 
     class Meta(BaseModelMeta):
         ordering = ("warehouse", "variant")
+        permissions = (("replenish_inventoryrecord", "Can replenish inventory with draft purchase orders"),)
         constraints = (
             models.UniqueConstraint(
                 fields=("variant", "warehouse"),
                 name="unique_inventory_per_variant_warehouse",
             ),
         )
+
+
+class SupplierPrice(VuedaModel):
+    """Current purchase cost, copied onto an order line rather than linked to its price."""
+
+    formatted_name = None
+    formatted_name_select_related = ("supplier", "variant__widget")
+
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name="prices")
+    variant = models.ForeignKey(WidgetVariant, on_delete=models.CASCADE, related_name="supplier_prices")
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0"))])
+
+    def get_formatted_name(self):
+        return f"{self.variant.widget.sku}-{self.variant.sku_suffix} from {self.supplier.name}"
+
+    class Meta(BaseModelMeta):
+        ordering = ("supplier", "variant")
+        constraints = (
+            models.UniqueConstraint(fields=("supplier", "variant"), name="unique_supplier_variant_price"),
+            models.CheckConstraint(condition=models.Q(unit_cost__gte=0), name="supplier_cost_nonnegative"),
+        )
+
+
+class ReplenishmentBatch(models.Model):
+    """Internal receipt for an idempotent replenishment submission."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    request_digest = models.CharField(max_length=64)
 
 
 class Promotion(VuedaModel):
@@ -261,6 +304,9 @@ class PurchaseOrder(HasWorkflowModelMixin, VuedaModel):
         max_length=32,
         unique=True,
         help_text="Purchase order number, e.g. PO-1042.",
+    )
+    replenishment_batch = models.ForeignKey(
+        ReplenishmentBatch, null=True, blank=True, on_delete=models.PROTECT, related_name="orders", editable=False
     )
     supplier = models.ForeignKey(
         Supplier,

@@ -124,7 +124,27 @@ export function setupModelConfig(pinia) {
                         value: "warehouse.id",
                     },
                 },
+                // The record label identifies the SKU as well as its warehouse.
+                displayFields: [
+                    "formatted_name",
+                    "quantity_on_hand",
+                    "reorder_threshold",
+                    "shortfall",
+                    "max_stock_level",
+                    "last_stocktake_at",
+                    "last_received_at",
+                    "notes",
+                ],
             },
+        },
+    );
+
+    modelConfigStore.setConfig(
+        { app: "catalog", model: "supplierprice" },
+        { expand: [], displayFields: ["formatted_name", "unit_cost"] },
+        {
+            create: { displayFields: ["supplier", "variant", "unit_cost"] },
+            update: { displayFields: ["supplier", "variant", "unit_cost"] },
         },
     );
 
