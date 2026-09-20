@@ -26,13 +26,19 @@ import { PAGE_SIZE_PARAM } from "@vueda/utils/constants.js";
 import { fetchHelper } from "@vueda/utils/fetchSupport.js";
 import { getListUrl } from "@vueda/utils/urls.js";
 import { computedAsync } from "@vueuse/core";
-import { computed, markRaw, unref } from "vue";
+import { computed, defineAsyncComponent, markRaw, unref } from "vue";
 import { RouterLink } from "vue-router";
 
 const modelInfoStore = storeModelInfo();
 const userStore = storeUser();
 
 usePageTitle(() => ({ title: "Dashboard" }));
+
+// Unovis is the only library on this page that is neither Vue nor VUEDA, and the chart
+// component is the only file that imports it. Loading that component asynchronously keeps
+// the library out of the entry bundle, so the rest of the app, which draws no charts,
+// never downloads it.
+const ChartOrderPipeline = defineAsyncComponent(() => import("@/charts/ChartOrderPipeline.vue"));
 
 const APP = "catalog";
 const PIPELINE_MODEL = "purchaseorderstatecount";
@@ -196,9 +202,6 @@ const pipeline = computedAsync(async () => {
     const query = queryString({ [PAGE_SIZE_PARAM]: 20 });
     const page = await fetchHelper(getListUrl({ app: APP, model: PIPELINE_MODEL, query }), {}, "Counting the pipeline");
     const rows = page.results ?? [];
-    // Scaled against the busiest state rather than the total, so the shortest bar is still
-    // visible. The number beside each bar is the value; the bar is the comparison.
-    const busiest = Math.max(1, ...rows.map((row) => row.order_count));
     const linkable = await mayList("purchaseorder");
     return {
         total: page.columnTotals?.order_count ?? 0,
@@ -207,7 +210,6 @@ const pipeline = computedAsync(async () => {
                 code: row.code,
                 name: row.name,
                 count: row.order_count,
-                share: row.order_count / busiest,
                 // A state with no orders does not link. The workflow state filter only
                 // accepts states some row is currently in, so a link from an empty bar
                 // would land on a 400 rather than an empty list.
@@ -289,9 +291,13 @@ const greeting = computed(() => userStore.loggedInUser?.name || userStore.logged
                         request per state.
                     </CardDescription>
                 </CardHeader>
-                <CardContent class="flex flex-col gap-3">
-                    <div v-for="state in unref(pipeline).states" :key="state.code" class="flex flex-col gap-1">
-                        <div class="flex items-baseline justify-between gap-3 text-sm">
+                <CardContent class="flex flex-col gap-4">
+                    <ChartOrderPipeline :states="unref(pipeline).states" />
+                    <!-- The chart carries the shape; this carries the exact numbers and
+                         the way in. Every count is reachable as text and every link by
+                         keyboard, so nothing the band knows is behind a hover. -->
+                    <ul class="flex flex-wrap items-baseline gap-x-5 gap-y-2 text-sm">
+                        <li v-for="state in unref(pipeline).states" :key="state.code" class="flex items-baseline gap-2">
                             <RouterLink
                                 v-if="state.to"
                                 :to="state.to"
@@ -301,14 +307,8 @@ const greeting = computed(() => userStore.loggedInUser?.name || userStore.logged
                             </RouterLink>
                             <span v-else class="text-muted-foreground">{{ state.name }}</span>
                             <Badge numeric variant="outline">{{ state.count }}</Badge>
-                        </div>
-                        <div class="bg-muted h-2 w-full overflow-hidden rounded-full">
-                            <div
-                                class="bg-primary h-full rounded-r-[4px]"
-                                :style="{ width: `${Math.round(state.share * 100)}%` }"
-                            />
-                        </div>
-                    </div>
+                        </li>
+                    </ul>
                 </CardContent>
             </Card>
         </section>
