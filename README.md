@@ -33,7 +33,8 @@ just manage seed_catalog
 Run them in that order the first time. `seed_workflows` attaches state permissions to the
 demo groups, so it needs `seed_demo_users` to have created them.
 
-All three are idempotent, so a deployed instance can be reseeded at any time. Reseeding
+All three are idempotent, so a deployed instance can be reseeded at any time. Supplier
+prices are created when absent and retain evaluator edits until a reset. Reseeding
 does not walk an order back: `seed_catalog` puts an order into its seeded workflow state
 when it creates the order and not afterwards, and `seed_workflows` only gives a starting
 state to orders that have none, which is what backfills orders seeded before the workflow
@@ -188,5 +189,68 @@ and edit it. Submit it, and the edit is gone: same order, same URL, same user, a
 affordance disappears because the row moved state. Rejecting it puts the order back in
 `draft` and hands the clerk their edit back.
 
-Running a transition is a server capability today. The client surface for triggering one
-is the next piece of work.
+Available transitions appear in the client and are executed through VUEDA's action forms.
+
+## Walkthrough: Replenish Stock
+
+Start with the seeded demo and sign in as **Inventory clerk**
+(`clerk@widgetwarehouse.com`, password `widget-demo`). This walkthrough follows a stock
+shortage through purchasing and approval, using the same records across each step.
+
+1. Open **Inventory Records** and choose **Review shortages** in the compact notice.
+   The list filters to records below their reorder threshold and sorts by **Units below
+   threshold**, largest first. Product SKUs identify the rows. The dashboard's **Below
+   reorder** tile is another entry into this queue.
+2. Select a few records using the ordinary list checkboxes, then choose **Replenish**
+   in the selection bar. For a repeatable fresh-demo example, choose `SPR-B003-STD @ SYD-DC`
+   and `GSK-B003-STD @ SYD-DC`. Include `BRG-6204-ZZ @ MEL-OVF` to see a shortage already
+   covered by an existing order. Selection concerns the records you checked, not every
+   record matching the filter.
+3. Review the proposed orders, grouped by **supplier and destination warehouse**. Each
+   stock item shows on-hand stock, its threshold and replenishment target, approved
+   incoming stock, and pending quantities on draft or submitted orders. Existing orders
+   count towards coverage, so a shortage is not automatically another purchase.
+4. Adjust an order quantity or unit price. Defaults replenish to `max_stock_level`, or
+   to the reorder threshold when no maximum exists, after subtracting on-hand and order
+   coverage. When that coverage already reaches the threshold, no further purchase is
+   proposed. Inactive products or warehouses, unapproved suppliers, and inconsistent
+   stock targets explain why a row cannot be included. Missing supplier prices can be
+   entered directly in the form.
+5. Choose **Create N draft purchase orders**. The server checks the reviewed stock and
+   order coverage again, then creates the whole batch together. The destination is the
+   ordinary PO list restricted to the new batch. **Show all orders** removes that scope.
+6. Select one of the generated drafts and choose **Submit** in the selection bar.
+   Switch to **Inventory supervisor** (`supervisor@widgetwarehouse.com`) to approve it or reject it back to
+   draft. The clerk can edit drafts but cannot approve them; submitting removes their
+   edit permission until an order returns to draft.
+7. Return to the inventory shortage and choose **Replenish** again. Its new draft or
+   submitted order appears as pending coverage; after approval it appears as incoming.
+   Creating a draft does not change on-hand stock. The current receive transition records
+   workflow state only; automatic stock posting and partial receipts are not implemented.
+
+Supplier prices are maintained through **Supplier Prices**. Both inventory roles can
+maintain them; the accountant can read them and the sales roles cannot. Ordinary PO
+create/update forms also default a newly selected variant from the chosen supplier's
+price. Each PO line retains its own editable price: negotiating a line price does not
+update the supplier price, and changing the supplier price does not rewrite older orders.
+
+Reselecting a variant or changing the supplier looks up its price again. If no price is
+stored, enter one on the order line. The API applies the same default when a new line
+omits its price, while an explicitly supplied price (including zero) takes precedence.
+
+For integrators, this is a custom bulk action composed with the standard list rather
+than a separate selection screen. `InventoryRecordViewSet.replenish` exposes GET preview
+and POST execution, and the client registers
+`ViewActionCatalogInventoryrecordReplenish.vue` through `setCrudComponents`. The page uses `useForm`
+and `ActionForm` for input and submission handling. The shared calculation and batch
+creation live in `catalog/replenishment.py`; supplier-price defaults live in
+`catalog/pricing.py` and `client/src/use/usePurchasePriceDefaults.js`.
+
+The server supports VUEDA's `Dry-Run` header without creating orders or batch receipts.
+Actual submissions use an idempotent batch identifier, and a stale proposal asks the
+operator to reload rather than silently changing the reviewed quantities. The batch's
+UUID filter stays out of the PO filter picker while its scope remains visible above the
+list. These are application rules layered on VUEDA's action, metadata, form, and CRUD
+surfaces, as described in the published
+[action contract](https://vueda.dev/v3/core-concepts/action-contract-and-availability.html)
+and [action form reference](https://vueda.dev/v3/reference/api/vue/ActionForm.html).

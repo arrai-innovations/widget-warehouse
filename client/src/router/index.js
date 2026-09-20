@@ -17,6 +17,9 @@ function makeViewLoader(action) {
 
 export function getRouter(app, pinia) {
     const crudComponents = {
+        // Explicit registration also works in Vite dev mode, where variable imports
+        // inside the installed dependency retain their unresolved @ alias.
+        replenish: async () => (await import("@/views/ViewActionCatalogInventoryrecordReplenish.vue")).default,
         list: makeViewLoader("List"),
         create: makeViewLoader("Create"),
         read: makeViewLoader("Read"),

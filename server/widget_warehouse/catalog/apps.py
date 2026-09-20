@@ -13,6 +13,7 @@ class CatalogConfig(AppConfig):
             PromotionSerializer,
             PurchaseOrderSerializer,
             PurchaseOrderStateCountSerializer,
+            SupplierPriceSerializer,
             SupplierSerializer,
             WarehouseSerializer,
             WidgetCategorySerializer,
@@ -24,6 +25,7 @@ class CatalogConfig(AppConfig):
             PromotionViewSet,
             PurchaseOrderStateCountViewSet,
             PurchaseOrderViewSet,
+            SupplierPriceViewSet,
             SupplierViewSet,
             WarehouseViewSet,
             WidgetCategoryViewSet,
@@ -35,6 +37,7 @@ class CatalogConfig(AppConfig):
         register(PromotionSerializer, PromotionViewSet)
         register(PurchaseOrderSerializer, PurchaseOrderViewSet)
         register(PurchaseOrderStateCountSerializer, PurchaseOrderStateCountViewSet)
+        register(SupplierPriceSerializer, SupplierPriceViewSet)
         register(SupplierSerializer, SupplierViewSet)
         register(WarehouseSerializer, WarehouseViewSet)
         register(WidgetCategorySerializer, WidgetCategoryViewSet)

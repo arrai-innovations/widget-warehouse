@@ -15,6 +15,7 @@ from widget_warehouse.catalog.models import (
     PurchaseOrderLine,
     PurchaseOrderStateCount,
     Supplier,
+    SupplierPrice,
     Warehouse,
     Widget,
     WidgetCategory,
@@ -118,6 +119,14 @@ class WidgetVariantSerializer(VuedaSerializer):
         expandable_fields.update(VuedaSerializer.Meta.expandable_fields)
 
 
+class SupplierPriceSerializer(VuedaSerializer):
+    formatted_name = serializers.SerializerMethodField()
+
+    class Meta(VuedaSerializer.Meta):
+        model = SupplierPrice
+        fields = ("id", "supplier", "variant", "unit_cost", *VuedaSerializer.Meta.fields)
+
+
 class WarehouseSerializer(VuedaSerializer):
     class Meta(VuedaSerializer.Meta):
         model = Warehouse
@@ -137,14 +146,38 @@ class WarehouseSerializer(VuedaSerializer):
 
 
 class InventoryRecordSerializer(VuedaSerializer):
+    """
+    ``formatted_name`` is redeclared because this model computes it in Python.
+
+    ``VuedaSerializer`` declares ``formatted_name`` as a ``ReadOnlyField``, which reads the
+    attribute of that name off the instance. That is right for the usual case, where the
+    model carries a stored ``GeneratedField``. ``InventoryRecord`` sets ``formatted_name =
+    None`` and supplies ``get_formatted_name()`` instead, so the attribute the read-only
+    field finds is the ``None``, and the API answers ``"formatted_name": null`` for every
+    row without complaining anywhere. Swapping in a ``SerializerMethodField`` picks up
+    ``FormattedNameSerializerMixin.get_formatted_name``, which is already in this class's
+    ancestry and calls the model's own method.
+    """
+
+    formatted_name = serializers.SerializerMethodField(label="Stock item")
+    shortfall = serializers.IntegerField(read_only=True, label="Units below threshold")
+
+    def get_field_model_info(self, fields):
+        fields = super().get_field_model_info(fields)
+        if "shortfall" in fields:
+            fields["shortfall"].update(type_db="IntegerField", type_model="IntegerField")
+        return fields
+
     class Meta(VuedaSerializer.Meta):
         model = InventoryRecord
         fields = (
             "id",
+            "formatted_name",
             "variant",
             "warehouse",
             "quantity_on_hand",
             "reorder_threshold",
+            "shortfall",
             "max_stock_level",
             "last_stocktake_at",
             "last_received_at",
@@ -241,6 +274,14 @@ class PurchaseOrderSerializer(HasWorkflowSerializerMixin, VuedaSerializer):
         label="Order value",
         help_text="Quantity times unit price across the order's lines.",
     )
+
+    def to_internal_value(self, data):
+        from .pricing import default_line_prices
+
+        data = default_line_prices(data, self.instance)
+        # Writable nested saves validate the original child payload again.
+        self.initial_data = data
+        return super().to_internal_value(data)
 
     def get_field_model_info(self, fields):
         """

@@ -11,6 +11,7 @@ from widget_warehouse.catalog.models import (
     PurchaseOrder,
     PurchaseOrderStateCount,
     Supplier,
+    SupplierPrice,
     Warehouse,
     Widget,
     WidgetCategory,
@@ -71,6 +72,12 @@ class WidgetVariantFilterSet(VuedaFilterSet):
     class Meta:
         model = WidgetVariant
         fields = ("id", "widget", "name")
+
+
+class SupplierPriceFilterSet(VuedaFilterSet):
+    class Meta:
+        model = SupplierPrice
+        fields = ("id", "supplier", "variant")
 
 
 class WarehouseFilterSet(VuedaFilterSet):
@@ -135,6 +142,7 @@ class PurchaseOrderFilterSet(HasWorkflowFilterSetMixin, VuedaFilterSet):
     rather than every state the workflow defines.
     """
 
+    replenishment_batch = rest_framework.UUIDFilter(field_name="replenishment_batch_id", label="Replenishment batch")
     reference = rest_framework.CharFilter(field_name="reference", label="Reference", lookup_expr="icontains")
     order_date = rest_framework.DateFromToRangeFilter(field_name="order_date", label="Order date")
     expected_arrival_date = rest_framework.DateFromToRangeFilter(
@@ -189,6 +197,7 @@ class PurchaseOrderFilterSet(HasWorkflowFilterSetMixin, VuedaFilterSet):
             "expected_arrival_date",
             "overdue",
             "is_open",
+            "replenishment_batch",
         )
 
 

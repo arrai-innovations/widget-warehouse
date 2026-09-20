@@ -150,3 +150,42 @@ def test_a_total_over_no_rows_is_null_rather_than_zero(stock, seeded_roles):
     assert response.status_code == 200, response.data
     assert response.data["totalRecords"] == 0
     assert response.data["columnTotals"] == {"quantity_on_hand": None}
+
+
+@pytest.mark.django_db
+def test_a_record_names_itself_by_sku_and_warehouse(stock, seeded_roles):
+    """
+    ``InventoryRecord`` computes ``formatted_name`` in Python rather than carrying it as a
+    stored column, because the name reaches through two relations and a generated column
+    cannot leave its own row.
+
+    That is also why the serializer redeclares the field. ``VuedaSerializer`` serves
+    ``formatted_name`` as a ``ReadOnlyField``, which reads the attribute of that name off
+    the instance; this model sets that attribute to ``None`` and answers through
+    ``get_formatted_name()`` instead, so the read-only field would serialize null for
+    every row, quietly and forever. This pins the value rather than the mechanism, so it
+    fails whichever way the wiring is lost.
+    """
+    response = list_as("clerk@widgetwarehouse.com", "?below_reorder=true")
+
+    assert response.status_code == 200, response.data
+    assert [row["formatted_name"] for row in response.data["results"]] == ["SPR-100-SM @ SYD-DC"]
+
+
+@pytest.mark.django_db
+def test_naming_a_record_costs_no_extra_query_per_row(stock, seeded_roles):
+    """
+    The name reaches ``variant.widget.sku`` and ``warehouse.code``, which is three tables
+    away from the row. ``formatted_name_select_related`` on the model is what keeps that
+    from becoming a query per row, and it belongs on the model rather than the viewset so
+    a management command or a lookup's choices get it too.
+    """
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    with CaptureQueriesContext(connection) as queries:
+        names = [record.get_formatted_name() for record in InventoryRecord.objects.all()]
+
+    assert len(names) == 4
+    # One for the records; anything more means the relations were not pre-fetched.
+    assert len(queries) == 1, [query["sql"] for query in queries]

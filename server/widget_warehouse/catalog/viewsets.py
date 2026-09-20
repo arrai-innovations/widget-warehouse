@@ -1,6 +1,11 @@
 from typing import ClassVar
 
-from django.db.models import Sum
+from django.db import OperationalError, transaction
+from django.db.models import F, Sum
+from django.db.models.functions import Greatest
+from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
+from vueda.core.decorators import action
 from vueda.core.viewsets import VuedaViewSet
 from vueda.workflow.models import StatePermission
 from vueda.workflow.views import HasWorkflowViewMixin
@@ -11,6 +16,7 @@ from widget_warehouse.catalog.filtersets import (
     PurchaseOrderFilterSet,
     PurchaseOrderStateCountFilterSet,
     SupplierFilterSet,
+    SupplierPriceFilterSet,
     WarehouseFilterSet,
     WidgetCategoryFilterSet,
     WidgetFilterSet,
@@ -22,6 +28,7 @@ from widget_warehouse.catalog.models import (
     PurchaseOrder,
     PurchaseOrderStateCount,
     Supplier,
+    SupplierPrice,
     Warehouse,
     Widget,
     WidgetCategory,
@@ -32,6 +39,7 @@ from widget_warehouse.catalog.serializers import (
     PromotionSerializer,
     PurchaseOrderSerializer,
     PurchaseOrderStateCountSerializer,
+    SupplierPriceSerializer,
     SupplierSerializer,
     WarehouseSerializer,
     WidgetCategorySerializer,
@@ -50,6 +58,12 @@ class SupplierViewSet(VuedaViewSet):
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
     filterset_class = SupplierFilterSet
+
+
+class SupplierPriceViewSet(VuedaViewSet):
+    queryset = SupplierPrice.objects.all()
+    serializer_class = SupplierPriceSerializer
+    filterset_class = SupplierPriceFilterSet
 
 
 class WidgetViewSet(VuedaViewSet):
@@ -104,11 +118,56 @@ class InventoryRecordViewSet(VuedaViewSet):
     and the total follows the filter.
     """
 
-    queryset = InventoryRecord.objects.all()
+    queryset = InventoryRecord.objects.annotate(shortfall=Greatest(F("reorder_threshold") - F("quantity_on_hand"), 0))
     serializer_class = InventoryRecordSerializer
     filterset_class = InventoryRecordFilterSet
     permit_list_expands: ClassVar[list[str]] = ["variant", "warehouse"]
     column_totals: ClassVar[list[str]] = ["quantity_on_hand"]
+
+    ordering_fields = ("warehouse", "variant", "quantity_on_hand", "shortfall")
+
+    def get_allowed_extra_actions(self, request, *, instance=None):
+        from .replenishment import can_replenish
+
+        actions = super().get_allowed_extra_actions(request, instance=instance)
+        if request and not can_replenish(request.user):
+            actions.discard("replenish")
+        return actions
+
+    @action(detail=False, bulk=True, methods=["get", "post"])
+    def replenish(self, request):
+        from .replenishment import execute, preview, require_replenishment_permission
+
+        require_replenishment_permission(request.user)
+        if request.method == "GET":
+            return Response(preview(request.user, request.query_params.get("pks", "").split(",")))
+        try:
+            return Response(execute(request.user, request.data, dry_run=request.dry_run))
+        except OperationalError as error:
+            if getattr(error.__cause__, "sqlstate", None) not in {"40001", "40P01"}:
+                raise
+            raise ValidationError(
+                {
+                    "non_field_errors": [
+                        "Another request changed this stock. Reload the proposals before creating orders."
+                    ]
+                }
+            ) from error
+
+    def check_permissions(self, request):
+        # Replenishment creates POs, not inventory records. It has its own permission
+        # and checks the required related-model permissions at the endpoint as well.
+        if self.action == "replenish":
+            from .replenishment import require_replenishment_permission
+
+            require_replenishment_permission(request.user)
+            return
+        return super().check_permissions(request)
+
+    @transaction.atomic
+    def dispatch(self, *args, **kwargs):
+        # VUEDA's action decorator rolls dry runs back at the request boundary.
+        return super().dispatch(*args, **kwargs)
 
 
 class PromotionViewSet(VuedaViewSet):

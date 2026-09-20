@@ -54,9 +54,26 @@ describe("setupModelConfig", () => {
                             value: "warehouse.id",
                         },
                     },
+                    displayFields: [
+                        "formatted_name",
+                        "quantity_on_hand",
+                        "reorder_threshold",
+                        "shortfall",
+                        "max_stock_level",
+                        "last_stocktake_at",
+                        "last_received_at",
+                        "notes",
+                    ],
                 },
             },
         });
+    });
+
+    it("identifies inventory by SKU and exposes the shortfall beside stock quantities", () => {
+        setupModelConfig({});
+        const [, , views] = mocks.setConfig.mock.calls.find(([target]) => target.model === "inventoryrecord");
+        expect(views.list.displayFields).toContain("formatted_name");
+        expect(views.list.displayFields).toContain("shortfall");
     });
 
     it("renders the Supplier notification addresses through FieldSetMany and keeps them off the list", () => {

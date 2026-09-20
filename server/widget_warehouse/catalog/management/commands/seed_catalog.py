@@ -11,6 +11,7 @@ from widget_warehouse.catalog.models import (
     PurchaseOrder,
     PurchaseOrderLine,
     Supplier,
+    SupplierPrice,
     Warehouse,
     Widget,
     WidgetCategory,
@@ -47,11 +48,26 @@ class Command(BaseCommand):
         self._seed_widgets()
         self._seed_bulk_widgets()
         self._seed_variants()
+        self._seed_prices()
         self._seed_warehouses()
         self._seed_inventory()
         self._seed_promotions()
         self._seed_purchase_orders()
         self.stdout.write(self.style.SUCCESS("Seed complete."))
+
+    def _seed_prices(self):
+        # Example purchase costs are distinct from selling prices. Reseeding preserves
+        # prices an evaluator has negotiated; reset_demo recreates the initial costs.
+        for variant in WidgetVariant.objects.select_related("widget").exclude(widget__supplier=None):
+            SupplierPrice.objects.get_or_create(
+                supplier_id=variant.widget.supplier_id,
+                variant=variant,
+                defaults={
+                    "unit_cost": ((variant.widget.unit_price + variant.additional_price) * Decimal("0.60")).quantize(
+                        Decimal("0.01")
+                    )
+                },
+            )
 
     def _seed_categories(self):
         self.stdout.write("Seeding categories...")

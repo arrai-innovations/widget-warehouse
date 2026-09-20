@@ -24,7 +24,7 @@ DEMO_PASSWORD = "widget-demo"
 
 CATALOG_MODELS = ("widget", "widgetcategory", "widgetvariant")
 INVENTORY_MODELS = ("inventoryrecord",)
-INBOUND_MODELS = ("supplier",)
+INBOUND_MODELS = ("supplier", "supplierprice")
 OUTBOUND_MODELS = ("promotion",)
 LOCATION_MODELS = ("warehouse",)
 # The order and its lines are always granted together: lines are only reachable as the
@@ -157,6 +157,7 @@ def codenames_for(role):
         | {("catalog", f"{action}_{model}") for model in role["write"] for action in WRITE_ACTIONS}
         | {("catalog", f"delete_{model}") for model in role["delete"]}
         | {("catalog", TRANSITION_PERMISSIONS[transition]) for transition in role["transitions"]}
+        | ({("catalog", "replenish_inventoryrecord")} if "purchaseorder" in role["write"] else set())
         | set(BASELINE_PERMISSIONS)
     )
 
