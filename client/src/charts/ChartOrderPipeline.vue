@@ -3,21 +3,19 @@
  * The order pipeline, drawn with Unovis.
  *
  * One measure (how many orders) across a handful of categories (which state they are in),
- * which is a single series: every bar is the accent colour, and there is no legend to
+ * which is a single series: every bar is the default chart colour, and there is no legend to
  * write because the card's title already says what is plotted. Giving each state its own
  * hue would encode the category twice, once as the bar's position and once as its colour.
  *
  * The chart is the shape only. The exact counts, and the links into the filtered list,
  * stay in the list beside it, so nothing here is reachable by pointer alone.
  *
- * Unovis is imported by this component and nowhere else, and the dashboard loads the
- * component asynchronously, so a page that draws no chart never pays for the library.
+ * The dashboard loads this component asynchronously, so a page that draws no chart never pays for the library.
  */
 import { Direction, Orientation, StackedBar } from "@unovis/ts";
 import { VisAxis, VisStackedBar, VisTooltip, VisXYContainer } from "@unovis/vue";
+import "@vueda/theme/vueda-tailwind/unovis.css";
 import { computed } from "vue";
-
-import "@/charts/unovisVuedaTheme.css";
 
 const props = defineProps({
     // `{ code, name, count }` per state, in workflow order.

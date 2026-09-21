@@ -28,7 +28,7 @@ from widget_warehouse.catalog.models import (
 
 # The spread the pipeline band on the landing page renders. Three drafts is the
 # walkthrough's supply: an evaluator submits one and there are still drafts behind it.
-SEEDED_PIPELINE = {"draft": 3, "submitted": 2, "approved": 3, "received": 3, "cancelled": 1}
+SEEDED_PIPELINE = {"draft": 3, "submitted": 2, "approved": 3, "received": 133, "cancelled": 1}
 
 # Rows under their own reorder threshold, which is what the restock queue counts.
 SEEDED_RESTOCK_ROWS = 15

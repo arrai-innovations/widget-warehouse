@@ -151,6 +151,13 @@ class PurchaseOrderFilterSet(HasWorkflowFilterSetMixin, VuedaFilterSet):
     )
     overdue = rest_framework.BooleanFilter(method="filter_overdue", label="Overdue")
     is_open = rest_framework.BooleanFilter(method="filter_is_open", label="Open")
+    purchasing = rest_framework.BooleanFilter(method="filter_purchasing", label="Approved or received")
+
+    def filter_purchasing(self, queryset, name, value):
+        if value is None:
+            return queryset
+        predicate = Q(object_states_proxy__state__code__in=("approved", "received"))
+        return queryset.filter(predicate) if value else queryset.exclude(predicate)
 
     def filter_overdue(self, queryset, name, value):
         """
@@ -197,6 +204,7 @@ class PurchaseOrderFilterSet(HasWorkflowFilterSetMixin, VuedaFilterSet):
             "expected_arrival_date",
             "overdue",
             "is_open",
+            "purchasing",
             "replenishment_batch",
         )
 

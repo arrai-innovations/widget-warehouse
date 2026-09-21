@@ -162,8 +162,8 @@ def test_overdue_skips_an_order_that_already_arrived(orders):
     assert references == {"PO-1041", "PO-1048"}
 
     settled = list_as(SUPERVISOR, "catalog.purchaseorder-list", {"expected_arrival_date_before": date.today()})
-    # Five orders have a date in the past; three of them are done with.
-    assert settled.data["totalRecords"] == 5
+    # The five walkthrough orders plus 130 received historical orders have past dates.
+    assert settled.data["totalRecords"] == 135
 
 
 def test_overdue_false_is_every_order_nobody_is_waiting_on(orders):
@@ -205,7 +205,7 @@ def test_open_and_settled_are_complements(orders):
 
     assert settled.data["totalRecords"] == total - 8
     # Received and cancelled, which is the whole of "settled".
-    assert settled.data["totalRecords"] == 4
+    assert settled.data["totalRecords"] == 134
 
 
 def test_an_order_with_no_workflow_state_counts_as_open(orders):

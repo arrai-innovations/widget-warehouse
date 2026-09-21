@@ -11,7 +11,6 @@ import {
     PhStackMinus,
     PhWarehouse,
 } from "@phosphor-icons/vue";
-import Badge from "@vueda/display/badge/Badge.vue";
 import Skeleton from "@vueda/feedback/skeleton/Skeleton.vue";
 import { getCRUDForTo } from "@vueda/router/getCrud.js";
 import Card from "@vueda/shell/card/Card.vue";
@@ -34,14 +33,13 @@ const userStore = storeUser();
 
 usePageTitle(() => ({ title: "Dashboard" }));
 
-// Unovis is the only library on this page that is neither Vue nor VUEDA, and the chart
-// component is the only file that imports it. Loading that component asynchronously keeps
-// the library out of the entry bundle, so the rest of the app, which draws no charts,
-// never downloads it.
-const ChartOrderPipeline = defineAsyncComponent(() => import("@/charts/ChartOrderPipeline.vue"));
-
 const APP = "catalog";
-const PIPELINE_MODEL = "purchaseorderstatecount";
+
+// Charts load asynchronously so routes without charts do not download Unovis.
+const DashboardPurchasing = defineAsyncComponent(() => import("@/charts/DashboardPurchasing.vue"));
+const canListOrders = computedAsync(async () => userStore.loggedIn && (await mayList("purchaseorder")), false);
+
+const DashboardOrderPipeline = defineAsyncComponent(() => import("@/charts/DashboardOrderPipeline.vue"));
 
 // Today, as the server's date filters want it. The count request and the link the tile
 // points at use the same value, so the list a reader lands on cannot disagree with the
@@ -189,44 +187,6 @@ const scaleTiles = withResolution(scale);
 const hasQueues = computed(() => queueTiles.some((tile) => unref(tile.state) !== null));
 const hasScale = computed(() => scaleTiles.some((tile) => unref(tile.state) !== null));
 
-// The pipeline is one request for the whole band. The counts come from a database view
-// with a row per state, so a state holding no orders is a zero rather than a missing bar,
-// and the response's column total is every order in one number.
-const pipeline = computedAsync(async () => {
-    if (!userStore.loggedIn) {
-        return undefined;
-    }
-    if (!(await mayList(PIPELINE_MODEL))) {
-        return null;
-    }
-    const query = queryString({ [PAGE_SIZE_PARAM]: 20 });
-    const page = await fetchHelper(getListUrl({ app: APP, model: PIPELINE_MODEL, query }), {}, "Counting the pipeline");
-    const rows = page.results ?? [];
-    const linkable = await mayList("purchaseorder");
-    return {
-        total: page.columnTotals?.order_count ?? 0,
-        states: await Promise.all(
-            rows.map(async (row) => ({
-                code: row.code,
-                name: row.name,
-                count: row.order_count,
-                // A state with no orders does not link. The workflow state filter only
-                // accepts states some row is currently in, so a link from an empty bar
-                // would land on a 400 rather than an empty list.
-                to:
-                    linkable && row.order_count
-                        ? await getCRUDForTo({
-                              app: APP,
-                              model: "purchaseorder",
-                              view: "list",
-                              query: { workflow_state: String(row.state) },
-                          })
-                        : null,
-            })),
-        ),
-    };
-});
-
 // loggedInUser, not user: the who-is response lands there, and reading the wrong one is
 // a silent fallback to the generic greeting rather than an error.
 const greeting = computed(() => userStore.loggedInUser?.name || userStore.loggedInUser?.email || "there");
@@ -280,38 +240,10 @@ const greeting = computed(() => userStore.loggedInUser?.name || userStore.logged
             </div>
         </section>
 
-        <section v-if="unref(pipeline) !== null" class="flex flex-col gap-3">
-            <h2 class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">Order pipeline</h2>
-            <Skeleton v-if="unref(pipeline) === undefined" class="h-56" />
-            <Card v-else>
-                <CardHeader>
-                    <CardTitle class="text-sm font-medium">Purchase orders by state</CardTitle>
-                    <CardDescription>
-                        {{ unref(pipeline).total }} orders, counted in one request by a database view rather than one
-                        request per state.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent class="flex flex-col gap-4">
-                    <ChartOrderPipeline :states="unref(pipeline).states" />
-                    <!-- The chart carries the shape; this carries the exact numbers and
-                         the way in. Every count is reachable as text and every link by
-                         keyboard, so nothing the band knows is behind a hover. -->
-                    <ul class="flex flex-wrap items-baseline gap-x-5 gap-y-2 text-sm">
-                        <li v-for="state in unref(pipeline).states" :key="state.code" class="flex items-baseline gap-2">
-                            <RouterLink
-                                v-if="state.to"
-                                :to="state.to"
-                                class="text-primary-text hover:text-primary-text-active underline-offset-4 hover:underline"
-                            >
-                                {{ state.name }}
-                            </RouterLink>
-                            <span v-else class="text-muted-foreground">{{ state.name }}</span>
-                            <Badge numeric variant="outline">{{ state.count }}</Badge>
-                        </li>
-                    </ul>
-                </CardContent>
-            </Card>
-        </section>
+        <template v-if="userStore.loggedIn && canListOrders">
+            <DashboardOrderPipeline />
+            <DashboardPurchasing />
+        </template>
 
         <section v-if="hasScale" class="flex flex-col gap-3">
             <h2 class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">In the warehouse</h2>
