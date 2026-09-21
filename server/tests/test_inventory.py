@@ -173,6 +173,31 @@ def test_a_record_names_itself_by_sku_and_warehouse(stock, seeded_roles):
 
 
 @pytest.mark.django_db
+def test_inventory_edits_are_offered_and_enforced_only_for_supervisors(stock, seeded_roles):
+    record = stock["short"]
+    detail_url = reverse("catalog.inventoryrecord-detail", args=[record.pk])
+    for name in ("supervisor", "clerk", "associate", "manager", "accountant"):
+        client = APIClient()
+        client.force_authenticate(get_user_model().objects.get(email=f"{name}@widgetwarehouse.com"))
+        info = client.get("/routes/vueda.info/model_info/catalog/inventoryrecord/?e=model_actions")
+        assert info.status_code == 200, info.data
+        actions = {action["name"] for action in info.data["model_actions"]}
+        assert ("update" in actions) == (name == "supervisor")
+        assert "create" not in actions
+        assert "delete" not in actions
+        response = client.patch(detail_url, {"reorder_threshold": 20}, format="json")
+        assert response.status_code == (200 if name == "supervisor" else 403), response.data
+        denied = client.delete(detail_url)
+        assert denied.status_code == 403, denied.data
+        denied = client.post(
+            reverse("catalog.inventoryrecord-list"),
+            {"variant": stock["healthy"].variant_id, "warehouse": record.warehouse_id},
+            format="json",
+        )
+        assert denied.status_code == 403, denied.data
+
+
+@pytest.mark.django_db
 def test_naming_a_record_costs_no_extra_query_per_row(stock, seeded_roles):
     """
     The name reaches ``variant.widget.sku`` and ``warehouse.code``, which is three tables

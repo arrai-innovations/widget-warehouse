@@ -64,8 +64,9 @@ BASELINE_PERMISSIONS = (
 )
 
 # name, email, and permission scopes per role, mirroring the walkthrough's role table
-# narrowed to the models that exist today. "write" grants create and update, "delete"
-# grants delete, "transitions" grants one permission per named transition; the sales
+# narrowed to the models that exist today. "write" grants create and update,
+# "update_only" grants update without create, "delete" grants delete,
+# "transitions" grants one permission per named transition; the sales
 # roles stay read-only until the sales order arrives.
 #
 # Supplier writes follow the same split as purchase order writes: the inbound roles keep
@@ -97,11 +98,9 @@ DEMO_ROLES = [
             CATALOG_MODELS + INVENTORY_MODELS + INBOUND_MODELS + LOCATION_MODELS + PURCHASE_MODELS + SUMMARY_MODELS
         ),
         "write": PURCHASE_MODELS + INBOUND_MODELS,
-        # The supervisor is the role that can retire an order outright, both by deleting
-        # it and, now that the workflow exists, by cancelling it. Cancel is not in the
-        # role table's Transitions column because the table lists the approval path;
-        # someone has to be able to end an order off that path, and it is this role.
-        # Retiring a supplier is the same call, so the delete scope carries both.
+        # Stock counts and replenishment targets are maintained on existing records.
+        "update_only": INVENTORY_MODELS,
+        # Only the supervisor can delete orders, suppliers, and supplier prices.
         "delete": PURCHASE_MODELS + INBOUND_MODELS,
         "transitions": ("submit", "approve", "reject", "receive", "cancel"),
     },
@@ -155,6 +154,7 @@ def codenames_for(role):
     return (
         {("catalog", f"{action}_{model}") for model in role["read"] for action in READ_ACTIONS}
         | {("catalog", f"{action}_{model}") for model in role["write"] for action in WRITE_ACTIONS}
+        | {("catalog", f"update_{model}") for model in role.get("update_only", ())}
         | {("catalog", f"delete_{model}") for model in role["delete"]}
         | {("catalog", TRANSITION_PERMISSIONS[transition]) for transition in role["transitions"]}
         | ({("catalog", "replenish_inventoryrecord")} if "purchaseorder" in role["write"] else set())
