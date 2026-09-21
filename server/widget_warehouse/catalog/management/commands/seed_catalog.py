@@ -53,6 +53,7 @@ class Command(BaseCommand):
         self._seed_inventory()
         self._seed_promotions()
         self._seed_purchase_orders()
+        self._seed_purchasing_history()
         self.stdout.write(self.style.SUCCESS("Seed complete."))
 
     def _seed_prices(self):
@@ -895,6 +896,47 @@ class Command(BaseCommand):
                 )
                 line_status = "created" if line_created else "exists"
                 self.stdout.write(f"    Line {variant_key} x{quantity}: {line_status}")
+
+    def _seed_purchasing_history(self):
+        """Twenty-six complete weeks of purchasing, without adding open work queues.
+
+        References identify rolling demo slots, so reseeding shifts dates without adding
+        another history. As with the walkthrough orders, existing workflow states survive.
+        These are historical fixtures, not receive actions that alter current inventory.
+        """
+        workflow, states = self._purchase_order_workflow()
+        today = datetime.now(UTC).date()
+        monday = today - timedelta(days=today.weekday())
+        plans = (
+            ("precision-parts-co", "SPR-100-SM", "12.50", 340, 24),
+            ("eurobearings-gmbh", "BRG-6204-2RS", "10.40", 430, 8),
+            ("pacific-fasteners", "FST-HB8-SS", "0.60", 4400, 25),
+            ("sinomech-industries", "FST-HB8-ZN", "0.42", 19000, -400),
+            ("apex-components", "GSK-B002-STD", "2.05", 1000, 45),
+        )
+        for supplier_index, (slug, variant_key, unit_price, initial, slope) in enumerate(plans):
+            for week in range(26):
+                ordered = monday - timedelta(weeks=26 - week) + timedelta(days=supplier_index % 5)
+                order, created = PurchaseOrder.objects.update_or_create(
+                    reference=f"PO-HIST-{supplier_index + 1}-{week + 1:02}",
+                    defaults={
+                        "supplier": self.supplier_objs[slug],
+                        "destination_warehouse": self.warehouse_objs[
+                            "SYD-DC" if supplier_index % 2 == 0 else "MEL-OVF"
+                        ],
+                        "order_date": ordered,
+                        "expected_arrival_date": ordered + timedelta(days=1),
+                    },
+                )
+                if created:
+                    self._seed_order_state(workflow, states, order, "received")
+                # Deterministic variation makes the lines cross without random fixtures.
+                quantity = round((initial + slope * week) * (0.85 + ((week * 3 + supplier_index) % 7) * 0.05))
+                PurchaseOrderLine.objects.update_or_create(
+                    purchase_order=order,
+                    variant=self.variant_objs[variant_key],
+                    defaults={"quantity_ordered": quantity, "unit_price": Decimal(unit_price)},
+                )
 
     def _purchase_order_workflow(self):
         """

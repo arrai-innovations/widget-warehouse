@@ -147,7 +147,7 @@ def test_the_scale_numbers_describe_the_whole_catalog(demo):
 
     counts = {key: count(client, model) for key, model in SCALE_TILES.items()}
 
-    assert counts == {"widgets": 63, "variants": 61, "suppliers": 5, "warehouses": 3, "orders": 12}
+    assert counts == {"widgets": 63, "variants": 61, "suppliers": 5, "warehouses": 3, "orders": 142}
 
 
 def test_the_pipeline_band_is_one_request_and_only_for_order_readers(demo):
@@ -164,10 +164,10 @@ def test_the_pipeline_band_is_one_request_and_only_for_order_readers(demo):
         ("draft", 3),
         ("submitted", 2),
         ("approved", 3),
-        ("received", 3),
+        ("received", 133),
         ("cancelled", 1),
     ]
-    assert response.data["columnTotals"] == {"order_count": 12}
+    assert response.data["columnTotals"] == {"order_count": 142}
 
     for email in SALES_ROLES:
         assert not may_list(client_for(email), "purchaseorderstatecount"), email

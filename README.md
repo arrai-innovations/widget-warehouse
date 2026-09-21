@@ -43,7 +43,8 @@ the sign-in view always work.
 
 The seeded orders are spread across the pipeline rather than all left in draft: three
 drafts waiting to be submitted, two waiting for approval, three approved (two of them
-already past their expected arrival), three received, and one cancelled. Some seeded stock
+already past their expected arrival), three received, and one cancelled. A further 130
+received orders provide 26 complete weeks of deterministic supplier purchasing history. Some seeded stock
 sits under its own reorder threshold for the same reason. Both are shapes the demo is
 meant to show, so `server/tests/test_seed_catalog.py` pins them.
 
@@ -115,22 +116,27 @@ the ones no demo role writes.
 ## The Dashboard
 
 Signing in lands on `/dashboard/`, which is the same page for everybody and a different
-page for every role. It has three bands: the work queues that need attention, the order
-pipeline by workflow state, and how much of each thing exists.
+page for every role. It shows work queues, an order pipeline, supplier purchasing trends, and catalog counts.
 
 The tiles are declared once, in `client/src/views/ViewDashboard.vue`, and nothing on the
 page asks who is signed in. Each tile asks VUEDA whether this account may list its model
 and disappears when the answer is no, so the sales roles get the stock and promotion
 queues while the inventory roles get the stock, order, and supplier queues, and only the
-roles that can read orders see the pipeline at all. Sign in as the supervisor and then as
+roles that can read orders see the pipeline and purchasing chart. Sign in as the supervisor and then as
 the sales associate to watch the same page come back different.
 
 Each tile is one list request for a single row: every VUEDA list response carries
 `totalRecords` for the whole filtered set, so a count costs a page of one rather than an
 endpoint of its own. The filter that produced the number is also the link the tile points
-at, so opening a tile lands on the list it counted, already filtered. The pipeline band is
-one request against the order state summary, which is a database view, so a state holding
-no orders is a bar reading zero rather than a missing bar.
+at, so opening a tile lands on the list it counted, already filtered. The pipeline defaults to orders placed in the last 30 days, including today; 90 days and
+all time are also available. Each state link retains the selected date range. Its report
+reuses the database view's workflow labels and ordering, but counts the caller's authorized,
+filtered orders so states with no matching orders remain zero.
+
+The supplier chart offers 6, 12, or 26 complete weeks of approved and received purchase
+order value. Both charts use native Unovis components and VUEDA's optional theme stylesheet,
+with separate chart colors. See [Dashboard chart integration](docs/dashboard-charts.md)
+for the report contracts, request lifecycle, and palette assignments.
 
 One tile reports a sum rather than a count. "Open order value" reads `columnTotals` from
 the same envelope, because the order viewset declares `total_value` in `column_totals`, so
