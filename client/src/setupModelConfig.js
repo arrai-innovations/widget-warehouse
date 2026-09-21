@@ -110,6 +110,9 @@ export function setupModelConfig(pinia) {
         { app: "catalog", model: "inventoryrecord" },
         {
             expand: [],
+            fieldProps: {
+                max_stock_level: { clearServerErrorDependents: ["quantity_on_hand"] },
+            },
         },
         {
             list: {
@@ -151,6 +154,10 @@ export function setupModelConfig(pinia) {
     modelConfigStore.setConfig(
         { app: "catalog", model: "purchaseorder" },
         {
+            fieldProps: {
+                supplier: { clearServerErrorDependents: ["expected_arrival_date"] },
+                order_date: { clearServerErrorDependents: ["expected_arrival_date"] },
+            },
             // Expand the lines everywhere and nothing else. An expanded foreign key renders
             // as a subform of the related object's own fields, which is not what a supplier
             // picker should be; unexpanded, it stays a select of suppliers.

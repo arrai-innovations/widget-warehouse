@@ -40,7 +40,12 @@ describe("setupModelConfig", () => {
             },
         });
         expect(callsByModel.inventoryrecord).toEqual({
-            genericConfig: { expand: [] },
+            genericConfig: {
+                expand: [],
+                fieldProps: {
+                    max_stock_level: { clearServerErrorDependents: ["quantity_on_hand"] },
+                },
+            },
             viewConfigs: {
                 list: {
                     expand: ["variant", "warehouse"],

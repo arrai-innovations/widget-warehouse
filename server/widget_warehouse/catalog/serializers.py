@@ -162,6 +162,23 @@ class InventoryRecordSerializer(VuedaSerializer):
     formatted_name = serializers.SerializerMethodField(label="Stock item")
     shortfall = serializers.IntegerField(read_only=True, label="Units below threshold")
 
+    def get_warnings(self):
+        warnings = super().get_warnings()
+        fields = ("quantity_on_hand", "max_stock_level")
+        values = {field: self.validated_data.get(field, getattr(self.instance, field, None)) for field in fields}
+        # Full form submissions include unchanged values too. Do not ask again when only
+        # notes or other unrelated fields changed on an already overstocked record.
+        if self.instance and all(values[field] == getattr(self.instance, field) for field in fields):
+            return warnings
+        quantity = values["quantity_on_hand"] or 0
+        maximum = values["max_stock_level"]
+        if maximum is not None and quantity > maximum:
+            warnings["quantity_on_hand"] = [
+                f"Recorded stock is {quantity} units, above this location's maximum stock level of {maximum}. "
+                "Confirm that the count is correct."
+            ]
+        return warnings
+
     def get_field_model_info(self, fields):
         fields = super().get_field_model_info(fields)
         if "shortfall" in fields:
@@ -282,6 +299,26 @@ class PurchaseOrderSerializer(HasWorkflowSerializerMixin, VuedaSerializer):
         # Writable nested saves validate the original child payload again.
         self.initial_data = data
         return super().to_internal_value(data)
+
+    def get_warnings(self):
+        warnings = super().get_warnings()
+        fields = ("supplier", "order_date", "expected_arrival_date")
+        values = {field: self.validated_data.get(field, getattr(self.instance, field, None)) for field in fields}
+        # Merge PATCH values with the instance, but also avoid repeat warnings when a
+        # full form submission changes only the reference, warehouse, or order lines.
+        if self.instance and all(values[field] == getattr(self.instance, field) for field in fields):
+            return warnings
+        lead_days = values["supplier"].typical_lead_days
+        arrival = values["expected_arrival_date"]
+        if lead_days is not None and arrival is not None:
+            delivery_days = (arrival - values["order_date"]).days
+            if delivery_days < lead_days:
+                warnings["expected_arrival_date"] = [
+                    f"Expected delivery is {delivery_days} days after the order date; "
+                    f"this supplier's typical lead time is {lead_days} days. "
+                    "Confirm that the earlier delivery has been arranged."
+                ]
+        return warnings
 
     def get_field_model_info(self, fields):
         """
