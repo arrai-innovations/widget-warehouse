@@ -1,9 +1,9 @@
 [project]
 name = "widget-warehouse-server"
-version = "0.1.1"
+version = "0.2.0"
 requires-python = ">=3.11"
 dependencies = [
-  "vueda >=3.0.0a2,<4",
+  "vueda >=3.0.0a3,<4",
   "psycopg[binary] >=3.2.0,<4",
   # Pinned to a git tag. The ASGI worker in 26.2.0, the newest release on PyPI, drops a
   # request pipelined on a kept-alive connection, so that connection hangs until the client

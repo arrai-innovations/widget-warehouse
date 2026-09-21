@@ -2153,7 +2153,7 @@ wheels = [
 
 [[package]]
 name = "vueda"
-version = "3.0.0a2"
+version = "3.0.0a3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ansicolors" },
@@ -2192,7 +2192,7 @@ dependencies = [
     { name = "urllib3" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2a/d0/4758e6205d209d6f75b33150d3ba1be7e87e186fcddba91803c46545461b/vueda-3.0.0a2-py3-none-any.whl", hash = "sha256:2e3641bb95da42656d0d68d4d4ae395e6e53775f112b3fc1bd0e1f4832c11309", size = 365935, upload-time = "2026-09-18T19:24:33.531Z" },
+    { url = "https://files.pythonhosted.org/packages/2e/50/3e0f1d0f13db0884b0224be25a353409812700c04235b852d7864d9263a4/vueda-3.0.0a3-py3-none-any.whl", hash = "sha256:6798c15b8aeadb95efec770855e5549190ddbee6afbb551592a8896506ada2f0", size = 366608, upload-time = "2026-09-21T16:06:02.789Z" },
 ]
 
 [[package]]
@@ -2206,7 +2206,7 @@ wheels = [
 
 [[package]]
 name = "widget-warehouse-server"
-version = "0.1.1"
+version = "0.2.0"
 source = { virtual = "server" }
 dependencies = [
     { name = "gunicorn" },
@@ -2233,7 +2233,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=12.2.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.0,<4" },
     { name = "redis", specifier = ">=7.4.0,<8" },
-    { name = "vueda", specifier = ">=3.0.0a2,<4" },
+    { name = "vueda", specifier = ">=3.0.0a3,<4" },
 ]
 
 [package.metadata.requires-dev]
