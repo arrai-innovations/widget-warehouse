@@ -56,8 +56,7 @@ def test_roles_are_scoped_apart(seeded):
     assert accountant.has_perm("catalog.list_supplier")
     assert accountant.has_perm("catalog.list_promotion")
 
-    # The rest of the catalog stays read-only for everyone. Suppliers are the one master
-    # data model a role writes; every other write in the role table is an order write.
+    # These roles can browse stock but cannot change counts or replenishment targets.
     for user in (clerk, associate, accountant):
         for model in ("widget", "promotion", "inventoryrecord"):
             for action in ("create", "update", "delete"):
@@ -90,8 +89,7 @@ def test_only_the_inventory_roles_write_purchase_orders(seeded):
 def test_only_the_inbound_roles_write_suppliers(seeded):
     users = {role["group"]: get_user_model().objects.get(email=role["email"]) for role in DEMO_ROLES}
 
-    # Both inbound roles maintain the vendor list, which is what makes the supplier form
-    # reachable without a superuser.
+    # Both inbound roles maintain the vendor list through the supplier form.
     for group in ("inventory-clerk", "inventory-supervisor"):
         assert users[group].has_perm("catalog.create_supplier")
         assert users[group].has_perm("catalog.update_supplier")
@@ -112,6 +110,15 @@ def test_only_the_inbound_roles_write_suppliers(seeded):
 def test_baseline_permissions_reach_every_role(seeded):
     for role in DEMO_ROLES:
         assert set(BASELINE_PERMISSIONS) <= granted(role["group"])
+
+
+@pytest.mark.django_db
+def test_only_the_supervisor_updates_existing_inventory(seeded):
+    for role in DEMO_ROLES:
+        user = get_user_model().objects.get(email=role["email"])
+        assert user.has_perm("catalog.update_inventoryrecord") == (role["group"] == "inventory-supervisor")
+        assert not user.has_perm("catalog.create_inventoryrecord")
+        assert not user.has_perm("catalog.delete_inventoryrecord")
 
 
 @pytest.mark.django_db

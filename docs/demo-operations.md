@@ -1,0 +1,57 @@
+# Demo operations
+
+## Seed and deploy
+
+Run from the repository root after migrations:
+
+```bash
+just manage seed_demo_users
+just manage seed_workflows
+just manage seed_catalog
+```
+
+The commands are idempotent. Users must be seeded before workflows so their groups
+exist, and workflows before catalog orders so new orders receive their initial states.
+`seed_demo_users` reapplies group permissions and resets the published account passwords.
+
+Reseeding updates seeded catalog values, but preserves existing order workflow states.
+Supplier prices are created only when absent, so price edits survive reseeding.
+Rows created by visitors and uploaded files remain until explicitly removed or reset.
+
+`update.sh` runs these commands during deployment after the deployment tool's migration
+step. Deployment does not run `reset_demo`.
+
+## Reset
+
+To discard demo changes and restore the seeded scenario:
+
+```bash
+just manage reset_demo
+```
+
+This deletes catalog rows, purchase orders, workflow states for those orders, their
+history, and uploaded catalog files, then runs the three seeds. Seeded IDs remain
+stable, so bookmarked seeded detail URLs still resolve. Accounts outside the five
+published demo users and the workflow definition are retained.
+
+The command asks for confirmation. A scheduled production reset can use `--noinput`
+from the deployment checkout, with production settings:
+
+```bash
+DJANGO_SETTINGS_MODULE=config.settings.production uv run --no-sync python server/manage.py reset_demo --noinput
+```
+
+Choose the schedule in the deployment environment and communicate it to visitors.
+The repository does not configure the host's scheduler. Resets interrupt work on shared
+records; the walkthrough creates its own shortage and does not depend on a visitor
+being able to reset the instance.
+
+## Seeded scenario
+
+The catalog includes purchase orders across Draft, Submitted, Approved, Received, and
+Cancelled, including overdue approved orders and stock below its reorder threshold.
+A further 130 received orders provide 26 complete weeks of supplier purchasing history.
+These historical orders do not change on-hand stock.
+
+See [Local development](../README.md#local-development) for configuration, and
+[Dashboard charts](dashboard-charts.md) for the purchasing-history model.

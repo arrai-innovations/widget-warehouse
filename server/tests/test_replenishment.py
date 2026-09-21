@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from tests import test_inventory
+from tests import test_inventory, test_purchase_order_workflow
 from widget_warehouse.catalog.models import InventoryRecord, PurchaseOrder, ReplenishmentBatch, SupplierPrice, Warehouse
 
 pytestmark = pytest.mark.django_db
@@ -214,6 +214,57 @@ def test_approved_coverage_is_incoming_and_cancelled_orders_do_not_cover(scenari
     state.save()
     row = proposal(client, record)[0]
     assert (row["incoming"], row["pending"], row["quantity"]) == (0, 0, 38)
+
+
+@pytest.mark.parametrize("existing_state", [None, "draft", "approved"])
+def test_walkthrough_creates_shortage_and_approves_order_with_existing_coverage(scenario, existing_state):
+    clerk, record, _ = scenario
+    supervisor = test_purchase_order_workflow.client_for("supervisor@widgetwarehouse.com")
+    if existing_state:
+        existing = clerk.post(endpoint(), payload(proposal(clerk, record)), format="json")
+        assert existing.status_code == 200, existing.data
+        if existing_state == "approved":
+            order = PurchaseOrder.objects.get(pk=existing.data["orders"][0]["id"])
+            for transition in ("submit", "approve"):
+                response = test_purchase_order_workflow.run_transition(
+                    "supervisor@widgetwarehouse.com", order, transition
+                )
+                assert response.status_code == 200, response.data
+
+    # Preview is also available for a healthy row, before a new shortage is created.
+    record.reorder_threshold = 0
+    record.save()
+    before = proposal(supervisor, record)[0]
+    projected = before["on_hand"] + before["incoming"] + before["pending"]
+    updated = supervisor.patch(
+        reverse("catalog.inventoryrecord-detail", args=[record.pk]),
+        {"reorder_threshold": projected + 10, "max_stock_level": projected + 20},
+        format="json",
+    )
+    assert updated.status_code == 200, updated.data
+    shortages = clerk.get(reverse("catalog.inventoryrecord-list"), {"below_reorder": "true"})
+    assert record.pk in {row["id"] for row in shortages.data["results"]}
+
+    rows = proposal(clerk, record)
+    assert rows[0]["quantity"] == 20
+    assert rows[0]["issue"] is None
+    created = clerk.post(endpoint(), payload(rows), format="json")
+    assert created.status_code == 200, created.data
+    order = PurchaseOrder.objects.get(pk=created.data["orders"][0]["id"])
+    pending = proposal(clerk, record)[0]
+    assert pending["pending"] == before["pending"] + 20
+    assert pending["quantity"] == 0
+    for email, transition in (("clerk@widgetwarehouse.com", "submit"), ("supervisor@widgetwarehouse.com", "approve")):
+        response = test_purchase_order_workflow.run_transition(email, order, transition)
+        assert response.status_code == 200, response.data
+
+    approved = proposal(clerk, record)[0]
+    assert approved["incoming"] == before["incoming"] + 20
+    assert approved["pending"] == before["pending"]
+    assert approved["quantity"] == 0
+    assert approved["issue"] == "Existing orders already cover the reorder threshold."
+    record.refresh_from_db()
+    assert record.quantity_on_hand == before["on_hand"]
 
 
 @pytest.mark.django_db(transaction=True)

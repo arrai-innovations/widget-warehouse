@@ -32,7 +32,7 @@ import { storeDarkMode } from "@vueda/stores/storeDarkMode.js";
 import { storeModelInfo } from "@vueda/stores/storeModelInfo.js";
 import { storeUser } from "@vueda/stores/storeUser.js";
 import { computedAsync } from "@vueuse/core";
-import { computed, markRaw, unref } from "vue";
+import { computed, markRaw, nextTick, unref } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 
 import NavLogo from "@/nav/NavLogo.vue";
@@ -45,6 +45,10 @@ const route = useRoute();
 
 async function handleSignOut() {
     try {
+        // Leave the CRUD view before logout invalidates its permissions and metadata.
+        // Otherwise it can redirect sign-in back to an edit the next role cannot use.
+        await router.push({ name: "dashboard" });
+        await nextTick();
         await userStore.logout();
     } catch {
         return;

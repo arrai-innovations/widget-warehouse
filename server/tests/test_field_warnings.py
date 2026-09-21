@@ -5,6 +5,7 @@ from datetime import date
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APIClient
@@ -186,10 +187,22 @@ def test_unrelated_order_edits_do_not_repeat_delivery_warning(client, order, ord
 
 @pytest.fixture
 def inventory_client():
-    user = get_user_model().objects.create_superuser(email="stock-admin@example.com", password="test-password")
+    call_command("seed_demo_users", verbosity=0)
+    user = get_user_model().objects.get(email="supervisor@widgetwarehouse.com")
     client = APIClient()
     client.force_authenticate(user)
     return client
+
+
+@pytest.fixture
+def inventory_creator(inventory_client):
+    # Creation also exercises the warning contract, but is not a demo role capability.
+    user = get_user_model().objects.get(email="supervisor@widgetwarehouse.com")
+    user.user_permissions.add(
+        Permission.objects.get(content_type__app_label="catalog", codename="create_inventoryrecord")
+    )
+    inventory_client.force_authenticate(user)
+    return inventory_client
 
 
 @pytest.fixture
@@ -203,10 +216,10 @@ def stock_data(catalog):
 
 
 @pytest.mark.parametrize(("quantity", "maximum", "stock_text"), [(140, 100, "140 units"), (1, 0, "1 unit")])
-def test_overstock_create_requires_confirmation(inventory_client, stock_data, quantity, maximum, stock_text):
+def test_overstock_create_requires_confirmation(inventory_creator, stock_data, quantity, maximum, stock_text):
     stock_data.update(quantity_on_hand=quantity, max_stock_level=maximum)
     url = reverse("catalog.inventoryrecord-list")
-    response = inventory_client.post(url, stock_data, format="json")
+    response = inventory_creator.post(url, stock_data, format="json")
 
     assert response.status_code == 409, response.data
     assert response.data["confirmation_required"] is True
@@ -218,7 +231,7 @@ def test_overstock_create_requires_confirmation(inventory_client, stock_data, qu
     }
     assert not InventoryRecord.objects.exists()
 
-    confirmed = inventory_client.post(
+    confirmed = inventory_creator.post(
         url, stock_data, format="json", headers={"Acknowledge-Warnings": response.data["digest"]}
     )
     assert confirmed.status_code == 201, confirmed.data
@@ -226,10 +239,10 @@ def test_overstock_create_requires_confirmation(inventory_client, stock_data, qu
 
 
 @pytest.mark.parametrize(("quantity", "maximum"), [(100, 100), (99, 100), (140, None), (0, 0)])
-def test_stock_within_maximum_or_without_maximum_saves_normally(inventory_client, stock_data, quantity, maximum):
+def test_stock_within_maximum_or_without_maximum_saves_normally(inventory_creator, stock_data, quantity, maximum):
     stock_data.update(quantity_on_hand=quantity, max_stock_level=maximum)
 
-    response = inventory_client.post(reverse("catalog.inventoryrecord-list"), stock_data, format="json")
+    response = inventory_creator.post(reverse("catalog.inventoryrecord-list"), stock_data, format="json")
 
     assert response.status_code == 201, response.data
 
@@ -275,13 +288,13 @@ def test_unrelated_stock_edits_do_not_repeat_overstock_warning(inventory_client,
     assert stock.notes == "Counted twice."
 
 
-def test_changed_stock_warning_requires_a_new_acknowledgement(inventory_client, stock_data):
+def test_changed_stock_warning_requires_a_new_acknowledgement(inventory_creator, stock_data):
     url = reverse("catalog.inventoryrecord-list")
-    original = inventory_client.post(url, stock_data, format="json")
+    original = inventory_creator.post(url, stock_data, format="json")
     assert original.status_code == 409, original.data
     stock_data["quantity_on_hand"] = 150
 
-    changed = inventory_client.post(
+    changed = inventory_creator.post(
         url, stock_data, format="json", headers={"Acknowledge-Warnings": original.data["digest"]}
     )
 
@@ -290,10 +303,10 @@ def test_changed_stock_warning_requires_a_new_acknowledgement(inventory_client, 
     assert not InventoryRecord.objects.exists()
 
 
-def test_invalid_stock_is_rejected_before_warnings(inventory_client, stock_data):
+def test_invalid_stock_is_rejected_before_warnings(inventory_creator, stock_data):
     stock_data["quantity_on_hand"] = -1
 
-    response = inventory_client.post(reverse("catalog.inventoryrecord-list"), stock_data, format="json")
+    response = inventory_creator.post(reverse("catalog.inventoryrecord-list"), stock_data, format="json")
 
     assert response.status_code == 400, response.data
     assert "quantity_on_hand" in response.data
