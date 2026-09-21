@@ -79,16 +79,39 @@ def order_url(pk=None):
     return f"{route}?{settings.REST_FLEX_FIELDS['EXPAND_PARAM']}=lines"
 
 
-def test_early_delivery_create_requires_confirmation_before_saving_order_and_lines(client, order_data):
+@pytest.mark.parametrize(
+    ("arrival", "lead_days", "expected_message"),
+    [
+        (
+            "2026-09-04",
+            14,
+            "Expected delivery is 3 days after the order date; this supplier's typical lead time is 14 days.",
+        ),
+        (
+            "2026-09-02",
+            14,
+            "Expected delivery is 1 day after the order date; this supplier's typical lead time is 14 days.",
+        ),
+        (
+            "2026-09-01",
+            1,
+            "Expected delivery is 0 days after the order date; this supplier's typical lead time is 1 day.",
+        ),
+    ],
+)
+def test_early_delivery_create_requires_confirmation_before_saving_order_and_lines(
+    client, catalog, order_data, arrival, lead_days, expected_message
+):
+    supplier = catalog["supplier"]
+    supplier.typical_lead_days = lead_days
+    supplier.save()
+    order_data["expected_arrival_date"] = arrival
     response = client.post(order_url(), order_data, format="json")
 
     assert response.status_code == 409, response.data
     assert response.data["confirmation_required"] is True
     assert response.data["warnings"] == {
-        "expected_arrival_date": [
-            "Expected delivery is 3 days after the order date; this supplier's typical lead time is 14 days. "
-            "Confirm that the earlier delivery has been arranged."
-        ]
+        "expected_arrival_date": [f"{expected_message} Confirm that the earlier delivery has been arranged."]
     }
     # Cancelling means no retry. Neither the parent nor the nested lines have been saved.
     assert not PurchaseOrder.objects.exists()
@@ -98,7 +121,7 @@ def test_early_delivery_create_requires_confirmation_before_saving_order_and_lin
         order_url(), order_data, format="json", headers={"Acknowledge-Warnings": response.data["digest"]}
     )
     assert confirmed.status_code == 201, confirmed.data
-    assert PurchaseOrder.objects.get().expected_arrival_date == date(2026, 9, 4)
+    assert PurchaseOrder.objects.get().expected_arrival_date == date.fromisoformat(arrival)
     assert PurchaseOrderLine.objects.get().quantity_ordered == 10
 
 
@@ -179,7 +202,9 @@ def stock_data(catalog):
     }
 
 
-def test_overstock_create_requires_confirmation(inventory_client, stock_data):
+@pytest.mark.parametrize(("quantity", "maximum", "stock_text"), [(140, 100, "140 units"), (1, 0, "1 unit")])
+def test_overstock_create_requires_confirmation(inventory_client, stock_data, quantity, maximum, stock_text):
+    stock_data.update(quantity_on_hand=quantity, max_stock_level=maximum)
     url = reverse("catalog.inventoryrecord-list")
     response = inventory_client.post(url, stock_data, format="json")
 
@@ -187,7 +212,7 @@ def test_overstock_create_requires_confirmation(inventory_client, stock_data):
     assert response.data["confirmation_required"] is True
     assert response.data["warnings"] == {
         "quantity_on_hand": [
-            "Recorded stock is 140 units, above this location's maximum stock level of 100. "
+            f"Recorded stock is {stock_text}, above this location's maximum stock level of {maximum}. "
             "Confirm that the count is correct."
         ]
     }
@@ -197,7 +222,7 @@ def test_overstock_create_requires_confirmation(inventory_client, stock_data):
         url, stock_data, format="json", headers={"Acknowledge-Warnings": response.data["digest"]}
     )
     assert confirmed.status_code == 201, confirmed.data
-    assert InventoryRecord.objects.get().quantity_on_hand == 140
+    assert InventoryRecord.objects.get().quantity_on_hand == quantity
 
 
 @pytest.mark.parametrize(("quantity", "maximum"), [(100, 100), (99, 100), (140, None), (0, 0)])

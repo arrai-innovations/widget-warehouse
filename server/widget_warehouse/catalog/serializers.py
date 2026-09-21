@@ -174,7 +174,8 @@ class InventoryRecordSerializer(VuedaSerializer):
         maximum = values["max_stock_level"]
         if maximum is not None and quantity > maximum:
             warnings["quantity_on_hand"] = [
-                f"Recorded stock is {quantity} units, above this location's maximum stock level of {maximum}. "
+                f"Recorded stock is {quantity} {'unit' if quantity == 1 else 'units'}, "
+                f"above this location's maximum stock level of {maximum}. "
                 "Confirm that the count is correct."
             ]
         return warnings
@@ -314,8 +315,8 @@ class PurchaseOrderSerializer(HasWorkflowSerializerMixin, VuedaSerializer):
             delivery_days = (arrival - values["order_date"]).days
             if delivery_days < lead_days:
                 warnings["expected_arrival_date"] = [
-                    f"Expected delivery is {delivery_days} days after the order date; "
-                    f"this supplier's typical lead time is {lead_days} days. "
+                    f"Expected delivery is {delivery_days} {'day' if delivery_days == 1 else 'days'} after the order date; "
+                    f"this supplier's typical lead time is {lead_days} {'day' if lead_days == 1 else 'days'}. "
                     "Confirm that the earlier delivery has been arranged."
                 ]
         return warnings
