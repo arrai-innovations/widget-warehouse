@@ -225,14 +225,31 @@ shortage through purchasing and approval, using the same records across each ste
 5. Choose **Create N draft purchase orders**. The server checks the reviewed stock and
    order coverage again, then creates the whole batch together. The destination is the
    ordinary PO list restricted to the new batch. **Show all orders** removes that scope.
-6. Select one of the generated drafts and choose **Submit** in the selection bar.
+6. Edit one of the generated drafts before submitting it. Set **Expected arrival date**
+   to one day after its **Order date**, then save. The seeded suppliers' typical lead
+   times are longer than one day, so a field warning explains the early delivery and a
+   confirmation dialog asks you to acknowledge it. Cancel the dialog first: the edit
+   remains unsaved and the warning stays visible. Save again and confirm to keep the
+   earlier date, as if expedited delivery had been arranged with the supplier.
+7. Select that draft and choose **Submit** in the selection bar.
    Switch to **Inventory supervisor** (`supervisor@widgetwarehouse.com`) to approve it or reject it back to
    draft. The clerk can edit drafts but cannot approve them; submitting removes their
    edit permission until an order returns to draft.
-7. Return to the inventory shortage and choose **Replenish** again. Its new draft or
+8. Return to the inventory shortage and choose **Replenish** again. Its new draft or
    submitted order appears as pending coverage; after approval it appears as incoming.
    Creating a draft does not change on-hand stock. The current receive transition records
    workflow state only; automatic stock posting and partial receipts are not implemented.
+9. If you have a **superuser** account, sign in with it to try the stock warning. The
+   five demo roles can read inventory records but cannot edit them. Open **Inventory
+   Records**, clear the shortage filter if needed, and edit `SPR-B003-STD @ SYD-DC`.
+   Note its original **Quantity on hand**, then set it to one unit above its **Max stock
+   level** and save. The warning asks you to confirm the count before saving stock above
+   the maximum. Cancel to leave the stored count unchanged, or confirm to save it and
+   then restore the original quantity so the shortage remains available for the demo.
+
+These are advisory warnings: confirming allows the save, while cancelling leaves the
+stored record unchanged. They use VUEDA's standard
+[warning confirmation dialog](https://vueda.dev/v3/reference/api/vue/#formconfirmdialog).
 
 Supplier prices are maintained through **Supplier Prices**. Both inventory roles can
 maintain them; the accountant can read them and the sales roles cannot. Ordinary PO
