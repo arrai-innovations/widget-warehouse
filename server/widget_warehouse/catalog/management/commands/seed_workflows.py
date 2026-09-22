@@ -64,7 +64,7 @@ STATES = (
 
 # code, name, source states, target state, the permission that executes it.
 # "reject" returns the order to draft rather than ending it, so a rejected order is
-# editable again by the clerk who raised it. That loop is what gives the clerk's
+# open to update again by the clerk who raised it. That loop is what gives the clerk's
 # draft-only narrowing something to do more than once.
 TRANSITIONS = (
     ("submit", "Submit for approval", ("draft",), "submitted", "submit_purchaseorder"),
@@ -85,7 +85,7 @@ WORKFLOW_PERMISSIONS = ("read_purchaseorder",)
 # The clerk's baseline grants update in any state. These take it back everywhere except
 # draft, which is the whole of "PO draft create/update" in the role table. The submitted
 # row is the one to put in the walkthrough: same order, same URL, same clerk, and the
-# edit action is gone the moment they submit it, including for the clerk who raised it.
+# update action is gone the moment they submit it, including for the clerk who raised it.
 STATE_PERMISSIONS = tuple(
     (state, "update_purchaseorder", "inventory-clerk", False)
     for state in ("submitted", "approved", "received", "cancelled")

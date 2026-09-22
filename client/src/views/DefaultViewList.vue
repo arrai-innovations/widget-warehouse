@@ -51,10 +51,10 @@ const displayFieldsWithUpdate = computed(() => {
             list customizations.
         -->
         <template #[`field(update)`]="{ pk }">
-            <LinkModelView :app="app" :model="model" :pk="pk" view="update" label="Edit" />
+            <LinkModelView :app="app" :model="model" :pk="pk" view="update" label="Update" />
         </template>
         <template #[`field(read)`]="{ pk }">
-            <LinkModelView :app="app" :model="model" :pk="pk" view="read" label="View" />
+            <LinkModelView :app="app" :model="model" :pk="pk" view="read" label="Read" />
         </template>
         <!-- Synthetic columns have no server-provided header; label them in card layout. -->
         <template #[`header(update)`]="slotProps">

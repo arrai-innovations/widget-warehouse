@@ -79,13 +79,13 @@ const actionTitle = computed(() => {
         return modelTitle.value;
     }
     if (action.value === "create") {
-        return `New ${memoizedStartCase(modelInfo.value?.verbose_name || model.value || "")}`;
+        return `Create ${memoizedStartCase(modelInfo.value?.verbose_name || model.value || "")}`;
     }
     if (action.value === "read" && pk.value) {
-        return `Record ${pk.value}`;
+        return `Read ${pk.value}`;
     }
     if (action.value === "update" && pk.value) {
-        return `Edit ${pk.value}`;
+        return `Update ${pk.value}`;
     }
     if (action.value === "destroy" && pk.value) {
         return `Delete ${pk.value}`;

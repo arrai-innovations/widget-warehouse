@@ -68,7 +68,7 @@ def test_only_the_inventory_roles_write_purchase_orders(seeded):
     users = {role["group"]: get_user_model().objects.get(email=role["email"]) for role in DEMO_ROLES}
 
     for model in ("purchaseorder", "purchaseorderline"):
-        # The clerk drafts and edits orders; narrowing that to draft-state orders is the
+        # The clerk drafts and updates orders; narrowing that to draft-state orders is the
         # workflow's StatePermission job, not a baseline permission.
         assert users["inventory-clerk"].has_perm(f"catalog.create_{model}")
         assert users["inventory-clerk"].has_perm(f"catalog.update_{model}")

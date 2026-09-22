@@ -6,8 +6,8 @@ These are the VUEDA integration points behind the [demo walkthrough](../README.m
 
 `seed_demo_users` defines groups, model permissions, and the published accounts.
 The inventory supervisor has update permission on inventory records, without create
-or delete. This covers every editable field, including counts, targets, and relations.
-Supplier permissions also cover the whole model: either inventory role can edit its
+or delete. This covers every writable field, including counts, targets, and relations.
+Supplier permissions also cover the whole model: either inventory role can update its
 approval flag as well as its contact details.
 
 `client/src/TheNav.vue` builds navigation from each model's permitted actions in
@@ -40,7 +40,7 @@ Three permission layers apply:
 - Transition permissions grant specific decisions, such as `approve_purchaseorder`.
   The order must also be in a valid source state.
 - State permissions deny the clerk's baseline update permission after Draft. Returning
-  an order to Draft restores the clerk's edit action.
+  an order to Draft restores the clerk's update action.
 
 The server tests in `server/tests/test_purchase_order_workflow.py` exercise these
 rules through the API with the published roles.
@@ -64,7 +64,7 @@ the filtered queryset. Inventory totals `quantity_on_hand` in the same way.
 Supplier `notification_emails` uses the `FieldSetMany` override in
 `client/src/setupModelConfig.js` to render multiple email inputs. Widget serializers
 also expose file, image, duration, and JSON fields; promotions expose a date range.
-The published roles browse widgets and promotions without editing them.
+The published roles browse widgets and promotions without updating them.
 
 ## Replenishment action and pricing
 
