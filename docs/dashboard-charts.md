@@ -90,7 +90,7 @@ with DOM `textContent`; server-provided names are not inserted as HTML.
 `seed_catalog` adds 130 received orders: one per supplier per week for 26 complete
 weeks. Quantities vary deterministically, with different supplier trends. Stable
 `PO-HIST-<supplier>-<week>` references make reseeding idempotent. Dates roll forward
-with the seed date, and existing workflow state edits survive. Historical fixtures do
+with the seed date, and existing workflow state changes survive. Historical fixtures do
 not execute stock receipt actions or change current inventory quantities.
 
 Use the normal seed workflow from the README. No model migration is needed for these

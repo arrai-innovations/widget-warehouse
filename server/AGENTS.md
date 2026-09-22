@@ -59,7 +59,7 @@ promotions. API exposure follows the VUEDA pattern:
 - Prefer VUEDA base classes such as `VuedaModel`, `Lookup`,
   `VuedaSerializer`, `VuedaLookupSerializer`, and `VuedaViewSet` when adding
   catalog surfaces.
-- Serializer fields determine what the client can render and edit through
+- Serializer fields determine what the client can render and update through
   VUEDA CRUD views.
 - Filtersets and viewsets affect list behavior, search, and client-visible
   actions.

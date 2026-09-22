@@ -24,13 +24,13 @@ locally.
 The sign-in page lists these accounts. Select one to fill the form, then sign in.
 Every account uses the password `widget-demo`.
 
-| Role                 | Email                          | What you can do                                                                                                                                                                        |
-| -------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Inventory clerk      | clerk@widgetwarehouse.com      | Browse catalog, inventory, and warehouses; maintain suppliers and supplier prices; create purchase orders, edit drafts, and submit them for approval.                                  |
-| Inventory supervisor | supervisor@widgetwarehouse.com | Everything the clerk can do; update inventory counts and targets; edit orders in any state; approve, reject, receive, or cancel orders; delete orders, suppliers, and supplier prices. |
-| Sales associate      | associate@widgetwarehouse.com  | Browse catalog, inventory, warehouses, and promotions.                                                                                                                                 |
-| Sales manager        | manager@widgetwarehouse.com    | The same read-only access as the sales associate.                                                                                                                                      |
-| Accountant           | accountant@widgetwarehouse.com | Browse all catalog models and purchasing reports, without changing records or running transitions.                                                                                     |
+| Role                 | Email                          | What you can do                                                                                                                                                                          |
+| -------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Inventory clerk      | clerk@widgetwarehouse.com      | Browse catalog, inventory, and warehouses; maintain suppliers and supplier prices; create purchase orders, update drafts, and submit them for approval.                                  |
+| Inventory supervisor | supervisor@widgetwarehouse.com | Everything the clerk can do; update inventory counts and targets; update orders in any state; approve, reject, receive, or cancel orders; delete orders, suppliers, and supplier prices. |
+| Sales associate      | associate@widgetwarehouse.com  | Browse catalog, inventory, warehouses, and promotions.                                                                                                                                   |
+| Sales manager        | manager@widgetwarehouse.com    | The same read-only access as the sales associate.                                                                                                                                        |
+| Accountant           | accountant@widgetwarehouse.com | Browse all catalog models and purchasing reports, without changing records or running transitions.                                                                                       |
 
 To switch roles, choose **Sign Out** in the sidebar, then select another account.
 Record the stock item and order reference you are working with so you can find them
@@ -57,10 +57,10 @@ workflow state, and stock posting and partial receipts are not implemented.
    numbers under **Incoming / Pending**. Add those three quantities to get the
    stock already held or on order. The preview shows them even when the item does
    not need replenishment. Do not create an order yet.
-3. Return to **Inventory Records** and edit that item. Set **Reorder threshold**
+3. Return to **Inventory Records** and choose **Update** on that item. Set **Reorder threshold**
    to the total from the preview plus **10**, and **Max stock level** to that total
    plus **20**. Leave **Quantity on hand** unchanged and choose **Submit** to save.
-   On an edit form, **Submit** saves fields; on the order list, **Submit** starts
+   On an update form, **Submit** saves fields; on the order list, **Submit** starts
    the approval workflow. For example, with 5 on hand, 12 incoming, and 8 pending,
    set the threshold to **35** and the maximum to **45**. This represents a higher
    stock requirement and creates a shortage beyond what existing orders cover.
@@ -71,25 +71,25 @@ workflow state, and stock posting and partial receipts are not implemented.
 
 1. Switch to **Inventory clerk**. Open **Inventory Records**, choose **Review
    shortages**, and select the same item. The clerk can read its stock and targets
-   but cannot edit them.
+   but cannot update them.
 2. Choose **Replenish**. The proposed quantity is **20**, accounting for both
    existing pending orders and approved incoming stock. The page groups selected
    items by supplier and destination warehouse; select additional items if you
    want to see multiple groups.
-3. Keep the proposed quantity for this walkthrough. You can edit **Unit price**;
+3. Keep the proposed quantity for this walkthrough. You can change **Unit price**;
    enter a sample price if none is stored. Choose **Create 1 draft purchase order**
    (the count changes when selecting multiple groups). The order list opens
    filtered to your new batch. Note the new order's **Reference**; **Show all
    orders** removes the batch filter.
-4. Edit the draft to explore its order lines. To try a delivery warning, check the
+4. Choose **Update** on the draft to explore its order lines. To try a delivery warning, check the
    supplier's **Typical lead days** and choose an **Expected arrival date** earlier
    than that lead time after the **Order date**. For a supplier with a lead time
    greater than one day, use the next day. Save, then cancel the warning
-   confirmation: the edit remains unsaved. Save again and confirm to keep the
+   confirmation: the change remains unsaved. Save again and confirm to keep the
    earlier date.
 5. Return to the order list, select your draft, and choose **Submit** in the selection bar.
    On the confirmation page, choose **Yes, continue** to submit it for approval.
-   The clerk can still read the submitted order, but its edit action is gone.
+   The clerk can still read the submitted order, but its **Update** action is gone.
 
 If another visitor changes stock, prices, or orders while you are working, the
 proposal can become stale. Choose **Reload proposals** and review it again. If
@@ -112,12 +112,12 @@ supplier through **Suppliers**. No instance reset is needed.
    it does not record a physical delivery.
 
 To explore rejection instead, choose **Reject** on a submitted order. It returns to
-**Draft**, and the clerk can edit and submit it again. Only the supervisor can approve
+**Draft**, and the clerk can update and submit it again. Only the supervisor can approve
 or reject an order.
 
 ### Try a stock-count warning
 
-While signed in as **Inventory supervisor**, edit the same inventory record. Note its
+While signed in as **Inventory supervisor**, update the same inventory record. Note its
 original **Quantity on hand**, then enter one unit above **Max stock level** and save.
 The warning asks you to confirm the count. Cancel to leave stored stock unchanged.
 To try confirmation too, save again and confirm, then restore the original quantity.
@@ -132,9 +132,9 @@ Both stock and delivery warnings are advisory: confirmation permits the save.
 - **Order totals:** filter Purchase Orders by supplier and watch the **Order value**
   footer follow the entire filtered result, not just the visible page. Values have
   no currency designation because the catalog does not store one.
-- **Suppliers and prices:** either inventory role can edit supplier details,
+- **Suppliers and prices:** either inventory role can update supplier details,
   including multiple notification email addresses, approval, and typical lead time.
-  **Supplier Prices** supplies default prices for new order lines. Editing a line's
+  **Supplier Prices** supplies default prices for new order lines. Changing a line's
   price does not change its supplier price, and changing a supplier price does not
   rewrite existing orders.
 - **Read-only browsing:** use either sales account to explore promotions and their

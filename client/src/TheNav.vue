@@ -46,7 +46,7 @@ const route = useRoute();
 async function handleSignOut() {
     try {
         // Leave the CRUD view before logout invalidates its permissions and metadata.
-        // Otherwise it can redirect sign-in back to an edit the next role cannot use.
+        // Otherwise it can redirect sign-in back to an update view the next role cannot use.
         await router.push({ name: "dashboard" });
         await nextTick();
         await userStore.logout();

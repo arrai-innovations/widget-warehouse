@@ -3,7 +3,7 @@ Behaviour tests for the purchase order workflow's three permission layers.
 
 These are the claims the walkthrough script makes, checked against the API an evaluator
 would drive: an order starts in draft, the transitions a role is offered depend on both
-the role and the row's current state, and submitting an order takes the edit away from
+the role and the row's current state, and submitting an order takes update away from
 the clerk who raised it while leaving it with the supervisor.
 
 The workflow itself is checked through ``seed_workflows`` rather than through fixtures
@@ -122,7 +122,7 @@ def test_submitting_takes_the_edit_away_from_the_clerk_who_raised_it(order):
     """
     The walkthrough's state permission moment. The clerk's baseline permission grants
     update on any purchase order; the deny rule on the submitted state takes it back for
-    this row, so the same user at the same URL loses the edit the moment they submit.
+    this row, so the same user at the same URL loses update the moment they submit.
     """
     clerk = client_for(CLERK)
     detail_url = reverse("catalog.purchaseorder-detail", args=[order.id])
@@ -188,13 +188,13 @@ def test_rejecting_returns_the_order_to_the_clerk(order):
     assert run_transition(SUPERVISOR, order, "reject").status_code == 200
 
     assert state_of(order) == "draft"
-    # Back in draft, so the deny no longer applies and the clerk can edit and resubmit.
-    edit = client_for(CLERK).patch(
+    # Back in draft, so the deny no longer applies and the clerk can update and resubmit.
+    update = client_for(CLERK).patch(
         reverse("catalog.purchaseorder-detail", args=[order.id]),
         {"reference": "PO-2001-D"},
         format="json",
     )
-    assert edit.status_code == 200, edit.data
+    assert update.status_code == 200, update.data
     assert transitions_offered(CLERK, order) == ["submit"]
 
 

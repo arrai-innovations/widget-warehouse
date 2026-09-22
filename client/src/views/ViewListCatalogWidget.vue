@@ -6,7 +6,7 @@ import DefaultViewList from "@/views/DefaultViewList.vue";
 // Model-specific list for catalog.widget. Wraps the app-wide DefaultViewList so
 // it inherits the reusable per-row links, then adds a model-specific touch:
 // the existing "name" column links to the widget's read view. This keeps the
-// "link an existing column" alternative alongside the synthetic "update" (Edit)
+// "link an existing column" alternative alongside the synthetic "update"
 // column that DefaultViewList adds for update-capable models.
 defineProps({
     app: { type: String, required: true },

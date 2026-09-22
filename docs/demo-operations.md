@@ -15,7 +15,7 @@ exist, and workflows before catalog orders so new orders receive their initial s
 `seed_demo_users` reapplies group permissions and resets the published account passwords.
 
 Reseeding updates seeded catalog values, but preserves existing order workflow states.
-Supplier prices are created only when absent, so price edits survive reseeding.
+Supplier prices are created only when absent, so price changes survive reseeding.
 Rows created by visitors and uploaded files remain until explicitly removed or reset.
 
 `update.sh` runs these commands during deployment after the deployment tool's migration
