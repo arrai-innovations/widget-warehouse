@@ -9,6 +9,7 @@ import BreadcrumbSeparator from "@vueda/navigation/breadcrumb/BreadcrumbSeparato
 import { getCRUDForTo } from "@vueda/router/getCrud.js";
 import { storeModelInfo } from "@vueda/stores/storeModelInfo.js";
 import { storeUser } from "@vueda/stores/storeUser.js";
+import { usePageTitle } from "@vueda/use/usePageTitle.js";
 import { memoizedStartCase } from "@vueda/utils/case.js";
 import { computedAsync } from "@vueuse/core";
 import { computed, unref } from "vue";
@@ -29,7 +30,6 @@ const isCrudRoute = computed(() => route.name === "actionrouter.listview" || rou
 const app = computed(() => route.params.app);
 const model = computed(() => route.params.model);
 const action = computed(() => route.params.action);
-const pk = computed(() => route.params.pk);
 
 // Model info is permission-filtered, so there is nothing to ask for without a session.
 // Reading loggedIn synchronously keeps both computeds reactive to sign-in and sign-out.
@@ -74,24 +74,16 @@ const appTitle = computed(() => memoizedStartCase(app.value || ""));
 // title-case them the way ViewList titles its page ("List Purchase Orders").
 const modelTitle = computed(() => memoizedStartCase(modelInfo.value?.verbose_name_plural || model.value || ""));
 
-const actionTitle = computed(() => {
-    if (action.value === "list") {
-        return modelTitle.value;
-    }
-    if (action.value === "create") {
-        return `Create ${memoizedStartCase(modelInfo.value?.verbose_name || model.value || "")}`;
-    }
-    if (action.value === "read" && pk.value) {
-        return `Read ${pk.value}`;
-    }
-    if (action.value === "update" && pk.value) {
-        return `Update ${pk.value}`;
-    }
-    if (action.value === "destroy" && pk.value) {
-        return `Delete ${pk.value}`;
-    }
-    return memoizedStartCase(action.value || "");
-});
+// The page crumb repeats the page heading, which the routed view contributes through usePageTitle.
+// A view reports an empty title while it loads, so show a skeleton rather than a guess until it
+// settles. Views that never contribute a title fall back to the action and verbose name, the same
+// form VUEDA's detail views use ("Update Purchase Order").
+const pageTitle = usePageTitle().current;
+const pageTitleLoading = computed(() => !!pageTitle.value.loading && !pageTitle.value.title);
+const fallbackActionTitle = computed(() =>
+    memoizedStartCase(`${action.value || ""} ${modelInfo.value?.verbose_name || model.value || ""}`),
+);
+const actionTitle = computed(() => pageTitle.value.title || fallbackActionTitle.value);
 </script>
 
 <template>
@@ -135,7 +127,8 @@ const actionTitle = computed(() => {
                 <template v-if="action !== 'list'">
                     <BreadcrumbSeparator />
                     <BreadcrumbItem>
-                        <BreadcrumbPage>{{ actionTitle }}</BreadcrumbPage>
+                        <Skeleton v-if="pageTitleLoading" class="h-4 w-24 align-middle" />
+                        <BreadcrumbPage v-else>{{ actionTitle }}</BreadcrumbPage>
                     </BreadcrumbItem>
                 </template>
             </template>
