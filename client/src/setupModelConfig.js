@@ -162,11 +162,11 @@ export function setupModelConfig(pinia) {
             // as a subform of the related object's own fields, which is not what a supplier
             // picker should be; unexpanded, it stays a select of suppliers.
             expand: ["lines"],
-            // Lines keep the inferred FieldSetStackedInline. A tabular inline is the better
-            // shape for line items and is a one-line override
-            // (fieldComponents: { lines: "FieldSetTabularInline" }), but VUEDA's tabular
-            // inline currently renders its column header labels as commented-out markup, so
-            // the columns come out unnamed. Stacked rows are taller and labelled.
+            // A writable many relation infers FieldSetStackedInline: one bordered card per
+            // line with a label above every field. Line items read better as a table, one
+            // row per line under a single header, so this names the tabular inline instead.
+            // Delete the override to see the stacked default.
+            fieldComponents: { lines: "FieldSetTabularInline" },
         },
         {
             // The create, update, and read views take the expand above, so they carry the
