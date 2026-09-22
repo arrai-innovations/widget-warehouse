@@ -6,12 +6,14 @@ import FormSectionTitle from "@vueda/form/layout/FormSectionTitle.vue";
 import { computed } from "vue";
 
 /**
- * Sectioned, multi-column field layout for the purchase order create and update forms.
+ * Sectioned, multi-column field layout for create and update forms, driven by a layout
+ * from `formLayouts.js`.
  *
  * VUEDA's default form is one full-width field per row, which is the right default for a
- * model whose field list is unknown but a poor fit for an order: five short header fields,
- * a line-item inline that wants the whole width, and read-only server-maintained values
- * that should not compete with the fields an operator fills in.
+ * model whose field list is unknown but a poor fit once it is known: short fields such as
+ * codes, dates, and flags waste a row each, an inline or a long text field wants the whole
+ * width, and read-only server-maintained values should not compete with the fields an
+ * operator fills in.
  *
  * This is the composition path for that: `FormModel` exposes a `fields` slot that replaces
  * its default loop, and `FormSection` and `FormGrid` are the layout primitives meant to go
@@ -25,9 +27,9 @@ import { computed } from "vue";
  *   `FormField` forwards only `class` onto the field wrapper, so a `data-col` set on a
  *   `FieldRenderer` lands on the input instead of the grid child. Each field is therefore
  *   wrapped in a plain `div` that carries the span.
- * - Anything not named in `SECTIONS` would silently vanish from the form, so the trailing
- *   section renders whatever the model gained since this file was written. It is empty
- *   today and exists so a new server field shows up somewhere instead of nowhere.
+ * - Anything not named in the layout would silently vanish from the form, so the trailing
+ *   section renders whatever the model gained since its layout was written. It exists so a
+ *   new server field shows up somewhere instead of nowhere.
  */
 defineOptions({
     // The `fields` slot binds the whole form-model context; none of it belongs on the DOM.
@@ -45,69 +47,41 @@ const props = defineProps({
         type: [Array, Set],
         required: true,
     },
+    /** Ordered sections of `{ title, aside, fields: [[name, columns], ...] }`. */
+    sections: {
+        type: Array,
+        required: true,
+    },
 });
-
-// Field name and the columns it claims at and above FormGrid's breakpoint, out of twelve.
-// FormGrid stamps spans for 3, 4, 6, 8, and 9; anything else stays full width.
-const SECTIONS = [
-    {
-        title: "Order",
-        aside: "supplier and dates",
-        fields: [
-            ["reference", 4],
-            ["supplier", 4],
-            ["destination_warehouse", 4],
-            ["order_date", 3],
-            ["expected_arrival_date", 3],
-        ],
-    },
-    {
-        title: "Lines",
-        aside: "at least one",
-        fields: [["lines", 12]],
-    },
-    {
-        title: "Value and state",
-        aside: "server maintained",
-        fields: [
-            ["total_value", 4],
-            ["workflow_state_name", 4],
-            ["workflow_state_code", 4],
-            ["valid_transitions", 12],
-        ],
-    },
-    {
-        title: "Record",
-        aside: "server maintained",
-        fields: [
-            ["created_at", 6],
-            ["updated_at", 6],
-        ],
-    },
-];
 
 const renderedFieldNames = computed(() => new Set(props.fieldNames));
 
 // A section drops out entirely when config leaves none of its fields in the form, so a
 // narrowed displayFields list does not leave a heading standing over nothing.
-const sections = computed(() =>
-    SECTIONS.map((section) => ({
-        ...section,
-        fields: section.fields.filter(([name]) => renderedFieldNames.value.has(name)),
-    })).filter((section) => section.fields.length),
+const visibleSections = computed(() =>
+    props.sections
+        .map((section) => ({
+            ...section,
+            fields: section.fields.filter(([name]) => renderedFieldNames.value.has(name)),
+        }))
+        .filter((section) => section.fields.length),
 );
 
-const placedFieldNames = new Set(SECTIONS.flatMap((section) => section.fields.map(([name]) => name)));
+const placedFieldNames = computed(
+    () => new Set(props.sections.flatMap((section) => section.fields.map(([name]) => name))),
+);
 
-const unplacedFields = computed(() => [...renderedFieldNames.value].filter((name) => !placedFieldNames.has(name)));
+const unplacedFields = computed(() =>
+    [...renderedFieldNames.value].filter((name) => !placedFieldNames.value.has(name)),
+);
 </script>
 
 <template>
-    <FormSection v-for="section in sections" :key="section.title">
+    <FormSection v-for="section in visibleSections" :key="section.title">
         <template #title>
             <FormSectionTitle>{{ section.title }}</FormSectionTitle>
         </template>
-        <template #aside>{{ section.aside }}</template>
+        <template v-if="section.aside" #aside>{{ section.aside }}</template>
         <FormGrid>
             <div v-for="[name, columns] in section.fields" :key="name" :data-col="columns">
                 <FieldRenderer :form-model="formModel" :form-model-name="name" />
