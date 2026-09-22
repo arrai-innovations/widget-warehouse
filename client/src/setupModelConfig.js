@@ -181,6 +181,7 @@ export function setupModelConfig(pinia) {
             list: {
                 displayFields: [
                     "reference",
+                    "workflow_state_name",
                     "supplier",
                     "destination_warehouse",
                     "order_date",
@@ -191,6 +192,7 @@ export function setupModelConfig(pinia) {
                 ],
                 fetchFields: [
                     "reference",
+                    "workflow_state_name",
                     "supplier",
                     "destination_warehouse",
                     "order_date",
@@ -199,6 +201,7 @@ export function setupModelConfig(pinia) {
                     "created_at",
                     "updated_at",
                 ],
+                fieldDetails: { workflow_state_name: { label: "State" } },
                 expand: ["supplier", "destination_warehouse"],
                 expandDetails: {
                     supplier: {
