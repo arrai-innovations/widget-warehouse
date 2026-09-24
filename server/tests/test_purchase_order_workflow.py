@@ -6,7 +6,7 @@ would drive: an order starts in draft, the transitions a role is offered depend 
 the role and the row's current state, and submitting an order takes update away from
 the clerk who raised it while leaving it with the supervisor.
 
-The workflow itself is checked through ``seed_workflows`` rather than through fixtures
+The workflow itself is checked through the seeded definition rather than through fixtures
 built here, so what these tests exercise is the definition a deployed instance runs.
 """
 
@@ -14,11 +14,11 @@ from datetime import date, timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APIClient
 
 from widget_warehouse.catalog.models import PurchaseOrder, Supplier, Warehouse
+from widget_warehouse.catalog.seeding import DemoUsers, PurchaseOrderWorkflow
 
 CLERK = "clerk@widgetwarehouse.com"
 SUPERVISOR = "supervisor@widgetwarehouse.com"
@@ -30,8 +30,8 @@ WORKFLOW_KWARGS = {"app_label": "catalog", "model": "purchaseorder"}
 
 @pytest.fixture
 def order(db):
-    call_command("seed_demo_users", verbosity=0)
-    call_command("seed_workflows", verbosity=0)
+    DemoUsers().run()
+    PurchaseOrderWorkflow().run()
 
     return PurchaseOrder.objects.create(
         reference="PO-2001",
@@ -243,6 +243,6 @@ def test_reseeding_the_workflow_leaves_an_order_where_it_was(order):
     """
     assert run_transition(CLERK, order, "submit").status_code == 200
 
-    call_command("seed_workflows", verbosity=0)
+    PurchaseOrderWorkflow().run()
 
     assert state_of(order) == "submitted"

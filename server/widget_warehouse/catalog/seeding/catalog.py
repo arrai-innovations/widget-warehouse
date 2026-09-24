@@ -2,8 +2,8 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from django.contrib.postgres.fields.ranges import Range
-from django.core.management.base import BaseCommand, CommandError
-from vueda.workflow.models import ObjectState, State, Workflow
+from django.core.management.base import CommandError
+from vueda.workflow.models import ObjectState, State, get_workflow_for_model
 
 from widget_warehouse.catalog.models import (
     InventoryRecord,
@@ -17,6 +17,7 @@ from widget_warehouse.catalog.models import (
     WidgetCategory,
     WidgetVariant,
 )
+from widget_warehouse.catalog.seeding.base import SeedStep
 
 # Inventory hangs off variants rather than widgets, so a widget with no variant is a widget
 # no stock row can point at. Giving every bulk widget one variant is what lets inventory
@@ -39,10 +40,10 @@ BULK_MAX_STOCK = 400
 BULK_OVERFLOW_EVERY = 3
 
 
-class Command(BaseCommand):
-    help = "Seed the catalog with sample widgets, suppliers, warehouses, and promotions."
+class Catalog(SeedStep):
+    """Sample widgets, suppliers, warehouses, promotions, and purchase orders."""
 
-    def handle(self, *args, **options):
+    def run(self):
         self._seed_categories()
         self._seed_suppliers()
         self._seed_widgets()
@@ -940,24 +941,13 @@ class Command(BaseCommand):
 
     def _purchase_order_workflow(self):
         """
-        The purchase order workflow and its states by code, or ``(None, {})`` if unseeded.
+        The purchase order workflow and its states by code.
 
-        ``seed_workflows`` runs before this command in the documented order, so the states
-        are normally here. Seeding the catalog on its own still works: every order takes
-        the workflow's initial state from ``HasWorkflowModelMixin.save()``, or no state at
-        all when no workflow exists yet, which the backfill in ``seed_workflows`` then
-        fills in. What is lost in that case is the spread, so this says so rather than
-        leaving a flat pipeline to be discovered on the dashboard.
+        ``seed_demo`` seeds the workflow before the catalog, so both are always here. A
+        catalog seeded without it would fail on the first order save, which raises
+        ``WorkflowNotConfiguredError``.
         """
-        workflow = Workflow.objects.filter(content_type=PurchaseOrder.get_content_type()).first()
-        if workflow is None:
-            self.stdout.write(
-                self.style.WARNING(
-                    "  No purchase order workflow yet, so orders keep their initial state. "
-                    "Run seed_workflows, then seed_catalog again on an empty database for the seeded spread."
-                )
-            )
-            return None, {}
+        workflow = get_workflow_for_model(PurchaseOrder)
         return workflow, {state.code: state for state in State.objects.filter(workflow=workflow)}
 
     def _seed_order_state(self, workflow, states, order, state_code):
@@ -968,17 +958,15 @@ class Command(BaseCommand):
         back: an evaluator who submitted an order finds it still submitted afterwards, and
         ``reset_demo`` is the undo half. A fresh database, or one just reset, therefore
         gets the spread above; an instance somebody has been using keeps what happened to
-        it. ``HasWorkflowModelMixin.save()`` has already written the initial state row by
-        the time this runs, so this updates that row rather than adding one.
+        it. VUEDA has already written the initial state row when the order was saved, so
+        this updates that row rather than adding one.
         """
-        if workflow is None:
-            return
 
         state = states.get(state_code)
         if state is None:
             raise CommandError(
                 f"{order.reference} is seeded into {state_code!r}, which the purchase order workflow "
-                "has no state for. Check the state codes in seed_workflows."
+                "has no state for. Check the state codes in workflows.py."
             )
 
         ObjectState.objects.update_or_create(

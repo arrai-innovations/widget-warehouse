@@ -1,8 +1,8 @@
 """
 Filter contract tests for the purchase order list.
 
-``workflow_state`` comes from VUEDA's ``HasWorkflowFilterSetMixin`` rather than from this
-project's filterset body, so these cover what the mixin actually does on this model: the
+``workflow_state`` comes from VUEDA, which adds it to every filterset of a workflow model,
+rather than from this project's filterset body. These cover what it does on this model: the
 filter narrows by state, and its accepted values are the states the queryset currently
 holds rather than the states the workflow defines. The second half is a framework
 behaviour a dashboard has to design around, so it is pinned here rather than discovered
@@ -12,19 +12,19 @@ again later.
 from datetime import date
 
 import pytest
-from django.core.management import call_command
 from vueda.workflow.models import State, Workflow
 
 from widget_warehouse.catalog.filtersets import PurchaseOrderFilterSet
 from widget_warehouse.catalog.models import PurchaseOrder, Supplier, Warehouse
+from widget_warehouse.catalog.seeding import DemoUsers, PurchaseOrderWorkflow
 
 
 @pytest.fixture
 def orders(db):
-    # seed_workflows looks the demo groups up by name for its state permissions, so the
+    # The workflow step looks the demo groups up by name for its state permissions, so the
     # roles have to exist first.
-    call_command("seed_demo_users", verbosity=0)
-    call_command("seed_workflows", verbosity=0)
+    DemoUsers().run()
+    PurchaseOrderWorkflow().run()
     supplier = Supplier.objects.create(
         name="Precision Parts Co.",
         slug="precision-parts-co",
@@ -78,7 +78,7 @@ def test_workflow_state_filters_the_order_list(orders):
 @pytest.mark.django_db
 def test_a_state_no_order_is_in_is_rejected_rather_than_returning_nothing(orders):
     """
-    ``HasWorkflowFilterSetMixin`` replaces the filter's queryset with the states present on
+    VUEDA's ``workflow_state`` filter replaces its queryset with the states present on
     the rows it was given, and a ModelChoiceFilter validates a submitted value against that
     same queryset. So asking for a state that currently holds no orders is an invalid
     choice, not an empty result, and anything counting orders per state has to handle a 400

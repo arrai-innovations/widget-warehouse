@@ -183,17 +183,15 @@ Run these commands from the repository root:
 ```bash
 just bootstrap
 just manage migrate
-just manage seed_demo_users
-just manage seed_workflows
-just manage seed_catalog
+just manage seed_demo
 just serve
 ```
 
-Keep the seed order: users create the groups, workflows attach permissions to those
-groups, and catalog orders receive their initial workflow states. Open
+`seed_demo` creates the demo groups and users, attaches the purchase order workflow's
+permissions to those groups, and then seeds the catalog, in one transaction. Open
 <http://localhost:8080/> and use the same [demo accounts](#demo-accounts) and walkthrough.
 
-After changing demo permissions, run `just manage seed_demo_users` again and sign out
+After changing demo permissions, run `just manage seed_demo` again and sign out
 and back in. To discard local catalog changes and restore the demo data, run
 `just manage reset_demo`. It asks for confirmation and deletes catalog records,
 orders, their history, and uploaded catalog files before reseeding.

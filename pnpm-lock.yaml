@@ -48,6 +48,9 @@ importers:
       '@commitlint/cli':
         specifier: ^19.8.1
         version: 19.8.1(@types/node@25.6.0)(typescript@6.0.2)
+      '@playwright/test':
+        specifier: ^1.63.0
+        version: 1.63.0
       concurrently:
         specifier: ^9.2.1
         version: 9.2.1
@@ -64,8 +67,8 @@ importers:
         specifier: ^2.0.11
         version: 2.0.11
       '@arrai-innovations/vueda':
-        specifier: ^3.0.0-alpha.5
-        version: 3.0.0-alpha.5(@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2)))(@arrai-innovations/vue-sonner@2.0.11)(@floating-ui/dom@1.8.0)(@sentry/vue@9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2)))(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(luxon@3.7.2)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(typescript@6.0.2)(vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)))(vue-router@4.6.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))
+        specifier: ^3.0.0-alpha.6
+        version: 3.0.0-alpha.6(@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2)))(@arrai-innovations/vue-sonner@2.0.11)(@floating-ui/dom@1.8.0)(@sentry/vue@9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2)))(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(luxon@3.7.2)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(typescript@6.0.2)(vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)))(vue-router@4.6.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))
       '@fontsource-variable/archivo':
         specifier: ^5.3.0
         version: 5.3.0
@@ -176,8 +179,8 @@ packages:
       nuxt:
         optional: true
 
-  '@arrai-innovations/vueda@3.0.0-alpha.5':
-    resolution: {integrity: sha512-Nb3TnMnicCrpHE0UmppqYpw2QzXgpquo0HPRWDXW037Cx8ylS9ExWUckNpNA3pCyjF3hNSXvIfolbpBDV//TNw==}
+  '@arrai-innovations/vueda@3.0.0-alpha.6':
+    resolution: {integrity: sha512-gSrARSBSSgPtu9FnCiqCjOLPhFrzbHdsPM2Sru73rv1g2+9s9JOkm/399HXQU/eGLlxUMYALGgl18Abyk8+yyQ==}
     peerDependencies:
       '@arrai-innovations/reactive-helpers': ^25.0.0
       '@arrai-innovations/vue-sonner': ^2.0.11
@@ -598,6 +601,11 @@ packages:
     engines: {node: '>=14'}
     peerDependencies:
       vue: '>=3.2.39'
+
+  '@playwright/test@1.63.0':
+    resolution: {integrity: sha512-oxMK4vllB9RK5NQ2l1pq1IfOf2AvnEuj/vYGDj0H2nMtmtZpKtCwt/l00GEO6xjGfpBNAvjovvYdCm50dRQkpQ==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   '@rolldown/binding-android-arm-eabi@1.2.9':
     resolution: {integrity: sha512-tNISae1QEf/vkb3xkRcjV5SEdzPE97We5IVaa2Z8jSszQPZ8U60B/YCYpw4QI7VidYsBtKavczXf+DyDs9WGxw==}
@@ -2964,6 +2972,16 @@ packages:
   platform-detect@3.0.1:
     resolution: {integrity: sha512-qAXFCIPz8Kd1b7RXuxsMNoZgLq+NR/fzJBFWpyUYARzh/ORG1xMG6suRLOFg/DkJXtS+pvsjawMfwq1htVBpUg==}
 
+  playwright-core@1.63.0:
+    resolution: {integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.63.0:
+    resolution: {integrity: sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   pluralize@8.0.0:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
     engines: {node: '>=4'}
@@ -3612,7 +3630,7 @@ snapshots:
 
   '@arrai-innovations/vue-sonner@2.0.11': {}
 
-  '@arrai-innovations/vueda@3.0.0-alpha.5(@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2)))(@arrai-innovations/vue-sonner@2.0.11)(@floating-ui/dom@1.8.0)(@sentry/vue@9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2)))(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(luxon@3.7.2)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(typescript@6.0.2)(vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)))(vue-router@4.6.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))':
+  '@arrai-innovations/vueda@3.0.0-alpha.6(@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2)))(@arrai-innovations/vue-sonner@2.0.11)(@floating-ui/dom@1.8.0)(@sentry/vue@9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2)))(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(luxon@3.7.2)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(typescript@6.0.2)(vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)))(vue-router@4.6.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))':
     dependencies:
       '@arrai-innovations/reactive-helpers': 25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2))
       '@arrai-innovations/vue-sonner': 2.0.11
@@ -4187,6 +4205,10 @@ snapshots:
   '@phosphor-icons/vue@2.2.1(vue@3.5.32(typescript@6.0.2))':
     dependencies:
       vue: 3.5.32(typescript@6.0.2)
+
+  '@playwright/test@1.63.0':
+    dependencies:
+      playwright: 1.63.0
 
   '@rolldown/binding-android-arm-eabi@1.2.9':
     optional: true
@@ -6714,6 +6736,12 @@ snapshots:
       typescript: 6.0.2
 
   platform-detect@3.0.1: {}
+
+  playwright-core@1.63.0: {}
+
+  playwright@1.63.0:
+    dependencies:
+      playwright-core: 1.63.0
 
   pluralize@8.0.0: {}
 

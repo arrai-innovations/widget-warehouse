@@ -15,7 +15,6 @@ from datetime import date
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APIClient
 from vueda.workflow.models import State, Workflow
@@ -26,14 +25,15 @@ from widget_warehouse.catalog.models import (
     Supplier,
     Warehouse,
 )
+from widget_warehouse.catalog.seeding import DemoUsers, PurchaseOrderWorkflow
 
 PIPELINE = ("draft", "submitted", "approved", "received", "cancelled")
 
 
 @pytest.fixture
 def orders(db):
-    call_command("seed_demo_users", verbosity=0)
-    call_command("seed_workflows", verbosity=0)
+    DemoUsers().run()
+    PurchaseOrderWorkflow().run()
     supplier = Supplier.objects.create(
         name="Precision Parts Co.",
         slug="precision-parts-co",
@@ -67,10 +67,10 @@ def orders(db):
     return made
 
 
-def list_as(email):
+def list_as(email, params=None):
     client = APIClient()
     client.force_authenticate(get_user_model().objects.get(email=email))
-    return client.get(reverse("catalog.purchaseorderstatecount-list"))
+    return client.get(reverse("catalog.purchaseorderstatecount-list"), params or {})
 
 
 @pytest.mark.django_db
@@ -95,7 +95,7 @@ def test_a_state_holding_no_orders_is_a_zero_rather_than_a_refusal(orders):
 
 @pytest.mark.django_db
 def test_the_totals_row_carries_the_order_count(orders):
-    response = list_as("clerk@widgetwarehouse.com")
+    response = list_as("clerk@widgetwarehouse.com", {"ct": "order_count"})
 
     # column_totals sums over the whole filtered queryset, so this is every order that has
     # a state, for free, in the same request as the breakdown.

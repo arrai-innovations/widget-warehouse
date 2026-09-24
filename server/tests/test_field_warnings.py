@@ -6,7 +6,6 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
-from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APIClient
 
@@ -20,6 +19,7 @@ from widget_warehouse.catalog.models import (
     WidgetCategory,
     WidgetVariant,
 )
+from widget_warehouse.catalog.seeding import DemoUsers, PurchaseOrderWorkflow
 
 pytestmark = pytest.mark.django_db
 
@@ -45,8 +45,8 @@ def catalog():
 
 @pytest.fixture
 def client():
-    call_command("seed_demo_users", verbosity=0)
-    call_command("seed_workflows", verbosity=0)
+    DemoUsers().run()
+    PurchaseOrderWorkflow().run()
     client = APIClient()
     client.force_authenticate(get_user_model().objects.get(email="clerk@widgetwarehouse.com"))
     return client
@@ -187,7 +187,7 @@ def test_unrelated_order_edits_do_not_repeat_delivery_warning(client, order, ord
 
 @pytest.fixture
 def inventory_client():
-    call_command("seed_demo_users", verbosity=0)
+    DemoUsers().run()
     user = get_user_model().objects.get(email="supervisor@widgetwarehouse.com")
     client = APIClient()
     client.force_authenticate(user)

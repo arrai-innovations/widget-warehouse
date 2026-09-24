@@ -3,7 +3,6 @@ from datetime import date
 from django.db.models import F, Q
 from django_filters import rest_framework
 from vueda.core.filters import VuedaFilterSet
-from vueda.workflow.filtersets import HasWorkflowFilterSetMixin
 
 from widget_warehouse.catalog.models import (
     InventoryRecord,
@@ -134,12 +133,12 @@ class PromotionFilterSet(VuedaFilterSet):
         fields = ("id", "name", "code", "is_active", "active_on")
 
 
-class PurchaseOrderFilterSet(HasWorkflowFilterSetMixin, VuedaFilterSet):
+class PurchaseOrderFilterSet(VuedaFilterSet):
     """
-    ``HasWorkflowFilterSetMixin`` contributes the ``workflow_state`` filter, which is how a
-    list request narrows to orders in a given state. The mixin narrows its own choices to
-    the states orders are actually in, so the filter's options describe this queryset
-    rather than every state the workflow defines.
+    VUEDA adds the ``workflow_state`` filter to every filterset of a workflow model, which
+    is how a list request narrows to orders in a given state. It narrows the filter's
+    choices to the states orders are actually in, so the filter's options describe this
+    queryset rather than every state the workflow defines.
     """
 
     replenishment_batch = rest_framework.UUIDFilter(field_name="replenishment_batch_id", label="Replenishment batch")
