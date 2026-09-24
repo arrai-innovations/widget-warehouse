@@ -2153,7 +2153,7 @@ wheels = [
 
 [[package]]
 name = "vueda"
-version = "3.0.0a3"
+version = "3.0.0a4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ansicolors" },
@@ -2192,7 +2192,7 @@ dependencies = [
     { name = "urllib3" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/50/3e0f1d0f13db0884b0224be25a353409812700c04235b852d7864d9263a4/vueda-3.0.0a3-py3-none-any.whl", hash = "sha256:6798c15b8aeadb95efec770855e5549190ddbee6afbb551592a8896506ada2f0", size = 366608, upload-time = "2026-09-21T16:06:02.789Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/05/5e8baa582950dddaf5fcf3e96c248350f4cae6980c10ebfc1fc7f9e52a8d/vueda-3.0.0a4-py3-none-any.whl", hash = "sha256:96c4ca1c8228d667c6a8e3ff6a45e0248dc5d6c741ffc4fd632c553b07c36ab8", size = 393250, upload-time = "2026-09-24T22:49:38.698Z" },
 ]
 
 [[package]]
@@ -2233,7 +2233,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=12.2.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.0,<4" },
     { name = "redis", specifier = ">=7.4.0,<8" },
-    { name = "vueda", specifier = ">=3.0.0a3,<4" },
+    { name = "vueda", specifier = ">=3.0.0a4,<4" },
 ]
 
 [package.metadata.requires-dev]

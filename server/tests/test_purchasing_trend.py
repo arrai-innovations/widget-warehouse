@@ -16,9 +16,7 @@ from widget_warehouse.catalog.models import PurchaseOrder, PurchaseOrderLine
 
 @pytest.fixture
 def demo(db):
-    call_command("seed_demo_users", verbosity=0)
-    call_command("seed_workflows", verbosity=0)
-    call_command("seed_catalog", verbosity=0)
+    call_command("seed_demo", verbosity=0)
 
 
 def params(weeks=6):
@@ -55,6 +53,7 @@ def test_report_matches_full_filtered_order_totals_and_week_links(demo):
                     "supplier": row["id"],
                     "purchasing": "true",
                     "ps": 1,
+                    "ct": "total_value",
                     "order_date_after": week.isoformat(),
                     "order_date_before": (week + timedelta(days=6)).isoformat(),
                 },
@@ -92,7 +91,9 @@ def test_report_enforces_list_permission_and_workflow_row_visibility(demo):
     response = report(client_for(ACCOUNTANT))
     assert response.status_code == 200, response.data
     total = sum(Decimal(value["value"]) for row in response.data["results"] for value in row["values"])
-    orders = client_for(ACCOUNTANT).get(reverse("catalog.purchaseorder-list"), {**params(), "ps": 1})
+    orders = client_for(ACCOUNTANT).get(
+        reverse("catalog.purchaseorder-list"), {**params(), "ps": 1, "ct": "total_value"}
+    )
     assert total == orders.data["columnTotals"]["total_value"]
     assert total < Decimal("20000")
     pipeline = client_for(ACCOUNTANT).get(reverse("catalog.order-pipeline"), params())

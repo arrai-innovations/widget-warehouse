@@ -13,11 +13,11 @@ from urllib.parse import urlencode
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APIClient
 
 from widget_warehouse.catalog.models import Supplier
+from widget_warehouse.catalog.seeding import DemoUsers
 
 EXPAND_PARAM = settings.REST_FLEX_FIELDS["EXPAND_PARAM"]
 FIELDS_PARAM = settings.REST_FLEX_FIELDS["FIELDS_PARAM"]
@@ -36,7 +36,7 @@ def supplier(db):
 
 @pytest.fixture
 def seeded_roles(db):
-    call_command("seed_demo_users", verbosity=0)
+    DemoUsers().run()
 
 
 def client_for(email):

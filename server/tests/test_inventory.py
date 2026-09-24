@@ -6,14 +6,13 @@ against that row's own threshold rather than against a value the request supplie
 exists so an operator (and, later, a dashboard tile) can ask "what needs restocking"
 without knowing any thresholds, so the boundary cases are pinned here.
 
-The totals come from VUEDA's ``column_totals``, which sums over the filtered queryset
-rather than the page, so the two features are tested together: a total that ignored the
+The totals come from VUEDA's ``column_totals``, which a request asks for with ``ct`` and
+which sums over the filtered queryset rather than the page, so the two features are tested together: a total that ignored the
 filter would be worse than no total at all.
 """
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APIClient
 
@@ -26,6 +25,7 @@ from widget_warehouse.catalog.models import (
     WidgetCategory,
     WidgetVariant,
 )
+from widget_warehouse.catalog.seeding import DemoUsers
 
 
 @pytest.fixture
@@ -111,7 +111,7 @@ def test_quantity_on_hand_filters_by_range(stock):
 
 @pytest.fixture
 def seeded_roles(db):
-    call_command("seed_demo_users", verbosity=0)
+    DemoUsers().run()
 
 
 def list_as(email, query=""):
@@ -122,7 +122,7 @@ def list_as(email, query=""):
 
 @pytest.mark.django_db
 def test_the_list_carries_a_total_for_every_matching_row(stock, seeded_roles):
-    response = list_as("clerk@widgetwarehouse.com")
+    response = list_as("clerk@widgetwarehouse.com", "?ct=quantity_on_hand")
 
     assert response.status_code == 200, response.data
     # 2 + 10 + 50 + 0, every record in the fixture rather than the page.
@@ -131,7 +131,7 @@ def test_the_list_carries_a_total_for_every_matching_row(stock, seeded_roles):
 
 @pytest.mark.django_db
 def test_the_total_follows_the_filter(stock, seeded_roles):
-    response = list_as("clerk@widgetwarehouse.com", "?below_reorder=true")
+    response = list_as("clerk@widgetwarehouse.com", "?below_reorder=true&ct=quantity_on_hand")
 
     assert response.status_code == 200, response.data
     assert response.data["totalRecords"] == 1
@@ -139,17 +139,16 @@ def test_the_total_follows_the_filter(stock, seeded_roles):
 
 
 @pytest.mark.django_db
-def test_a_total_over_no_rows_is_null_rather_than_zero(stock, seeded_roles):
+def test_a_total_over_no_rows_is_zero(stock, seeded_roles):
     """
-    ``Sum`` over an empty queryset is NULL, and VUEDA passes that through. Anything
-    displaying the total has to treat it as "nothing to add up" rather than as a missing
-    response; ``ViewList`` renders it as an empty cell.
+    ``Sum`` over an empty queryset is NULL in SQL, and VUEDA totals it as zero instead, so
+    the footer shows 0 for a filter that matches nothing rather than an empty cell.
     """
-    response = list_as("clerk@widgetwarehouse.com", "?quantity_on_hand_min=9000")
+    response = list_as("clerk@widgetwarehouse.com", "?quantity_on_hand_min=9000&ct=quantity_on_hand")
 
     assert response.status_code == 200, response.data
     assert response.data["totalRecords"] == 0
-    assert response.data["columnTotals"] == {"quantity_on_hand": None}
+    assert response.data["columnTotals"] == {"quantity_on_hand": 0}
 
 
 @pytest.mark.django_db

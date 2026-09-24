@@ -13,7 +13,6 @@ from urllib.parse import urlencode
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APIClient
 
@@ -26,6 +25,7 @@ from widget_warehouse.catalog.models import (
     WidgetCategory,
     WidgetVariant,
 )
+from widget_warehouse.catalog.seeding import DemoUsers, PurchaseOrderWorkflow
 
 EXPAND_PARAM = settings.REST_FLEX_FIELDS["EXPAND_PARAM"]
 FIELDS_PARAM = settings.REST_FLEX_FIELDS["FIELDS_PARAM"]
@@ -76,11 +76,11 @@ def catalog(db):
 
 @pytest.fixture
 def seeded_roles(db):
-    call_command("seed_demo_users", verbosity=0)
-    # The order is workflow-enabled, and reading one asks for the transitions its reader
-    # may run. With no workflow rows at all that ask is refused, so every purchase order
-    # request 403s until the workflow is seeded, whatever the role.
-    call_command("seed_workflows", verbosity=0)
+    DemoUsers().run()
+    # The order is workflow-enabled, so saving or reading one needs its workflow
+    # definition. Without it every purchase order request fails with
+    # WorkflowNotConfiguredError, whatever the role.
+    PurchaseOrderWorkflow().run()
 
 
 def client_for(email):

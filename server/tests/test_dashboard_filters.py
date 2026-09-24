@@ -23,6 +23,7 @@ from rest_framework.test import APIClient
 from vueda.workflow.models import ObjectState
 
 from widget_warehouse.catalog.models import Promotion, PurchaseOrder, Supplier, Warehouse
+from widget_warehouse.catalog.seeding import DemoUsers
 
 CLERK = "clerk@widgetwarehouse.com"
 # Promotions belong to the sales roles: the clerk cannot list them at all, which is the
@@ -33,7 +34,7 @@ SUPERVISOR = "supervisor@widgetwarehouse.com"
 
 @pytest.fixture
 def suppliers(db):
-    call_command("seed_demo_users", verbosity=0)
+    DemoUsers().run()
     for slug, approved in (
         ("approved-one", True),
         ("approved-two", True),
@@ -51,7 +52,7 @@ def suppliers(db):
 
 @pytest.fixture
 def promotions(db):
-    call_command("seed_demo_users", verbosity=0)
+    DemoUsers().run()
     for code, lower, upper in (
         ("RUNNING", date(2026, 9, 1), date(2026, 10, 1)),
         ("ALSO-RUNNING", date(2026, 9, 15), date(2026, 9, 20)),
@@ -145,9 +146,7 @@ def test_both_filters_are_offered_to_the_client_as_ordinary_filters(promotions, 
 
 @pytest.fixture
 def orders(db):
-    call_command("seed_demo_users", verbosity=0)
-    call_command("seed_workflows", verbosity=0)
-    call_command("seed_catalog", verbosity=0)
+    call_command("seed_demo", verbosity=0)
 
 
 def test_overdue_skips_an_order_that_already_arrived(orders):
@@ -211,8 +210,9 @@ def test_open_and_settled_are_complements(orders):
 def test_an_order_with_no_workflow_state_counts_as_open(orders):
     """
     A row that predates the workflow is not a finished order. This is reachable in a
-    deployment: seed_catalog run before seed_workflows leaves orders stateless until the
-    backfill, and the value tile should not quietly drop them in the meantime.
+    deployment: enabling workflow on a model with existing rows leaves them stateless until
+    ``backfillworkflowstates`` runs, and the value tile should not quietly drop them in the
+    meantime.
     """
     stateless = PurchaseOrder.objects.create(
         reference="PO-NOSTATE",
@@ -239,7 +239,7 @@ def test_the_open_value_reaches_the_client_as_a_number_it_can_render(orders):
     client = APIClient()
     client.force_authenticate(get_user_model().objects.get(email=SUPERVISOR))
 
-    response = client.get(reverse("catalog.purchaseorder-list"), {"is_open": "true", "ps": 1})
+    response = client.get(reverse("catalog.purchaseorder-list"), {"is_open": "true", "ps": 1, "ct": "total_value"})
     payload = json.loads(response.content)
 
     assert isinstance(payload["columnTotals"]["total_value"], (int, float))
@@ -247,17 +247,17 @@ def test_the_open_value_reaches_the_client_as_a_number_it_can_render(orders):
     assert isinstance(payload["results"][0]["total_value"], str)
 
 
-def test_a_total_over_no_rows_is_null_rather_than_zero(orders):
+def test_a_total_over_no_rows_is_zero(orders):
     """
-    ``Sum`` over an empty queryset returns NULL, which the annotation's own Coalesce does
-    not reach: that one fills in a row with no lines, not a page with no rows. The tile has
-    to read null as nothing rather than render it.
+    ``Sum`` over an empty queryset returns NULL in SQL, which the annotation's own Coalesce
+    does not reach: that one fills in a row with no lines, not a page with no rows. VUEDA
+    totals the empty page as zero, so the tile renders 0.00 for it.
     """
     client = APIClient()
     client.force_authenticate(get_user_model().objects.get(email=SUPERVISOR))
 
-    response = client.get(reverse("catalog.purchaseorder-list"), {"reference": "no-such-order"})
+    response = client.get(reverse("catalog.purchaseorder-list"), {"reference": "no-such-order", "ct": "total_value"})
     payload = json.loads(response.content)
 
     assert payload["totalRecords"] == 0
-    assert payload["columnTotals"] == {"total_value": None}
+    assert payload["columnTotals"] == {"total_value": 0}

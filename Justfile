@@ -38,6 +38,13 @@ test-server *args:
 test-client *args:
   cd {{justfile_directory()}}/client && pnpm test "$@"
 
+# End-to-end tests in a browser. Starts its own server and client on their own ports and
+# database (see playwright.config.mjs); nothing already running is used. Extra arguments
+# go to playwright.
+[positional-arguments]
+test-e2e *args:
+  cd {{justfile_directory()}} && pnpm exec playwright test "$@"
+
 build: build-client
 
 build-client:

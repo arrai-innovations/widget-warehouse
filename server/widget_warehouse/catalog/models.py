@@ -7,7 +7,6 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.functions import Coalesce
 from vueda.core.models import BaseModelMeta, FormattedNameManager, Lookup, VuedaModel
-from vueda.workflow.models import HasWorkflowModelMixin
 
 # The money an order is worth is a sum over its lines, so it is neither a column nor a
 # GeneratedField: it is an annotation the viewset adds, a serializer field that reads it,
@@ -287,14 +286,16 @@ class PurchaseOrderQuerySet(models.QuerySet):
         )
 
 
-class PurchaseOrder(HasWorkflowModelMixin, VuedaModel):
+class PurchaseOrder(VuedaModel):
     """
     An inbound order placed with a supplier for delivery into a warehouse.
 
-    ``HasWorkflowModelMixin`` precedes ``VuedaModel`` so its ``save()`` runs last and can
-    create the order's workflow state row once the base save has given the order an id.
-    The mixin contributes no columns, only a generic relation, so it needs no migration
-    of its own; the transition permissions below do.
+    ``class Vueda.Workflow`` below is what puts the order in a workflow. VUEDA then adds
+    the workflow methods and the ``workflow_state`` fields and filter, and gives every
+    saved order a state row in the workflow's initial state. Saving an order therefore
+    needs the purchase order workflow to exist, which ``seed_demo`` guarantees by seeding
+    it before the catalog. Enabling workflow adds no columns, so it needs no migration of
+    its own; the transition permissions below do.
     """
 
     formatted_name = None
@@ -361,6 +362,10 @@ class PurchaseOrder(HasWorkflowModelMixin, VuedaModel):
             ("receive_purchaseorder", "Can receive approved purchase orders into a warehouse"),
             ("cancel_purchaseorder", "Can cancel purchase orders"),
         )
+
+    class Vueda:
+        class Workflow:
+            enabled = True
 
 
 class PurchaseOrderLine(VuedaModel):

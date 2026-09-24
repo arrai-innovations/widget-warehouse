@@ -50,9 +50,7 @@ SCALE_TILES = {
 
 @pytest.fixture
 def demo(db):
-    call_command("seed_demo_users", verbosity=0)
-    call_command("seed_workflows", verbosity=0)
-    call_command("seed_catalog", verbosity=0)
+    call_command("seed_demo", verbosity=0)
 
 
 def client_for(email):
@@ -130,12 +128,12 @@ def test_the_promotion_tile_counts_what_is_running_today(demo):
 
 def test_the_value_tile_reads_the_total_rather_than_the_count(demo):
     """
-    The one tile that reports a sum. It is the same request as any other tile, because the
-    viewset declares total_value in column_totals and the sum arrives in the envelope
-    beside the count: eight orders in flight, and what the warehouse has committed to them.
+    The one tile that reports a sum. It is the same request as any other tile plus ``ct``
+    naming the total, and the sum arrives in the envelope beside the count: eight orders in
+    flight, and what the warehouse has committed to them.
     """
     model, params = QUEUE_TILES["open-value"]
-    response = client_for(ACCOUNTANT).get(reverse(f"catalog.{model}-list"), {**params, "ps": 1})
+    response = client_for(ACCOUNTANT).get(reverse(f"catalog.{model}-list"), {**params, "ps": 1, "ct": "total_value"})
 
     assert response.status_code == 200, response.data
     assert response.data["totalRecords"] == 8
@@ -157,7 +155,7 @@ def test_the_pipeline_band_is_one_request_and_only_for_order_readers(demo):
     summary either, so the whole band disappears rather than rendering empty bars.
     """
     client = client_for(SUPERVISOR)
-    response = client.get(reverse("catalog.purchaseorderstatecount-list"), {"ps": 20})
+    response = client.get(reverse("catalog.purchaseorderstatecount-list"), {"ps": 20, "ct": "order_count"})
 
     assert response.status_code == 200, response.data
     assert [(row["code"], row["order_count"]) for row in response.data["results"]] == [

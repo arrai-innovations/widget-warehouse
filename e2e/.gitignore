@@ -1,0 +1,6 @@
+# Written by each run: the saved sessions, the test server's uploads, and Playwright's
+# report and traces.
+.auth/
+.run/
+test-results/
+playwright-report/

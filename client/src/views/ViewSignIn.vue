@@ -20,7 +20,7 @@ import WidgetTextInput from "@vueda/widgets/WidgetTextInput.vue";
  * not gated on DEBUG: an evaluator on the deployed instance needs it to switch roles.
  */
 
-// Mirrors the roles in server/widget_warehouse/catalog/management/commands/seed_demo_users.py.
+// Mirrors the roles in server/widget_warehouse/catalog/seeding/users.py.
 // Every account there shares one password so switching roles stays a two-click operation.
 const DEMO_PASSWORD = "widget-demo";
 const DEMO_ACCOUNTS = [
