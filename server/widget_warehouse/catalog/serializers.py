@@ -4,7 +4,6 @@ from django.conf import settings
 from rest_framework import serializers
 from vueda.core.fields.serializers import FileField, ImageField, RangeField
 from vueda.core.serializers import VuedaLookupSerializer, VuedaSerializer
-from vueda.workflow.serializers import HasWorkflowSerializerMixin
 
 from widget_warehouse.catalog.models import (
     TOTAL_VALUE_DECIMAL_PLACES,
@@ -270,13 +269,13 @@ class PurchaseOrderLineSerializer(VuedaSerializer):
         expandable_fields.update(VuedaSerializer.Meta.expandable_fields)
 
 
-class PurchaseOrderSerializer(HasWorkflowSerializerMixin, VuedaSerializer):
+class PurchaseOrderSerializer(VuedaSerializer):
     """
     Read/write serializer for the order and its lines.
 
-    ``HasWorkflowSerializerMixin`` adds the current state and the transitions this
-    request's user may run on this row, so a list response carries both the state to
-    display and the affordances to offer without a second call per row.
+    VUEDA adds the current state and the transitions this request's user may run on this
+    row to every serializer of a workflow model, so a list response carries both the
+    state to display and the affordances to offer without a second call per row.
 
     ``total_value`` is the serializer half of an aggregate column. The viewset annotates
     the queryset and declares the same name in ``column_totals``, but a declared total is
@@ -365,7 +364,6 @@ class PurchaseOrderSerializer(HasWorkflowSerializerMixin, VuedaSerializer):
             "created_at",
             "updated_at",
             *VuedaSerializer.Meta.fields,
-            *HasWorkflowSerializerMixin.Meta.fields,
         )
         read_only_fields = ("created_at", "updated_at", "total_value")
         expandable_fields: ClassVar[dict] = {

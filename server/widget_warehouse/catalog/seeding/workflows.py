@@ -3,15 +3,15 @@ Seed the purchase order workflow: its states, transitions, and the three permiss
 layers VUEDA evaluates over them.
 
 The whole definition lives here as data rather than in fixtures or in the DEBUG-only
-workflow management UI, so a deployed instance reproduces it by running this command.
+workflow management UI, so a deployed instance reproduces it by running ``seed_demo``.
 Widget Warehouse therefore does not use ``makeworkflowmigrations``: that command records
 changes an operator made through the management UI, which is the workflow this project
 deliberately does not use.
 
-Run order matters. This command looks up the demo groups by name, so ``seed_demo_users``
-has to have run first. It is safe to run before or after ``seed_catalog``: orders seeded
-before the workflow existed have no state row, and the backfill at the end gives them
-the initial state.
+``seed_demo`` runs this step after the demo users, whose groups it looks up by name, and
+before the catalog. A purchase order cannot be saved until this workflow exists: VUEDA
+gives every saved order a state row, and raises ``WorkflowNotConfiguredError`` when the
+order's model has no workflow to take an initial state from.
 
 The three layers, in the order VUEDA evaluates them:
 
@@ -27,17 +27,14 @@ TransitionPermission
 
 StatePermission
     A grant or deny that overrides a baseline CRUDL permission for one state and one
-    group. This is the only layer that reads the row's state, which is why the viewset
-    mixes in ``HasWorkflowViewMixin`` to defer the model-level check to object level.
+    group. This is the only layer that reads the row's state, which is why VUEDA defers
+    the model-level check to object level for a user whose groups hold a state grant.
 """
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from django.core.management.base import BaseCommand
-from django.db import transaction
 from vueda.workflow.models import (
     InitialState,
-    ObjectState,
     State,
     StatePermission,
     Transition,
@@ -48,6 +45,7 @@ from vueda.workflow.models import (
 )
 
 from widget_warehouse.catalog.models import PurchaseOrder
+from widget_warehouse.catalog.seeding.base import SeedStep
 
 WORKFLOW_CODE = "purchase-order"
 WORKFLOW_NAME = "Purchase Order"
@@ -92,11 +90,10 @@ STATE_PERMISSIONS = tuple(
 )
 
 
-class Command(BaseCommand):
-    help = "Seed the purchase order workflow, its transitions, and its permission rows."
+class PurchaseOrderWorkflow(SeedStep):
+    """The purchase order workflow, its transitions, and its permission rows."""
 
-    @transaction.atomic
-    def handle(self, *args, **options):
+    def run(self):
         content_type = ContentType.objects.get_for_model(PurchaseOrder)
         permissions = self._permissions(content_type)
         groups = self._groups()
@@ -107,7 +104,6 @@ class Command(BaseCommand):
         self._seed_transitions(workflow, states, permissions)
         self._seed_workflow_permissions(workflow, permissions)
         self._seed_state_permissions(states, permissions, groups)
-        self._backfill_object_states(workflow, states)
 
         self.stdout.write(self.style.SUCCESS(f"Workflow {WORKFLOW_CODE} seeded."))
 
@@ -138,7 +134,7 @@ class Command(BaseCommand):
         if missing:
             raise LookupError(
                 f"The purchase order workflow wants groups that do not exist: {', '.join(missing)}. "
-                "Run seed_demo_users first, then reseed."
+                "Seed the demo users first, then reseed."
             )
         return groups
 
@@ -235,23 +231,3 @@ class Command(BaseCommand):
                 f"  State permission {state_code}/{group_name}/{permission_codename}: "
                 f"{rule}, {'created' if created else 'updated'}"
             )
-
-    def _backfill_object_states(self, workflow, states):
-        """
-        Give the initial state to orders that were saved before the workflow existed.
-
-        ``HasWorkflowModelMixin.save()`` creates the state row, but only when a workflow
-        is already there to read an initial state from, so seeding the catalog first
-        leaves those orders stateless. Without this, their transition list is empty and
-        the list view has nothing to show in the state column.
-        """
-        stateful_ids = ObjectState.objects.filter(workflow=workflow).values_list("object_id", flat=True)
-        stateless_ids = list(PurchaseOrder.objects.exclude(id__in=stateful_ids).values_list("id", flat=True))
-
-        # Created one at a time rather than in bulk: object state is a history-tracked
-        # model, and a bulk insert would skip the history record the transition machinery
-        # reads back after it moves a row.
-        for order_id in stateless_ids:
-            ObjectState.objects.create(workflow=workflow, object_id=order_id, state=states[INITIAL_STATE])
-
-        self.stdout.write(f"  Backfilled {len(stateless_ids)} order(s) into {INITIAL_STATE}")

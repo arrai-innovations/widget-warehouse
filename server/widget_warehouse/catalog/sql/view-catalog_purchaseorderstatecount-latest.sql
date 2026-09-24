@@ -17,7 +17,7 @@
 
     position exists because vueda_workflow_state has no ordering column of its own and
     sorts by code, which would show the pipeline alphabetically. The codes are this
-    project's own, seeded by seed_workflows, so ordering them here keeps the sequence in
+    project's own, seeded by seed_demo, so ordering them here keeps the sequence in
     one place instead of in every consumer.
 */
 DROP VIEW IF EXISTS catalog_purchaseorderstatecount;

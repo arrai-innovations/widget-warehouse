@@ -5,20 +5,19 @@
 Run from the repository root after migrations:
 
 ```bash
-just manage seed_demo_users
-just manage seed_workflows
-just manage seed_catalog
+just manage seed_demo
 ```
 
-The commands are idempotent. Users must be seeded before workflows so their groups
-exist, and workflows before catalog orders so new orders receive their initial states.
-`seed_demo_users` reapplies group permissions and resets the published account passwords.
+The command is idempotent. It seeds the demo users, then the purchase order workflow,
+then the catalog, in one transaction: the workflow looks the users' groups up by name,
+and a purchase order cannot be saved until its workflow exists. Each run reapplies group
+permissions and resets the published account passwords.
 
 Reseeding updates seeded catalog values, but preserves existing order workflow states.
 Supplier prices are created only when absent, so price changes survive reseeding.
 Rows created by visitors and uploaded files remain until explicitly removed or reset.
 
-`update.sh` runs these commands during deployment after the deployment tool's migration
+`update.sh` runs `seed_demo` during deployment after the deployment tool's migration
 step. Deployment does not run `reset_demo`.
 
 ## Reset

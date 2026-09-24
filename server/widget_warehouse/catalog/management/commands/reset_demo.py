@@ -1,12 +1,11 @@
 """
 Return the demo to its seeded state, discarding everything an evaluator changed.
 
-The three ``seed_*`` commands converge: every write is ``update_or_create``, so rerunning
-them restores seeded rows to their seeded values. What they cannot do is undo. A row an
-evaluator created stays, an uploaded datasheet stays, and an order walked from draft to
-approved stays approved through every reseed, because ``seed_catalog`` sets an order's
-seeded state only when it creates the order and ``seed_workflows`` only gives a starting
-state to orders that have none. A public instance therefore runs out of drafts to submit,
+``seed_demo`` converges: every write is ``update_or_create``, so rerunning it restores
+seeded rows to their seeded values. What it cannot do is undo. A row an evaluator created
+stays, an uploaded datasheet stays, and an order walked from draft to approved stays
+approved through every reseed, because the catalog step sets an order's seeded state only
+when it creates the order. A public instance therefore runs out of drafts to submit,
 which is the moment the walkthrough is built around. This command is the undo half, and it
 is what a scheduled reset runs.
 
@@ -16,7 +15,7 @@ fill the history views with the reset itself. TRUNCATE fires no row triggers, an
 RESTART IDENTITY keeps the seeded ids stable from one reset to the next, so a bookmarked
 detail URL still points at the same order tomorrow.
 
-What is deliberately kept: the workflow definition, which ``seed_workflows`` converges on
+What is deliberately kept: the workflow definition, which ``seed_demo`` converges on
 anyway; every account outside the five demo users, including the superuser; and the
 pghistory context rows, which are shared with the rest of the install.
 """
@@ -26,15 +25,11 @@ from pathlib import Path
 
 from django.apps import apps
 from django.conf import settings
-from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection, transaction
 
 from ...models import Widget
-
-# Run in the order README documents: seed_workflows looks the demo groups up by name, and
-# seeding the catalog last lets each order take its initial state from the saved workflow.
-SEED_COMMANDS = ("seed_demo_users", "seed_workflows", "seed_catalog")
+from ...seeding import seed_demo
 
 # Object state is not a catalog table, and truncating the catalog does not reach it: it
 # addresses its row through a plain integer column rather than a foreign key. Left behind,
@@ -70,9 +65,7 @@ class Command(BaseCommand):
         # other statement in PostgreSQL.
         with transaction.atomic():
             self._truncate()
-            for command in SEED_COMMANDS:
-                self.stdout.write(f"Running {command}")
-                call_command(command, stdout=self.stdout, stderr=self.stderr)
+            seed_demo(self.stdout, self.style)
 
         # After the commit, because the rows that named these files are gone either way and
         # removing a file cannot be rolled back.

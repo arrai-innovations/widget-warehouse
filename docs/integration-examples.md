@@ -4,7 +4,8 @@ These are the VUEDA integration points behind the [demo walkthrough](../README.m
 
 ## Permissions and navigation
 
-`seed_demo_users` defines groups, model permissions, and the published accounts.
+`server/widget_warehouse/catalog/seeding/users.py` defines groups, model permissions, and
+the published accounts.
 The inventory supervisor has update permission on inventory records, without create
 or delete. This covers every writable field, including counts, targets, and relations.
 Supplier permissions also cover the whole model: either inventory role can update its
@@ -19,8 +20,9 @@ and [row-level filtering](https://vueda.dev/v3/core-concepts/row-level-permissio
 
 ## Purchase order workflow
 
-`server/widget_warehouse/catalog/management/commands/seed_workflows.py` defines the
-workflow as data and attaches its permissions to the demo groups.
+`server/widget_warehouse/catalog/seeding/workflows.py` defines the workflow as data and
+attaches its permissions to the demo groups. `PurchaseOrder` opts into it with
+`class Vueda.Workflow`.
 
 | Transition             | From                       | To        | Role                          |
 | ---------------------- | -------------------------- | --------- | ----------------------------- |

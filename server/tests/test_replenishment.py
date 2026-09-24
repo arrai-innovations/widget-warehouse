@@ -3,12 +3,12 @@ from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APIClient
 
 from tests import test_inventory, test_purchase_order_workflow
 from widget_warehouse.catalog.models import InventoryRecord, PurchaseOrder, ReplenishmentBatch, SupplierPrice, Warehouse
+from widget_warehouse.catalog.seeding import DemoUsers, PurchaseOrderWorkflow
 
 pytestmark = pytest.mark.django_db
 stock = test_inventory.stock
@@ -16,8 +16,8 @@ stock = test_inventory.stock
 
 @pytest.fixture
 def scenario(stock):
-    call_command("seed_demo_users", verbosity=0)
-    call_command("seed_workflows", verbosity=0)
+    DemoUsers().run()
+    PurchaseOrderWorkflow().run()
     record = stock["short"]
     record.max_stock_level = 40
     record.save()

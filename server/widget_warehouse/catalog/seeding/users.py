@@ -3,19 +3,19 @@ Seed the five demo roles the Widget Warehouse walkthrough signs in as.
 
 Groups, their permission grants, and one user per group are defined here as data
 rather than as fixtures or through the DEBUG-only permission overview UI, so the
-whole role matrix reproduces on a deployed instance by running this command.
+whole role matrix reproduces on a deployed instance by running ``seed_demo``.
 
 Baseline CRUDL permissions and the per-transition permissions are granted here, because
 both are ordinary Django permissions on a group. The workflow rows that consume them
 (WorkflowPermission, TransitionPermission, StatePermission) belong to the workflow
-definition and are seeded by ``seed_workflows``, which has to run after this command
-because it looks these groups up by name.
+definition and are seeded by the workflow step, which runs after this one because it
+looks these groups up by name.
 """
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
-from django.core.management.base import BaseCommand
-from django.db import transaction
+
+from widget_warehouse.catalog.seeding.base import SeedStep
 
 # A single shared password keeps the sign-in view's credential list short enough that an
 # evaluator can switch roles repeatedly without leaving the page. These accounts exist to
@@ -54,10 +54,10 @@ ALL_MODELS = (
 # guarded by the standard CRUDL permission classes, so without it the client cannot fetch
 # model info for any model.
 #
-# vueda_workflow.read_workflow: every list view asks the workflow API for the model's
-# permitted transitions, and that viewset requires workflow read for any request, including
-# one about a model that has no workflow. Without it the request 403s and the list renders
-# empty, whether or not the model is in a workflow.
+# vueda_workflow.read_workflow: the purchase order screens ask the workflow API for the
+# order's permitted transitions, and that viewset requires workflow read for any request.
+# Without it the request 403s and the purchase order list renders empty. The client asks
+# only about models that report workflow, so the other screens do not depend on it.
 BASELINE_PERMISSIONS = (
     ("contenttypes", "read_contenttype"),
     ("vueda_workflow", "read_workflow"),
@@ -77,7 +77,7 @@ BASELINE_PERMISSIONS = (
 #
 # The write scopes are baseline permissions, so a purchase order write is granted here
 # regardless of what state the order is in. Narrowing the clerk to draft orders only is
-# the job of the StatePermission deny rules in seed_workflows.
+# the job of the StatePermission deny rules in workflows.py.
 DEMO_ROLES = [
     {
         "group": "inventory-clerk",
@@ -139,7 +139,7 @@ WRITE_ACTIONS = ("create", "update")
 # Transition permissions are per transition, so a role's Transitions column is granted
 # here one codename at a time. Holding one is not enough on its own to run the
 # transition: the order also has to be in a state the transition starts from, and the
-# workflow's own gate permission has to be held. See seed_workflows.
+# workflow's own gate permission has to be held. See workflows.py.
 TRANSITION_PERMISSIONS = {
     "submit": "submit_purchaseorder",
     "approve": "approve_purchaseorder",
@@ -162,11 +162,10 @@ def codenames_for(role):
     )
 
 
-class Command(BaseCommand):
-    help = "Seed the demo roles: five groups, their catalog permissions, and one user each."
+class DemoUsers(SeedStep):
+    """The demo roles: five groups, their catalog permissions, and one user each."""
 
-    @transaction.atomic
-    def handle(self, *args, **options):
+    def run(self):
         app_labels = {app_label for app_label, _ in BASELINE_PERMISSIONS} | {"catalog"}
         permissions = {
             (permission.content_type.app_label, permission.codename): permission
