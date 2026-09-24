@@ -1,9 +1,9 @@
 import pytest
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import Group, Permission
-from django.core.management import call_command
 
-from widget_warehouse.catalog.management.commands.seed_demo_users import (
+from widget_warehouse.catalog.seeding import DemoUsers
+from widget_warehouse.catalog.seeding.users import (
     BASELINE_PERMISSIONS,
     DEMO_PASSWORD,
     DEMO_ROLES,
@@ -13,7 +13,7 @@ from widget_warehouse.catalog.management.commands.seed_demo_users import (
 
 @pytest.fixture
 def seeded(db):
-    call_command("seed_demo_users", verbosity=0)
+    DemoUsers().run()
 
 
 def granted(group_name):
@@ -126,7 +126,7 @@ def test_reseeding_is_idempotent_and_narrows_a_widened_group(seeded):
     clerk_group = Group.objects.get(name="inventory-clerk")
     clerk_group.permissions.add(Permission.objects.get(content_type__app_label="catalog", codename="delete_widget"))
 
-    call_command("seed_demo_users", verbosity=0)
+    DemoUsers().run()
 
     assert Group.objects.filter(name__in=[role["group"] for role in DEMO_ROLES]).count() == len(DEMO_ROLES)
     assert get_user_model().objects.filter(email__in=[role["email"] for role in DEMO_ROLES]).count() == len(DEMO_ROLES)

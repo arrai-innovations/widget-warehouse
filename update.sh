@@ -14,14 +14,8 @@ uv run --no-sync vueda update --non-interactive
 uv run --no-sync python server/manage.py createcachetable
 
 # A fresh deployment is migrated but empty, and the sign-in view lists five demo accounts
-# that do not exist until these have run. All three are idempotent and converge, so a
-# deploy can run them unconditionally: they restore the seeded rows to their seeded values
-# without discarding anything an evaluator is part way through. Returning the demo to its
-# starting state is `reset_demo`, which the scheduled reset runs and a deploy deliberately
-# does not.
-#
-# Order matters. `seed_workflows` looks the demo groups up by name, and seeding the catalog
-# last lets each order take its initial state from the saved workflow.
-uv run --no-sync python server/manage.py seed_demo_users
-uv run --no-sync python server/manage.py seed_workflows
-uv run --no-sync python server/manage.py seed_catalog
+# that do not exist until this has run. It is idempotent and converges, so a deploy can run
+# it unconditionally: it restores the seeded rows to their seeded values without
+# discarding anything an evaluator is part way through. Returning the demo to its starting
+# state is `reset_demo`, which the scheduled reset runs and a deploy deliberately does not.
+uv run --no-sync python server/manage.py seed_demo

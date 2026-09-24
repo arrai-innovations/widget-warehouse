@@ -36,9 +36,7 @@ SEEDED_RESTOCK_ROWS = 15
 
 @pytest.fixture
 def seeded(db):
-    call_command("seed_demo_users", verbosity=0)
-    call_command("seed_workflows", verbosity=0)
-    call_command("seed_catalog", verbosity=0)
+    call_command("seed_demo", verbosity=0)
 
 
 def pipeline():
@@ -102,15 +100,14 @@ def test_the_bulk_catalog_has_variants_to_hang_stock_off(seeded):
 
 def test_reseeding_leaves_an_advanced_order_where_an_evaluator_left_it(seeded):
     """
-    The seed sets an order's state when it creates the order and not afterwards, which is
-    the same promise ``seed_workflows`` makes about its backfill. A deployed instance
-    reseeds without undoing anybody's walkthrough; ``reset_demo`` is the undo half.
+    The seed sets an order's state when it creates the order and not afterwards. A deployed
+    instance reseeds without undoing anybody's walkthrough; ``reset_demo`` is the undo half.
     """
     object_state = PurchaseOrder.objects.get(reference="PO-1043").object_state
     object_state.state = State.objects.get(workflow=object_state.workflow, code="submitted")
     object_state.save()
 
-    call_command("seed_catalog", verbosity=0)
+    call_command("seed_demo", verbosity=0)
 
     assert PurchaseOrder.objects.get(reference="PO-1043").workflow_state.code == "submitted"
 
@@ -124,7 +121,7 @@ def test_reseeding_adds_nothing_and_changes_no_count(seeded):
         below_reorder().count(),
     )
 
-    call_command("seed_catalog", verbosity=0)
+    call_command("seed_demo", verbosity=0)
 
     after = (
         Widget.objects.count(),
@@ -135,27 +132,6 @@ def test_reseeding_adds_nothing_and_changes_no_count(seeded):
     )
     assert after == before
     assert pipeline() == SEEDED_PIPELINE
-
-
-def test_seeding_the_catalog_before_the_workflow_still_produces_orders(db):
-    """
-    The documented run order is users, workflow, catalog. Out of order the orders land
-    without the spread rather than failing, and ``seed_workflows`` backfills them into the
-    initial state, which is what it exists for.
-    """
-    call_command("seed_catalog", verbosity=0)
-    assert PurchaseOrder.objects.count() == sum(SEEDED_PIPELINE.values())
-
-    call_command("seed_demo_users", verbosity=0)
-    call_command("seed_workflows", verbosity=0)
-
-    assert pipeline() == {
-        "draft": PurchaseOrder.objects.count(),
-        "submitted": 0,
-        "approved": 0,
-        "received": 0,
-        "cancelled": 0,
-    }
 
 
 def test_every_seeded_order_has_lines_to_value(seeded):

@@ -30,9 +30,7 @@ PurchaseOrderEvent = apps.get_model("catalog", "PurchaseOrderEvent")
 # in its own transaction in a deployment, which is the case worth testing anyway.
 @pytest.fixture
 def seeded(transactional_db):
-    call_command("seed_demo_users", verbosity=0)
-    call_command("seed_workflows", verbosity=0)
-    call_command("seed_catalog", verbosity=0)
+    call_command("seed_demo", verbosity=0)
 
 
 def reset():

@@ -21,7 +21,7 @@ import CardTitle from "@vueda/shell/card/CardTitle.vue";
 import { storeModelInfo } from "@vueda/stores/storeModelInfo.js";
 import { storeUser } from "@vueda/stores/storeUser.js";
 import { usePageTitle } from "@vueda/use/usePageTitle.js";
-import { PAGE_SIZE_PARAM } from "@vueda/utils/constants.js";
+import { COLUMN_TOTALS_PARAM, PAGE_SIZE_PARAM } from "@vueda/utils/constants.js";
 import { fetchHelper } from "@vueda/utils/fetchSupport.js";
 import { getListUrl } from "@vueda/utils/urls.js";
 import { computedAsync } from "@vueuse/core";
@@ -99,9 +99,9 @@ const queues = [
         model: "purchaseorder",
         params: { is_open: "true" },
         // The one tile that reports a sum rather than a count. Naming a column here reads
-        // columnTotals instead of totalRecords, which is the same request either way: the
-        // viewset declares total_value in column_totals, so the sum over every matching
-        // order arrives in the envelope beside the count.
+        // columnTotals instead of totalRecords. The request is the same list request plus
+        // the totals parameter naming this column, and the sum over every matching order
+        // arrives in the envelope beside the count.
         total: "total_value",
         icon: PhReceipt,
     },
@@ -154,11 +154,16 @@ function resolveTile({ model, params, total }) {
         // One row, because only the envelope matters: every VUEDA list response carries
         // totalRecords for the whole filtered set, so a count costs a page of one rather
         // than a bespoke endpoint.
-        const query = queryString({ ...params, [PAGE_SIZE_PARAM]: 1 });
+        // Column totals are opt-in: a list request that names none gets an empty
+        // columnTotals, which the fallback below would render as 0.00 without any error.
+        const query = queryString({
+            ...params,
+            [PAGE_SIZE_PARAM]: 1,
+            ...(total ? { [COLUMN_TOTALS_PARAM]: total } : {}),
+        });
         const page = await fetchHelper(getListUrl({ app: APP, model, query }), {}, `Counting ${model}`);
-        // A column total over no rows is null rather than zero: the database returns NULL
-        // for a SUM of nothing, and the annotation's own fallback fills in a row with no
-        // lines, not a page with no rows. Read it as nothing to add up.
+        // The server totals a filter matching no rows as 0, so the fallback only covers a
+        // total the response left out.
         const value = total ? (page.columnTotals?.[total] ?? 0) : page.totalRecords;
         return {
             display: total ? amountFormat.format(value) : countFormat.format(value),

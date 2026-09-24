@@ -1,14 +1,12 @@
 from typing import ClassVar
 
 from django.db import OperationalError, transaction
-from django.db.models import F, Sum
+from django.db.models import F
 from django.db.models.functions import Greatest
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from vueda.core.decorators import action
 from vueda.core.viewsets import VuedaViewSet
-from vueda.workflow.models import StatePermission
-from vueda.workflow.views import HasWorkflowViewMixin
 
 from widget_warehouse.catalog.filtersets import (
     InventoryRecordFilterSet,
@@ -112,17 +110,18 @@ class WarehouseViewSet(VuedaViewSet):
 
 class InventoryRecordViewSet(VuedaViewSet):
     """
-    ``column_totals`` is VUEDA's server-side aggregate hook: the listed columns are summed
-    over the filtered queryset and returned alongside the page, so the list footer totals
-    every matching row rather than the ten on screen. Filter the list down to one warehouse
-    and the total follows the filter.
+    ``column_totals`` is VUEDA's server-side aggregate hook. It maps a client column name
+    to the field summed for it. A list request that names the total in the ``ct`` parameter
+    gets it summed over the filtered queryset and returned alongside the page, so the list
+    footer totals every matching row rather than the ten on screen. Filter the list down to
+    one warehouse and the total follows the filter.
     """
 
     queryset = InventoryRecord.objects.annotate(shortfall=Greatest(F("reorder_threshold") - F("quantity_on_hand"), 0))
     serializer_class = InventoryRecordSerializer
     filterset_class = InventoryRecordFilterSet
     permit_list_expands: ClassVar[list[str]] = ["variant", "warehouse"]
-    column_totals: ClassVar[list[str]] = ["quantity_on_hand"]
+    column_totals: ClassVar[dict[str, str]] = {"quantity_on_hand": "quantity_on_hand"}
 
     ordering_fields = ("warehouse", "variant", "quantity_on_hand", "shortfall")
 
@@ -176,16 +175,17 @@ class PromotionViewSet(VuedaViewSet):
     filterset_class = PromotionFilterSet
 
 
-class PurchaseOrderViewSet(HasWorkflowViewMixin, VuedaViewSet):
+class PurchaseOrderViewSet(VuedaViewSet):
     """
-    ``HasWorkflowViewMixin`` defers the model-level permission check to object level when
-    the workflow carries state permissions, because a state rule can only be decided
-    against a row.
+    VUEDA defers the model-level permission check to object level for a user whose groups
+    hold a state grant on this workflow, because a state rule can only be decided against
+    a row. A user without one takes the ordinary model-level check, so a role with no
+    purchase order permission is refused list and create outright.
 
     ``column_totals`` here totals money rather than a stored column. ``total_value`` is not
     a field on the model: ``get_queryset`` annotates it from the order's lines, the
-    serializer declares a decimal field of the same name, and VUEDA sums that name over the
-    filtered queryset. Filter the list to one supplier and the footer reports what is owed
+    serializer declares a decimal field of the same name, and VUEDA sums that annotation over
+    the filtered queryset when a list request asks for it. Filter the list to one supplier and the footer reports what is owed
     to that supplier. This is the shape to copy for any aggregate a list should carry, and
     it needs all three parts: annotate it, serialize it, declare it.
     """
@@ -193,7 +193,7 @@ class PurchaseOrderViewSet(HasWorkflowViewMixin, VuedaViewSet):
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
     filterset_class = PurchaseOrderFilterSet
-    column_totals: ClassVar[list[str]] = ["total_value"]
+    column_totals: ClassVar[dict[str, str]] = {"total_value": "total_value"}
     # "lines" is here so a list request can expand the inline as well: without it,
     # flex-fields refuses the expand on list and the create/update forms are the only
     # place the child rows are reachable.
@@ -228,51 +228,6 @@ class PurchaseOrderViewSet(HasWorkflowViewMixin, VuedaViewSet):
         """
         return super().get_queryset().with_total_value()
 
-    def get_column_info(self, queryset):
-        """
-        Total the annotated column under a private alias.
-
-        VUEDA aggregates each total under the column's own name
-        (``{column: Sum(column)}``), which works for a stored column and fails for an
-        annotated one: the alias replaces the annotation it is summing, so the wrapping
-        subquery stops selecting it and PostgreSQL reports ``column "total_value" does not
-        exist``. Aggregating under a different alias and renaming the key back produces the
-        same response in one query.
-
-        The upstream fix is already written, in VUEDA PR 313, which aliases its own
-        aggregates for exactly this reason. Remove this override when that lands, and
-        expect to migrate with it: that change also makes ``column_totals`` a mapping of
-        client-facing name to ORM path, puts totals behind a ``ct`` request parameter, and
-        totals an empty result as zero rather than null.
-        """
-        if not self.column_totals:
-            return {}
-
-        alias = "column_total__{}".format
-        totals = queryset.aggregate(**{alias(column): Sum(column) for column in self.column_totals})
-        return {column: totals[alias(column)] for column in self.column_totals}
-
-    def check_permissions(self, request):
-        """
-        Narrow the mixin's deferral to the requests it exists for.
-
-        The mixin defers as soon as the workflow has any StatePermission row, without
-        asking whether one could apply to this user, so a role with no purchase order
-        permission at all reaches list and create unchallenged. Deferral is only ever
-        needed for a grant rule, where the baseline says no and a state says yes; a deny
-        rule narrows a permission the user already holds, so the model-level check passes
-        on its own and the deny lands at object level. This defers only when the user's
-        groups hold a grant rule on this workflow, and otherwise takes the ordinary path.
-        """
-        holds_a_state_grant = StatePermission.objects.filter(
-            state__workflow__content_type=PurchaseOrder.get_content_type(),
-            group__in=request.user.groups.all(),
-            grant_or_deny=True,
-        ).exists()
-        if holds_a_state_grant:
-            return super().check_permissions(request)
-        return super(HasWorkflowViewMixin, self).check_permissions(request)
-
 
 class PurchaseOrderStateCountViewSet(VuedaViewSet):
     """
@@ -287,4 +242,4 @@ class PurchaseOrderStateCountViewSet(VuedaViewSet):
     queryset = PurchaseOrderStateCount.objects.all()
     serializer_class = PurchaseOrderStateCountSerializer
     filterset_class = PurchaseOrderStateCountFilterSet
-    column_totals: ClassVar[list[str]] = ["order_count"]
+    column_totals: ClassVar[dict[str, str]] = {"order_count": "order_count"}

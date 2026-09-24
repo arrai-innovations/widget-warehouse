@@ -15,7 +15,6 @@ from urllib.parse import urlencode
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APIClient
 
@@ -28,6 +27,7 @@ from widget_warehouse.catalog.models import (
     WidgetCategory,
     WidgetVariant,
 )
+from widget_warehouse.catalog.seeding import DemoUsers, PurchaseOrderWorkflow
 
 SUPERVISOR = "supervisor@widgetwarehouse.com"
 EXPAND_PARAM = settings.REST_FLEX_FIELDS["EXPAND_PARAM"]
@@ -40,8 +40,8 @@ MODEL_INFO_QUERY = urlencode(
 
 @pytest.fixture
 def orders(db):
-    call_command("seed_demo_users", verbosity=0)
-    call_command("seed_workflows", verbosity=0)
+    DemoUsers().run()
+    PurchaseOrderWorkflow().run()
     category = WidgetCategory.objects.create(code="SPROCKET", name="Sprocket")
     supplier = Supplier.objects.create(
         name="Precision Parts Co.",
@@ -101,9 +101,11 @@ def orders(db):
 
 
 def list_orders(params=None):
+    # Totals are opt-in, so every request here names the one it reads, the way the list
+    # view does for a visible total column.
     client = APIClient()
     client.force_authenticate(get_user_model().objects.get(email=SUPERVISOR))
-    return client.get(reverse("catalog.purchaseorder-list"), params or {})
+    return client.get(reverse("catalog.purchaseorder-list"), {"ct": "total_value", **(params or {})})
 
 
 def values_by_reference(response):
