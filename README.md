@@ -17,7 +17,12 @@ locally.
 - **VUEDA integrators:** see [Integration examples](#integration-examples) for the
   code and framework features behind the demo.
 - **Demo operators:** see [Demo operations](docs/demo-operations.md) for seeding,
-  deployment, and resets.
+  release tagging, deployment, and resets.
+
+The repository's CircleCI deployment workflows operate the hosted demo using
+Arrai Innovations infrastructure. Although the Arrai orbs are public, the workflows
+assume Arrai-managed credentials and deployment services whose setup is not
+documented here. They are not a supported deployment setup for VUEDA integrators.
 
 ## Demo accounts
 
