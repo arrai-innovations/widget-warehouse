@@ -50,8 +50,8 @@ importers:
         specifier: ^2.0.11
         version: 2.0.11
       '@arrai-innovations/vueda':
-        specifier: ^3.0.0-alpha.6
-        version: 3.0.0-alpha.6(@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2)))(@arrai-innovations/vue-sonner@2.0.11)(@floating-ui/dom@1.8.0)(@sentry/vue@9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2)))(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(luxon@3.7.2)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(typescript@6.0.2)(vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)))(vue-router@4.6.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))
+        specifier: ^3.0.0-beta.1
+        version: 3.0.0-beta.1(@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2)))(@arrai-innovations/vue-sonner@2.0.11)(@floating-ui/dom@1.8.0)(@sentry/vue@9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2)))(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(luxon@3.7.2)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(typescript@6.0.2)(vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)))(vue-router@4.6.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))
       '@fontsource-variable/archivo':
         specifier: ^5.3.0
         version: 5.3.0
@@ -162,8 +162,8 @@ packages:
       nuxt:
         optional: true
 
-  '@arrai-innovations/vueda@3.0.0-alpha.6':
-    resolution: {integrity: sha512-gSrARSBSSgPtu9FnCiqCjOLPhFrzbHdsPM2Sru73rv1g2+9s9JOkm/399HXQU/eGLlxUMYALGgl18Abyk8+yyQ==}
+  '@arrai-innovations/vueda@3.0.0-beta.1':
+    resolution: {integrity: sha512-YQe0cyZ1+yjeGTFi2WNPbpRfx1f+dPBfIlMb+jo4Ilbruk8upoGdf/Ti/YSl+r/4MAUAUlayNayq4rLdad0B1g==}
     peerDependencies:
       '@arrai-innovations/reactive-helpers': ^25.0.0
       '@arrai-innovations/vue-sonner': ^2.0.11
@@ -3297,6 +3297,9 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
+  tailwind-merge@3.7.0:
+    resolution: {integrity: sha512-XPPUyAc+cvspz3lHTcR/QgPfW2A0lv/xQNIjX3HGhLR+Nq2lHaLq5MtTesHn8GUr3W3DguT2KT5x3NVgRtYwmA==}
+
   tailwindcss@4.2.2:
     resolution: {integrity: sha512-KWBIxs1Xb6NoLdMVqhbhgwZf2PGBpPEiwOqgI4pFIYbNTfBXiKYyWoTsXgBQ9WFg/OlhnvHaY+AEpW7wSmFo2Q==}
 
@@ -3366,6 +3369,9 @@ packages:
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
+  tw-animate-css@1.4.0:
+    resolution: {integrity: sha512-7bziOlRqH0hJx80h/3mbicLW7o8qLsH5+RaLR2t+OHM3D0JlWGODQKQ4cxbK7WlvmUxpcj6Kgu6EKqjrGFe3QQ==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -3632,7 +3638,7 @@ snapshots:
 
   '@arrai-innovations/vue-sonner@2.0.11': {}
 
-  '@arrai-innovations/vueda@3.0.0-alpha.6(@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2)))(@arrai-innovations/vue-sonner@2.0.11)(@floating-ui/dom@1.8.0)(@sentry/vue@9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2)))(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(luxon@3.7.2)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(typescript@6.0.2)(vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)))(vue-router@4.6.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))':
+  '@arrai-innovations/vueda@3.0.0-beta.1(@arrai-innovations/reactive-helpers@25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2)))(@arrai-innovations/vue-sonner@2.0.11)(@floating-ui/dom@1.8.0)(@sentry/vue@9.47.1(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2)))(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(luxon@3.7.2)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(typescript@6.0.2)(vue-draggable-next@2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2)))(vue-router@4.6.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))':
     dependencies:
       '@arrai-innovations/reactive-helpers': 25.0.0(@vueuse/core@14.4.0(vue@3.5.32(typescript@6.0.2)))(lodash-es@4.18.1)(vue@3.5.32(typescript@6.0.2))
       '@arrai-innovations/vue-sonner': 2.0.11
@@ -3662,6 +3668,8 @@ snapshots:
       reka-ui: 2.10.4(vue@3.5.32(typescript@6.0.2))
       semver: 7.7.4
       string-similarity-js: 2.1.4
+      tailwind-merge: 3.7.0
+      tw-animate-css: 1.4.0
       vaul-vue: 0.4.1(reka-ui@2.10.4(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))
       vue: 3.5.32(typescript@6.0.2)
       vue-draggable-next: 2.3.0(sortablejs@1.15.7)(vue@3.5.32(typescript@6.0.2))
@@ -7179,6 +7187,8 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
+  tailwind-merge@3.7.0: {}
+
   tailwindcss@4.2.2: {}
 
   tapable@2.3.2: {}
@@ -7227,6 +7237,8 @@ snapshots:
       typescript: 6.0.2
 
   tslib@2.8.1: {}
+
+  tw-animate-css@1.4.0: {}
 
   type-check@0.4.0:
     dependencies:

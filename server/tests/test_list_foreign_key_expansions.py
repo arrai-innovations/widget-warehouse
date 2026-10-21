@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 from widget_warehouse.catalog.models import InventoryRecord, Warehouse, Widget, WidgetCategory, WidgetVariant
 from widget_warehouse.catalog.serializers import InventoryRecordSerializer, WidgetVariantSerializer
 
-EXPAND_PARAM = settings.REST_FLEX_FIELDS["EXPAND_PARAM"]
+EXPAND_PARAM = settings.REST_FLEX_FIELDS2["EXPAND_PARAM"]
 
 
 @pytest.fixture

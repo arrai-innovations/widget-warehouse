@@ -36,5 +36,6 @@ test.describe("as the supervisor", () => {
         await page.goto("/catalog/purchaseorder/list/");
 
         expect((await transitions).status()).toBe(200);
+        await expect(page.getByRole("navigation", { name: "breadcrumb" })).toContainText("Purchase Orders");
     });
 });

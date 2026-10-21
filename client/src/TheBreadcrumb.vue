@@ -69,10 +69,7 @@ const routeTitle = computed(
     () => route.meta?.titles?.view || route.meta?.title || memoizedStartCase(String(route.name || "")),
 );
 const appTitle = computed(() => memoizedStartCase(app.value || ""));
-// storeModelInfo camelCases only nested sections (fields, filtering, expand); root keys such as
-// verbose_name_plural keep the server's snake_case spelling. Django verbose names are lowercase, so
-// title-case them the way ViewList titles its page ("List Purchase Orders").
-const modelTitle = computed(() => memoizedStartCase(modelInfo.value?.verbose_name_plural || model.value || ""));
+const modelTitle = computed(() => memoizedStartCase(modelInfo.value?.verboseNamePlural || model.value || ""));
 
 // The page crumb repeats the page heading, which the routed view contributes through usePageTitle.
 // A view reports an empty title while it loads, so show a skeleton rather than a guess until it
@@ -81,7 +78,7 @@ const modelTitle = computed(() => memoizedStartCase(modelInfo.value?.verbose_nam
 const pageTitle = usePageTitle().current;
 const pageTitleLoading = computed(() => !!pageTitle.value.loading && !pageTitle.value.title);
 const fallbackActionTitle = computed(() =>
-    memoizedStartCase(`${action.value || ""} ${modelInfo.value?.verbose_name || model.value || ""}`),
+    memoizedStartCase(`${action.value || ""} ${modelInfo.value?.verboseName || model.value || ""}`),
 );
 const actionTitle = computed(() => pageTitle.value.title || fallbackActionTitle.value);
 </script>

@@ -19,8 +19,8 @@ from rest_framework.test import APIClient
 from widget_warehouse.catalog.models import Supplier
 from widget_warehouse.catalog.seeding import DemoUsers
 
-EXPAND_PARAM = settings.REST_FLEX_FIELDS["EXPAND_PARAM"]
-FIELDS_PARAM = settings.REST_FLEX_FIELDS["FIELDS_PARAM"]
+EXPAND_PARAM = settings.REST_FLEX_FIELDS2["EXPAND_PARAM"]
+FIELDS_PARAM = settings.REST_FLEX_FIELDS2["FIELDS_PARAM"]
 MODEL_INFO_QUERY = urlencode([(FIELDS_PARAM, "model_fields"), (EXPAND_PARAM, "model_fields")])
 
 

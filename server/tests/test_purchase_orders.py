@@ -27,8 +27,8 @@ from widget_warehouse.catalog.models import (
 )
 from widget_warehouse.catalog.seeding import DemoUsers, PurchaseOrderWorkflow
 
-EXPAND_PARAM = settings.REST_FLEX_FIELDS["EXPAND_PARAM"]
-FIELDS_PARAM = settings.REST_FLEX_FIELDS["FIELDS_PARAM"]
+EXPAND_PARAM = settings.REST_FLEX_FIELDS2["EXPAND_PARAM"]
+FIELDS_PARAM = settings.REST_FLEX_FIELDS2["FIELDS_PARAM"]
 LIST_URL = f"{{}}?{EXPAND_PARAM}=lines"
 
 # The request the client's storeModelInfo makes for every screen it builds.
