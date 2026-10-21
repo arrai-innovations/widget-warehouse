@@ -99,6 +99,14 @@ class InventoryRecordFilterSet(VuedaFilterSet):
         label="Below reorder threshold",
     )
     quantity_on_hand = rest_framework.RangeFilter(field_name="quantity_on_hand", label="Quantity on hand")
+    product_active = rest_framework.BooleanFilter(field_name="variant__widget__is_active", label="Product active")
+    warehouse_active = rest_framework.BooleanFilter(field_name="warehouse__is_active", label="Warehouse active")
+    supplier_active = rest_framework.BooleanFilter(
+        field_name="variant__widget__supplier__is_active", label="Supplier active"
+    )
+    supplier_approved = rest_framework.BooleanFilter(
+        field_name="variant__widget__supplier__is_approved", label="Supplier approved"
+    )
 
     def filter_below_reorder(self, queryset, name, value):
         if value is None:
@@ -108,7 +116,17 @@ class InventoryRecordFilterSet(VuedaFilterSet):
 
     class Meta:
         model = InventoryRecord
-        fields = ("id", "variant", "warehouse", "quantity_on_hand", "below_reorder")
+        fields = (
+            "id",
+            "variant",
+            "warehouse",
+            "quantity_on_hand",
+            "below_reorder",
+            "product_active",
+            "warehouse_active",
+            "supplier_active",
+            "supplier_approved",
+        )
 
 
 class PromotionFilterSet(VuedaFilterSet):

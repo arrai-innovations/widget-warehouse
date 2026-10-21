@@ -11,10 +11,14 @@ which sums over the filtered queryset rather than the page, so the two features 
 filter would be worse than no total at all.
 """
 
+from urllib.parse import urlencode
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from rest_framework.test import APIClient
+from rest_framework.request import Request
+from rest_framework.test import APIClient, APIRequestFactory
+from vueda.core.filters import VuedaSearchFilterBackend
 
 from widget_warehouse.catalog.filtersets import InventoryRecordFilterSet
 from widget_warehouse.catalog.models import (
@@ -26,6 +30,8 @@ from widget_warehouse.catalog.models import (
     WidgetVariant,
 )
 from widget_warehouse.catalog.seeding import DemoUsers
+from widget_warehouse.catalog.serializers import InventoryRecordSerializer
+from widget_warehouse.catalog.viewsets import InventoryRecordViewSet
 
 
 @pytest.fixture
@@ -109,6 +115,68 @@ def test_quantity_on_hand_filters_by_range(stock):
     }
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("term", "expected"),
+    [
+        ("SPR-100-SM @ SYD-DC", {"short"}),
+        ('"SPR-100-SM @ SYD-DC"', {"short"}),
+        ("spr-100-sm", {"short"}),
+        ("SM SYD-DC", {"short"}),
+        ("SYD-DC", {"short", "exactly_at", "healthy", "no_threshold"}),
+        ("SPR-100-SM @ MEL-OVF", set()),
+        ("nonexistent-stock-item", set()),
+    ],
+)
+def test_stock_item_search(stock, settings, term, expected):
+    request = Request(APIRequestFactory().get("/", {settings.REST_FRAMEWORK["SEARCH_PARAM"]: term}))
+    view = InventoryRecordViewSet()
+    queryset = VuedaSearchFilterBackend().filter_queryset(request, view.queryset.all(), view)
+
+    assert set(queryset.values_list("id", flat=True)) == {stock[name].id for name in expected}
+    assert all(record.stock_item_search == record.get_formatted_name() for record in queryset)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("field", ["product_active", "warehouse_active", "supplier_active", "supplier_approved"])
+def test_inventory_status_filters_follow_related_records(stock, field):
+    record = stock["short"]
+    related, attribute = {
+        "product_active": (record.variant.widget, "is_active"),
+        "warehouse_active": (record.warehouse, "is_active"),
+        "supplier_active": (record.variant.widget.supplier, "is_active"),
+        "supplier_approved": (record.variant.widget.supplier, "is_approved"),
+    }[field]
+    all_ids = {item.id for item in stock.values()}
+    for value in (True, False):
+        setattr(related, attribute, value)
+        related.save()
+        assert filtered_ids({field: str(value).lower()}) == all_ids
+        assert filtered_ids({field: str(not value).lower()}) == set()
+        assert filtered_ids({}) == all_ids
+        assert InventoryRecordSerializer(InventoryRecordViewSet.queryset.get(pk=record.pk)).data[field] is value
+
+
+@pytest.mark.django_db
+def test_inventory_supplier_status_preserves_unknown_and_missing_supplier(stock):
+    record = stock["short"]
+    supplier = record.variant.widget.supplier
+    supplier.is_approved = None
+    supplier.save()
+    data = InventoryRecordSerializer(InventoryRecordViewSet.queryset.get(pk=record.pk)).data
+    assert data["supplier_approved"] is None
+    assert filtered_ids({"supplier_approved": "true"}) == set()
+    assert filtered_ids({"supplier_approved": "false"}) == set()
+
+    widget = record.variant.widget
+    widget.supplier = None
+    widget.save()
+    data = InventoryRecordSerializer(InventoryRecordViewSet.queryset.get(pk=record.pk)).data
+    assert data["supplier_active"] is None
+    assert data["supplier_approved"] is None
+    assert filtered_ids({"supplier_active": "true", "supplier_approved": "true"}) == set()
+
+
 @pytest.fixture
 def seeded_roles(db):
     DemoUsers().run()
@@ -118,6 +186,59 @@ def list_as(email, query=""):
     client = APIClient()
     client.force_authenticate(get_user_model().objects.get(email=email))
     return client.get(f"{reverse('catalog.inventoryrecord-list')}{query}")
+
+
+@pytest.mark.django_db
+def test_inventory_search_combines_with_status_filters_and_totals(stock, seeded_roles):
+    supplier = stock["short"].variant.widget.supplier
+    supplier.is_active = True
+    supplier.is_approved = True
+    supplier.save()
+    params = {
+        "s": "SPR-100-SM @ SYD-DC",
+        "product_active": "true",
+        "warehouse_active": "true",
+        "supplier_active": "true",
+        "supplier_approved": "true",
+        "ct": "quantity_on_hand",
+    }
+    response = list_as("clerk@widgetwarehouse.com", f"?{urlencode(params)}")
+    assert response.status_code == 200, response.data
+    assert response.data["totalRecords"] == 1
+    assert response.data["columnTotals"] == {"quantity_on_hand": 2}
+    row = response.data["results"][0]
+    assert row["formatted_name"] == params["s"]
+    for field in ("product_active", "warehouse_active", "supplier_active", "supplier_approved"):
+        assert row[field] is True
+
+    params["s"] = "nonexistent-stock-item"
+    response = list_as("clerk@widgetwarehouse.com", f"?{urlencode(params)}")
+    assert response.status_code == 200, response.data
+    assert response.data["totalRecords"] == 0
+    assert response.data["columnTotals"] == {"quantity_on_hand": 0}
+
+    params["s"] = "SPR-100-SM @ SYD-DC"
+    params["supplier_approved"] = "false"
+    response = list_as("clerk@widgetwarehouse.com", f"?{urlencode(params)}")
+    assert response.status_code == 200, response.data
+    assert response.data["totalRecords"] == 0
+
+
+@pytest.mark.django_db
+def test_inventory_status_metadata_offers_read_only_columns_and_boolean_filters(seeded_roles):
+    client = APIClient()
+    client.force_authenticate(get_user_model().objects.get(email="clerk@widgetwarehouse.com"))
+    response = client.get("/routes/vueda.info/model_info/catalog/inventoryrecord/?e=model_fields,model_filtering")
+
+    assert response.status_code == 200, response.data
+    for name in ("product_active", "warehouse_active", "supplier_active", "supplier_approved"):
+        field = response.data["model_fields"][name]
+        assert field["type_model"] == "BooleanField"
+        assert field["read_only"] is True
+        filter_info = response.data["model_filtering"][name]
+        assert filter_info["hidden"] is False
+        assert filter_info["label"] == field["label"]
+        assert filter_info["choices"] == [{"label": "Yes", "value": "true"}, {"label": "No", "value": "false"}]
 
 
 @pytest.mark.django_db
