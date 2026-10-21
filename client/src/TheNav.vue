@@ -1,5 +1,6 @@
 <script setup>
 import {
+    PhBookOpen,
     PhCloudMoon,
     PhFileArrowUp,
     PhGauge,
@@ -187,6 +188,14 @@ function isModelActive(modelName) {
                 class="rounded-vueda-control p-2"
             />
             <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton as-child tooltip="Demo walkthrough">
+                        <RouterLink :to="{ name: 'walkthrough' }">
+                            <PhBookOpen weight="duotone" />
+                            <span>Demo walkthrough</span>
+                        </RouterLink>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem v-if="!userStore.loggedIn">
                     <SidebarMenuButton as-child tooltip="Sign In">
                         <RouterLink to="/sign-in/">

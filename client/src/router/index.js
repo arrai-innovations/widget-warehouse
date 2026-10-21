@@ -31,13 +31,25 @@ export function getRouter(app, pinia) {
     const router = createRouter({
         history: createWebHistory(import.meta.env.BASE_URL),
         routes: [],
+        scrollBehavior(to, from, savedPosition) {
+            if (savedPosition) return savedPosition;
+            if (to.name === "walkthrough" && to.hash) return { el: to.hash };
+            if (to.meta.guest) return { top: 0 };
+        },
     });
 
     const routes = [
         {
             path: "/",
             name: "home",
-            redirect: { name: "sign-in" },
+            component: () => import("@/views/ViewHome.vue"),
+            meta: { title: "Widget Warehouse", guest: true },
+        },
+        {
+            path: "/walkthrough/",
+            name: "walkthrough",
+            component: () => import("@/views/ViewWalkthrough.vue"),
+            meta: { title: "Demo walkthrough", guest: true },
         },
         {
             path: "/sign-in/",

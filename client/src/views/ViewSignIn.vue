@@ -2,6 +2,9 @@
 import Button from "@vueda/controls/button/Button.vue";
 import ViewSignIn from "@vueda/views/ViewSignIn.vue";
 import WidgetTextInput from "@vueda/widgets/WidgetTextInput.vue";
+import { RouterLink } from "vue-router";
+
+import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/demoAccounts.js";
 
 /**
  * Widget Warehouse sign-in view. Adopts VUEDA's default ViewSignIn (AuthorizingForm
@@ -19,17 +22,6 @@ import WidgetTextInput from "@vueda/widgets/WidgetTextInput.vue";
  * a second copy of the form state. Widget Warehouse is a public demo, so the panel is
  * not gated on DEBUG: an evaluator on the deployed instance needs it to switch roles.
  */
-
-// Mirrors the roles in server/widget_warehouse/catalog/seeding/users.py.
-// Every account there shares one password so switching roles stays a two-click operation.
-const DEMO_PASSWORD = "widget-demo";
-const DEMO_ACCOUNTS = [
-    { role: "Inventory clerk", email: "clerk@widgetwarehouse.com" },
-    { role: "Inventory supervisor", email: "supervisor@widgetwarehouse.com" },
-    { role: "Sales associate", email: "associate@widgetwarehouse.com" },
-    { role: "Sales manager", email: "manager@widgetwarehouse.com" },
-    { role: "Accountant", email: "accountant@widgetwarehouse.com" },
-];
 
 // ViewSignIn emits its form context on mount. The context keeps state readonly for
 // observation and exposes mutation methods for controlled programmatic updates.
@@ -57,6 +49,13 @@ function useAccount(email) {
         <template #suffix>
             <!-- A rule, not a nested card: the panel already sits inside AuthorizingForm's card. -->
             <div class="mt-4 border-t-hairline pt-4">
+                <p class="mb-3 text-sm">
+                    New here?
+                    <RouterLink :to="{ name: 'walkthrough' }" class="underline underline-offset-4">
+                        Follow the demo walkthrough
+                    </RouterLink>
+                    to try replenishment and approvals with different roles.
+                </p>
                 <p class="text-[length:var(--vueda-text-supporting)] font-medium">Demo accounts</p>
                 <p class="mt-1 text-[length:var(--vueda-text-supporting)] leading-[1.4] text-muted-foreground">
                     Every account below uses the password

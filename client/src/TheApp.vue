@@ -7,13 +7,16 @@ import Sonner from "@vueda/feedback/toast/Sonner.vue";
 import SidebarInset from "@vueda/navigation/sidebar/SidebarInset.vue";
 import SidebarProvider from "@vueda/navigation/sidebar/SidebarProvider.vue";
 import SidebarTrigger from "@vueda/navigation/sidebar/SidebarTrigger.vue";
+import { waitForCurrentUser } from "@vueda/router/guards.js";
 import PageTitle from "@vueda/shell/page-title/PageTitle.vue";
 import StickyStackProvider from "@vueda/shell/sticky/StickyStackProvider.vue";
 import { storeDarkMode } from "@vueda/stores/storeDarkMode.js";
+import { storeUser } from "@vueda/stores/storeUser.js";
 import { usePageTitle } from "@vueda/use/usePageTitle.js";
 import throttle from "lodash-es/throttle.js";
+import { getActivePinia } from "pinia";
 import { computed, onMounted, toRef, watch } from "vue";
-import { RouterView, useRoute } from "vue-router";
+import { RouterLink, RouterView, useRoute } from "vue-router";
 
 import NavLogo from "@/nav/NavLogo.vue";
 
@@ -39,6 +42,15 @@ const pageTitleTheme = {
 // keeping a small amount of public chrome for branding and global controls.
 const route = useRoute();
 const isGuestRoute = computed(() => route.meta.guest === true);
+const userStore = storeUser();
+const pinia = getActivePinia();
+watch(
+    isGuestRoute,
+    (isGuest) => {
+        if (isGuest) waitForCurrentUser(pinia).catch(() => {});
+    },
+    { immediate: true },
+);
 
 const darkModeStore = storeDarkMode();
 const removeNoTransition = () => {
@@ -69,13 +81,28 @@ onMounted(() => {
 <template>
     <div v-if="isGuestRoute" class="relative min-h-svh bg-background text-foreground">
         <header
-            class="absolute inset-x-0 top-0 z-10 flex h-12 items-center justify-between gap-2 border-b-hairline bg-sidebar px-4"
+            class="absolute inset-x-0 top-0 z-10 flex min-h-12 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b-hairline bg-sidebar px-4 py-2"
         >
             <NavLogo class="min-w-0 whitespace-nowrap" />
-            <Button emphasis="ghost" size="icon-sm" aria-label="Toggle color mode" @click="darkModeStore.toggle()">
-                <PhSun v-if="darkModeStore.isDark" weight="duotone" />
-                <PhCloudMoon v-else weight="duotone" />
-            </Button>
+            <nav aria-label="Public navigation" class="flex items-center gap-4 text-sm">
+                <RouterLink
+                    :to="{ name: 'walkthrough' }"
+                    :aria-current="route.name === 'walkthrough' ? 'page' : undefined"
+                    class="underline underline-offset-4"
+                >
+                    Walkthrough
+                </RouterLink>
+                <RouterLink
+                    :to="{ name: userStore.loggedIn ? 'dashboard' : 'sign-in' }"
+                    class="underline underline-offset-4"
+                >
+                    {{ userStore.loggedIn ? "Return to dashboard" : "Sign in" }}
+                </RouterLink>
+                <Button emphasis="ghost" size="icon-sm" aria-label="Toggle color mode" @click="darkModeStore.toggle()">
+                    <PhSun v-if="darkModeStore.isDark" weight="duotone" />
+                    <PhCloudMoon v-else weight="duotone" />
+                </Button>
+            </nav>
         </header>
         <RouterView />
     </div>

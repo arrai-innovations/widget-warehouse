@@ -1,6 +1,6 @@
 # Integration examples
 
-These are the VUEDA integration points behind the [demo walkthrough](../README.md#create-and-approve-a-replenishment-order).
+These are the VUEDA integration points behind the [demo walkthrough](https://www.widgetwarehouse.com/walkthrough/).
 
 ## Permissions and navigation
 
