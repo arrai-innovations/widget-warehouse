@@ -1,5 +1,5 @@
 <script setup>
-import FieldRenderer from "@vueda/form/form-model/FieldRenderer.vue";
+import FormModelField from "@vueda/form/form-model/FormModelField.vue";
 import FormGrid from "@vueda/form/layout/FormGrid.vue";
 import FormSection from "@vueda/form/layout/FormSection.vue";
 import FormSectionTitle from "@vueda/form/layout/FormSectionTitle.vue";
@@ -84,7 +84,7 @@ const unplacedFields = computed(() =>
         <template v-if="section.aside" #aside>{{ section.aside }}</template>
         <FormGrid>
             <div v-for="[name, columns] in section.fields" :key="name" :data-col="columns">
-                <FieldRenderer :form-model="formModel" :form-model-name="name" />
+                <FormModelField :form-model="formModel" :form-model-name="name" />
             </div>
         </FormGrid>
     </FormSection>
@@ -95,7 +95,7 @@ const unplacedFields = computed(() =>
         <template #aside>not yet assigned a section</template>
         <FormGrid>
             <div v-for="name in unplacedFields" :key="name">
-                <FieldRenderer :form-model="formModel" :form-model-name="name" />
+                <FormModelField :form-model="formModel" :form-model-name="name" />
             </div>
         </FormGrid>
     </FormSection>

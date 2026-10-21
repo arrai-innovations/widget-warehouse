@@ -1,4 +1,4 @@
-import { requireAuth, requireInitialized, requireUnauth } from "@vueda/router/guards.js";
+import { requireAuth, requireCurrentUser, requireUnauth } from "@vueda/router/guards.js";
 import { makeCRUDRoutes } from "@vueda/router/makeCrud.js";
 import { setCrudComponents } from "@vueda/router/routerComponent.js";
 import { getPascalCaseName } from "@vueda/utils/case.js";
@@ -54,7 +54,7 @@ export function getRouter(app, pinia) {
             name: "dashboard",
             component: () => import("@/views/ViewDashboard.vue"),
             meta: { title: "Dashboard" },
-            // requireAuth rather than requireInitialized. Every tile waits for a signed-in
+            // requireAuth rather than requireCurrentUser. Every tile waits for a signed-in
             // user before it fetches anything, so a signed-out visitor would sit in front
             // of a page of skeletons that never resolve. This sends them to sign in and
             // adds ?redirect, which the sign-in flow prefers over its own target, so they
@@ -81,7 +81,7 @@ export function getRouter(app, pinia) {
                     view: "Not Found",
                 },
             },
-            beforeEnter: () => requireInitialized(router, pinia),
+            beforeEnter: () => requireCurrentUser(router, pinia),
             props: (route) => {
                 return {
                     ...(route.params || {}),

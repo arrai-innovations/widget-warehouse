@@ -77,7 +77,7 @@ def order(catalog):
 
 def order_url(pk=None):
     route = reverse("catalog.purchaseorder-detail", args=[pk]) if pk else reverse("catalog.purchaseorder-list")
-    return f"{route}?{settings.REST_FLEX_FIELDS['EXPAND_PARAM']}=lines"
+    return f"{route}?{settings.REST_FLEX_FIELDS2['EXPAND_PARAM']}=lines"
 
 
 @pytest.mark.parametrize(

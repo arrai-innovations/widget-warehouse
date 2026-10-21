@@ -82,13 +82,13 @@ class WidgetSerializer(VuedaSerializer):
             "category": (
                 WidgetCategorySerializer,
                 {
-                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                    settings.REST_FLEX_FIELDS2["FIELDS_PARAM"]: ("id", "formatted_name"),
                 },
             ),
             "supplier": (
                 SupplierSerializer,
                 {
-                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                    settings.REST_FLEX_FIELDS2["FIELDS_PARAM"]: ("id", "formatted_name"),
                 },
             ),
         }
@@ -111,7 +111,7 @@ class WidgetVariantSerializer(VuedaSerializer):
             "widget": (
                 WidgetSerializer,
                 {
-                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                    settings.REST_FLEX_FIELDS2["FIELDS_PARAM"]: ("id", "formatted_name"),
                 },
             ),
         }
@@ -205,13 +205,13 @@ class InventoryRecordSerializer(VuedaSerializer):
             "variant": (
                 WidgetVariantSerializer,
                 {
-                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                    settings.REST_FLEX_FIELDS2["FIELDS_PARAM"]: ("id", "formatted_name"),
                 },
             ),
             "warehouse": (
                 WarehouseSerializer,
                 {
-                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                    settings.REST_FLEX_FIELDS2["FIELDS_PARAM"]: ("id", "formatted_name"),
                 },
             ),
         }
@@ -262,7 +262,7 @@ class PurchaseOrderLineSerializer(VuedaSerializer):
             "variant": (
                 WidgetVariantSerializer,
                 {
-                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                    settings.REST_FLEX_FIELDS2["FIELDS_PARAM"]: ("id", "formatted_name"),
                 },
             ),
         }
@@ -370,13 +370,13 @@ class PurchaseOrderSerializer(VuedaSerializer):
             "supplier": (
                 SupplierSerializer,
                 {
-                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                    settings.REST_FLEX_FIELDS2["FIELDS_PARAM"]: ("id", "formatted_name"),
                 },
             ),
             "destination_warehouse": (
                 WarehouseSerializer,
                 {
-                    settings.REST_FLEX_FIELDS["FIELDS_PARAM"]: ("id", "formatted_name"),
+                    settings.REST_FLEX_FIELDS2["FIELDS_PARAM"]: ("id", "formatted_name"),
                 },
             ),
             # Writable inline. Expanding "lines" on a write request is what makes the

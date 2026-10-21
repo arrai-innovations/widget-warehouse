@@ -44,7 +44,7 @@ promotions. API exposure follows the VUEDA pattern:
 
 ## Code Style
 
-- Python 3.11 or newer.
+- Python 3.12 or newer.
 - Ruff enforces line length 120, import sorting, pyupgrade, bugbear, simplify,
   and Ruff-specific rules.
 - Use Django and DRF conventions for models, serializers, filtersets, viewsets,

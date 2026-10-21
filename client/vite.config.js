@@ -47,9 +47,9 @@ export default defineConfig(({ mode }) => {
             // Its runtime dependencies still need prebundling, especially CommonJS
             // packages such as pluralize. Include lazy-view dependencies up front.
             include: [
-                ...Object.keys(vuedaPackageDetails.dependencies || {}).map(
-                    (dependency) => `${vuedaPackageName} > ${dependency}`,
-                ),
+                ...Object.keys(vuedaPackageDetails.dependencies || {})
+                    .filter((dependency) => dependency !== "tw-animate-css")
+                    .map((dependency) => `${vuedaPackageName} > ${dependency}`),
                 ...Object.keys(vuedaPackageDetails.peerDependencies || {}).filter(
                     (dependency) => !vuedaPackageDetails.peerDependenciesMeta?.[dependency]?.optional,
                 ),
@@ -63,6 +63,9 @@ export default defineConfig(({ mode }) => {
     return {
         plugins: [vue(), tailwindcss()],
         ...vueda,
+        test: {
+            server: { deps: { inline: [vuedaPackageName] } },
+        },
         server: {
             // Preserve vuedaViteConfig's server config (notably fs.allow for linked vueda source);
             // the app's own keys below still take precedence.

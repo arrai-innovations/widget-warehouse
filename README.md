@@ -64,9 +64,9 @@ workflow state, and stock posting and partial receipts are not implemented.
    not need replenishment. Do not create an order yet.
 3. Return to **Inventory Records** and choose **Update** on that item. Set **Reorder threshold**
    to the total from the preview plus **10**, and **Max stock level** to that total
-   plus **20**. Leave **Quantity on hand** unchanged and choose **Submit** to save.
-   On an update form, **Submit** saves fields; on the order list, **Submit** starts
-   the approval workflow. For example, with 5 on hand, 12 incoming, and 8 pending,
+   plus **20**. Leave **Quantity on hand** unchanged and choose **Update** to save.
+   On the order list, **Submit** starts the approval workflow. For example, with
+   5 on hand, 12 incoming, and 8 pending,
    set the threshold to **35** and the maximum to **45**. This represents a higher
    stock requirement and creates a shortage beyond what existing orders cover.
 4. Open **Review shortages**, or the dashboard's **Below reorder** tile. Your item
@@ -151,7 +151,7 @@ Both stock and delivery warnings are advisory: confirmation permits the save.
 
 ### Prerequisites and configuration
 
-Install Python, Node.js 22 or newer, [uv](https://docs.astral.sh/uv/),
+Install Python 3.12 to 3.14, Node.js 22 or newer, [uv](https://docs.astral.sh/uv/),
 [pnpm](https://pnpm.io/), and [just](https://just.systems/). Start PostgreSQL with an
 empty database and a role that can migrate it, and start Valkey or Redis for the
 application cache. Running the server tests also requires permission to create a
