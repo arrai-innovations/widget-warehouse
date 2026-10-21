@@ -1,8 +1,8 @@
 from typing import ClassVar
 
 from django.db import OperationalError, transaction
-from django.db.models import F
-from django.db.models.functions import Greatest
+from django.db.models import CharField, F, Value
+from django.db.models.functions import Concat, Greatest
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from vueda.core.decorators import action
@@ -117,11 +117,22 @@ class InventoryRecordViewSet(VuedaViewSet):
     one warehouse and the total follows the filter.
     """
 
-    queryset = InventoryRecord.objects.annotate(shortfall=Greatest(F("reorder_threshold") - F("quantity_on_hand"), 0))
+    queryset = InventoryRecord.objects.select_related("variant__widget__supplier").annotate(
+        shortfall=Greatest(F("reorder_threshold") - F("quantity_on_hand"), 0),
+        stock_item_search=Concat(
+            "variant__widget__sku",
+            Value("-"),
+            "variant__sku_suffix",
+            Value(" @ "),
+            "warehouse__code",
+            output_field=CharField(),
+        ),
+    )
     serializer_class = InventoryRecordSerializer
     filterset_class = InventoryRecordFilterSet
     permit_list_expands: ClassVar[list[str]] = ["variant", "warehouse"]
     column_totals: ClassVar[dict[str, str]] = {"quantity_on_hand": "quantity_on_hand"}
+    search_fields: ClassVar[list[str]] = ["stock_item_search"]
 
     ordering_fields = ("warehouse", "variant", "quantity_on_hand", "shortfall")
 

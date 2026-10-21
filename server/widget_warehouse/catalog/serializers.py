@@ -160,6 +160,14 @@ class InventoryRecordSerializer(VuedaSerializer):
 
     formatted_name = serializers.SerializerMethodField(label="Stock item")
     shortfall = serializers.IntegerField(read_only=True, label="Units below threshold")
+    product_active = serializers.BooleanField(source="variant.widget.is_active", read_only=True, label="Product active")
+    warehouse_active = serializers.BooleanField(source="warehouse.is_active", read_only=True, label="Warehouse active")
+    supplier_active = serializers.BooleanField(
+        source="variant.widget.supplier.is_active", read_only=True, allow_null=True, label="Supplier active"
+    )
+    supplier_approved = serializers.BooleanField(
+        source="variant.widget.supplier.is_approved", read_only=True, allow_null=True, label="Supplier approved"
+    )
 
     def get_warnings(self):
         warnings = super().get_warnings()
@@ -195,6 +203,10 @@ class InventoryRecordSerializer(VuedaSerializer):
             "quantity_on_hand",
             "reorder_threshold",
             "shortfall",
+            "product_active",
+            "warehouse_active",
+            "supplier_active",
+            "supplier_approved",
             "max_stock_level",
             "last_stocktake_at",
             "last_received_at",

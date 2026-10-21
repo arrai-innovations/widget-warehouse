@@ -103,10 +103,14 @@ const sections = [
                     <h2>Create a shortage</h2>
                     <ol>
                         <li>
-                            Open <strong>Inventory Records</strong>. Choose an existing stock item, such as
-                            <code>SPR-B003-STD @ SYD-DC</code>, with an active product, an active warehouse, and an
-                            active, approved supplier. Use pagination or set <strong>Rows per page</strong> to
-                            <strong>100</strong> to find the example item.
+                            Open <strong>Inventory Records</strong> and clear any existing filters. Enter
+                            <code>SPR-B003-STD @ SYD-DC</code> in <strong>Search</strong> and choose the
+                            <strong>Search</strong> button. You can also search by part of a stock-item label, such as
+                            <code>SPR-B003</code> or <code>SYD-DC</code>. Check that <strong>Product active</strong>,
+                            <strong>Warehouse active</strong>, <strong>Supplier active</strong>, and
+                            <strong>Supplier approved</strong> all show <strong>Yes</strong>. If not, clear the search
+                            and use the filters with those same names, setting each to <strong>Yes</strong>, to choose
+                            another item. A missing supplier or pending approval does not qualify.
                         </li>
                         <li>
                             Select its list checkbox and choose <strong>Replenish</strong>. Read
@@ -139,8 +143,8 @@ const sections = [
                     <ol>
                         <li>
                             Switch to <strong>Inventory clerk</strong>. Open <strong>Inventory Records</strong>, choose
-                            <strong>Review shortages</strong>, and select the same item. The clerk can read its stock
-                            and targets but cannot update them.
+                            <strong>Review shortages</strong>, and search for the stock-item label you saved. Select the
+                            same item. The clerk can read its stock and targets but cannot update them.
                         </li>
                         <li>
                             Choose <strong>Replenish</strong>. The proposed quantity is <strong>20</strong>, accounting
