@@ -1999,7 +1999,7 @@ wheels = [
 
 [[package]]
 name = "widget-warehouse-server"
-version = "0.2.1"
+version = "0.2.2"
 source = { virtual = "server" }
 dependencies = [
     { name = "gunicorn" },
