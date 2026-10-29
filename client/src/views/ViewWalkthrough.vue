@@ -12,7 +12,7 @@ useTitle("Demo walkthrough | Widget Warehouse");
 
 const sections = [
     { id: "accounts", title: "Choose an account" },
-    { id: "shortage", title: "1. Create a shortage" },
+    { id: "shortage", title: "1. Find stock to replenish" },
     { id: "draft", title: "2. Prepare an order" },
     { id: "approve", title: "3. Approve the order" },
     { id: "warnings", title: "Try a stock-count warning" },
@@ -26,8 +26,9 @@ const sections = [
             <p class="mb-3 text-sm font-medium tracking-widest text-muted-foreground uppercase">Widget Warehouse</p>
             <h1 class="text-3xl leading-tight font-bold tracking-tight sm:text-4xl">Demo walkthrough</h1>
             <p class="mt-5 text-lg leading-relaxed">
-                Create a shortage, prepare a purchase order, and approve it with a different account. This exercise
-                shows VUEDA's forms, permissions, workflows, and a custom replenishment action working together.
+                Find stock to replenish, prepare a purchase order, and approve it with a different account. This
+                exercise shows VUEDA's forms, permissions, workflows, and a custom replenishment action working
+                together.
             </p>
             <div class="mt-6 flex flex-wrap gap-3">
                 <Button as-child tone="primary">
@@ -100,34 +101,46 @@ const sections = [
 
                 <section id="shortage">
                     <p class="role">Step 1 / Inventory supervisor</p>
-                    <h2>Create a shortage</h2>
+                    <h2>Find stock to replenish</h2>
                     <ol>
                         <li>
-                            Open <strong>Inventory Records</strong> and clear any existing filters. Enter
-                            <code>SPR-B003-STD @ SYD-DC</code> in <strong>Search</strong> and choose the
-                            <strong>Search</strong> button. You can also search by part of a stock-item label, such as
-                            <code>SPR-B003</code> or <code>SYD-DC</code>. Check that <strong>Product active</strong>,
+                            Open <strong>Inventory Records</strong>. If any filters are already applied, choose
+                            <strong>Clear filters</strong>.
+                        </li>
+                        <li>
+                            Set <strong>Below reorder threshold</strong>, <strong>Product active</strong>,
                             <strong>Warehouse active</strong>, <strong>Supplier active</strong>, and
-                            <strong>Supplier approved</strong> all show <strong>Yes</strong>. If not, clear the search
-                            and use the filters with those same names, setting each to <strong>Yes</strong>, to choose
-                            another item. A missing supplier or pending approval does not qualify.
+                            <strong>Supplier approved</strong> to <strong>Yes</strong>.
                         </li>
                         <li>
-                            Select its list checkbox and choose <strong>Replenish</strong>. Read
-                            <strong>On hand</strong> and both numbers under <strong>Incoming / Pending</strong>. Add
-                            those three quantities to get the stock already held or on order. The preview shows them
-                            even when the item does not need replenishment. Do not create an order yet.
+                            Select an item's checkbox and choose <strong>Replenish</strong>. Check its proposed
+                            quantity. If existing orders already cover the shortage, try another item.
                         </li>
                         <li>
-                            Return to <strong>Inventory Records</strong> and choose <strong>Update</strong> on that
-                            item. Set <strong>Reorder threshold</strong> to the total plus <strong>10</strong>, and
-                            <strong>Max stock level</strong> to the total plus <strong>20</strong>. Leave
-                            <strong>Quantity on hand</strong> unchanged and choose <strong>Update</strong> to save.
+                            When an item has a positive proposed quantity, record its stock-item label. Do not create an
+                            order yet. Continue to <strong>Step 2: Prepare an order</strong>.
+                        </li>
+                    </ol>
+                    <h3>If no item needs another order</h3>
+                    <ol>
+                        <li>
+                            Return to <strong>Inventory Records</strong> and remove the
+                            <strong>Below reorder threshold</strong> filter. Keep the four eligibility filters set to
+                            <strong>Yes</strong>.
                         </li>
                         <li>
-                            Open <strong>Review shortages</strong>, or the dashboard's <strong>Below reorder</strong>
-                            tile. Your item is now in this filtered queue. Keep its stock-item label for the next
-                            account.
+                            Choose an item, select its checkbox, and open <strong>Replenish</strong>. Add
+                            <strong>On hand</strong> and both quantities under <strong>Incoming / Pending</strong>.
+                        </li>
+                        <li>
+                            Return to the list and choose <strong>Update</strong> for that item. Set
+                            <strong>Reorder threshold</strong> to that total plus <strong>10</strong>, and
+                            <strong>Max stock level</strong> to that total plus <strong>20</strong>. Leave
+                            <strong>Quantity on hand</strong> unchanged and save.
+                        </li>
+                        <li>
+                            Open <strong>Review shortages</strong> and search for the item's label. Keep that label for
+                            Step 2.
                         </li>
                     </ol>
                     <p class="callout">
@@ -147,9 +160,9 @@ const sections = [
                             same item. The clerk can read its stock and targets but cannot update them.
                         </li>
                         <li>
-                            Choose <strong>Replenish</strong>. The proposed quantity is <strong>20</strong>, accounting
-                            for existing pending orders and approved incoming stock. The page groups selected items by
-                            supplier and destination warehouse. Select additional items to see multiple groups.
+                            Choose <strong>Replenish</strong>. Review the proposed quantity, which accounts for existing
+                            pending orders and approved incoming stock. The page groups selected items by supplier and
+                            destination warehouse. Select additional items to see multiple groups.
                         </li>
                         <li>
                             Keep the proposed quantity. You can change <strong>Unit price</strong>; enter a sample price
