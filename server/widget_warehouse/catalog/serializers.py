@@ -11,6 +11,7 @@ from widget_warehouse.catalog.models import (
     InventoryRecord,
     Promotion,
     PurchaseOrder,
+    PurchaseOrderDelivery,
     PurchaseOrderLine,
     PurchaseOrderStateCount,
     Supplier,
@@ -281,6 +282,26 @@ class PurchaseOrderLineSerializer(VuedaSerializer):
         expandable_fields.update(VuedaSerializer.Meta.expandable_fields)
 
 
+class PurchaseOrderDeliverySerializer(VuedaSerializer):
+    """
+    Child serializer for the purchase order's singular inline.
+
+    ``purchase_order`` is absent for the same reason as on the lines: the parent sets it
+    when it saves the delivery. A delivery is therefore only reachable through
+    ``PurchaseOrderSerializer``.
+    """
+
+    class Meta(VuedaSerializer.Meta):
+        model = PurchaseOrderDelivery
+        fields = (
+            "id",
+            "carrier",
+            "tracking_number",
+            "receiving_instructions",
+            "available_actions",
+        )
+
+
 class PurchaseOrderSerializer(VuedaSerializer):
     """
     Read/write serializer for the order and its lines.
@@ -373,11 +394,15 @@ class PurchaseOrderSerializer(VuedaSerializer):
             "expected_arrival_date",
             "total_value",
             "lines",
+            "delivery",
             "created_at",
             "updated_at",
             *VuedaSerializer.Meta.fields,
         )
         read_only_fields = ("created_at", "updated_at", "total_value")
+        # DRF builds an unexpanded reverse one-to-one as a required primary key field, which
+        # would make every create name a delivery. An order may have none.
+        extra_kwargs: ClassVar[dict] = {"delivery": {"required": False, "allow_null": True}}
         expandable_fields: ClassVar[dict] = {
             "supplier": (
                 SupplierSerializer,
@@ -395,6 +420,9 @@ class PurchaseOrderSerializer(VuedaSerializer):
             # nested payload deserialize as objects rather than primary keys, and an
             # existing line left out of that payload is deleted.
             "lines": (PurchaseOrderLineSerializer, {"many": True}),
+            # Optional singular inline. Sending null for an expanded "delivery" deletes the
+            # order's delivery; leaving the key out keeps it.
+            "delivery": (PurchaseOrderDeliverySerializer, {"required": False, "allow_null": True}),
         }
         expandable_fields.update(VuedaSerializer.Meta.expandable_fields)
 

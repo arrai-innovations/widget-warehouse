@@ -160,12 +160,14 @@ export function setupModelConfig(pinia) {
         {
             fieldProps: {
                 supplier: { clearServerErrorDependents: ["expected_arrival_date"] },
-                order_date: { clearServerErrorDependents: ["expected_arrival_date"] },
-            },
-            // Expand the lines everywhere and nothing else. An expanded foreign key renders
-            // as a subform of the related object's own fields, which is not what a supplier
-            // picker should be; unexpanded, it stays a select of suppliers.
-            expand: ["lines"],
+                order_date: { clearServerErrorDependents: ["expected_arrival_date"] },            },
+            // Expand the two inlines everywhere and nothing else. An expanded foreign key
+            // renders as a subform of the related object's own fields, which is not what a
+            // supplier picker should be; unexpanded, it stays a select of suppliers.
+            // "delivery" is a single optional object, so it infers
+            // FieldSetSingularStackedInline: one card that the form can create, edit, or
+            // mark for deletion on save.
+            expand: ["lines", "delivery"],
             // A writable many relation infers FieldSetStackedInline: one bordered card per
             // line with a label above every field. Line items read better as a table, one
             // row per line under a single header, so this names the tabular inline instead.

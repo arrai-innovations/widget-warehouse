@@ -9,6 +9,7 @@ from widget_warehouse.catalog.models import (
     InventoryRecord,
     Promotion,
     PurchaseOrder,
+    PurchaseOrderDelivery,
     PurchaseOrderLine,
     Supplier,
     SupplierPrice,
@@ -867,6 +868,18 @@ class Catalog(SeedStep):
             ),
         ]
 
+        # Only some orders have a booked carrier, so the order form shows the delivery inline
+        # both filled in and empty. PO-1043 is a draft with a delivery, so the clerk can open
+        # it and mark the delivery for deletion on save.
+        # reference: (carrier, tracking number, receiving instructions)
+        deliveries_data = {
+            "PO-1041": ("StarTrack", "ST-88412093", "Dock 2. Call the receiving desk 30 minutes out."),
+            "PO-1042": ("TNT", "", ""),
+            "PO-1043": ("DHL Freight", "DHL-5530-1187", "Palletised. Forklift needed."),
+            "PO-1045": ("Toll", "TL-20931", ""),
+            "PO-1047": ("DHL Freight", "DHL-5530-2240", "Bearings are moisture sensitive. Keep wrapped."),
+        }
+
         for entry in purchase_orders_data:
             reference, supplier_slug, warehouse_code, ordered_days_ago, arrival_in_days, state_code, lines = entry
             order, created = PurchaseOrder.objects.update_or_create(
@@ -897,6 +910,20 @@ class Catalog(SeedStep):
                 )
                 line_status = "created" if line_created else "exists"
                 self.stdout.write(f"    Line {variant_key} x{quantity}: {line_status}")
+
+            delivery = deliveries_data.get(reference)
+            if delivery:
+                carrier, tracking_number, receiving_instructions = delivery
+                _, delivery_created = PurchaseOrderDelivery.objects.update_or_create(
+                    purchase_order=order,
+                    defaults={
+                        "carrier": carrier,
+                        "tracking_number": tracking_number,
+                        "receiving_instructions": receiving_instructions,
+                    },
+                )
+                delivery_status = "created" if delivery_created else "exists"
+                self.stdout.write(f"    Delivery by {carrier}: {delivery_status}")
 
     def _seed_purchasing_history(self):
         """Twenty-six complete weeks of purchasing, without adding open work queues.

@@ -27,9 +27,10 @@ INVENTORY_MODELS = ("inventoryrecord",)
 INBOUND_MODELS = ("supplier", "supplierprice")
 OUTBOUND_MODELS = ("promotion",)
 LOCATION_MODELS = ("warehouse",)
-# The order and its lines are always granted together: lines are only reachable as the
-# order's writable inline, so a role that can change an order changes its lines too.
-PURCHASE_MODELS = ("purchaseorder", "purchaseorderline")
+# The order, its lines, and its delivery are always granted together: the children are
+# only reachable as the order's writable inlines, so a role that can change an order
+# changes its children too.
+PURCHASE_MODELS = ("purchaseorder", "purchaseorderline", "purchaseorderdelivery")
 # Read-only models backed by database views. They summarize another model, so they follow
 # its read grant: a role that cannot list purchase orders has no business reading the
 # pipeline counts either. They never appear in a write or delete scope, because there is

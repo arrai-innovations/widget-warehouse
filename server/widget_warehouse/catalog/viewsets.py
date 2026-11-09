@@ -205,10 +205,10 @@ class PurchaseOrderViewSet(VuedaViewSet):
     serializer_class = PurchaseOrderSerializer
     filterset_class = PurchaseOrderFilterSet
     column_totals: ClassVar[dict[str, str]] = {"total_value": "total_value"}
-    # "lines" is here so a list request can expand the inline as well: without it,
-    # flex-fields refuses the expand on list and the create/update forms are the only
-    # place the child rows are reachable.
-    permit_list_expands: ClassVar[list[str]] = ["supplier", "destination_warehouse", "lines"]
+    # "lines" and "delivery" are here so a list request can expand the inlines as well:
+    # without them, flex-fields refuses the expand on list and the create/update forms are
+    # the only place the child rows are reachable.
+    permit_list_expands: ClassVar[list[str]] = ["supplier", "destination_warehouse", "lines", "delivery"]
     ordering_fields: ClassVar[list[str]] = [
         "reference",
         "supplier",

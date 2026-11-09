@@ -236,6 +236,11 @@ export const formLayouts = {
             fields: [["lines", 12]],
         },
         {
+            title: "Delivery",
+            aside: "once a carrier is booked",
+            fields: [["delivery", 12]],
+        },
+        {
             title: "Value and state",
             aside: "server maintained",
             fields: [

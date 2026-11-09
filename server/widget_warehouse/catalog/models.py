@@ -395,6 +395,34 @@ class PurchaseOrderLine(VuedaModel):
         ordering = ("purchase_order", "id")
 
 
+class PurchaseOrderDelivery(VuedaModel):
+    """
+    How the supplier ships a purchase order, and what the receiving warehouse should know.
+
+    An order has at most one, and many orders have none until the supplier books a carrier.
+    That makes it a reverse one-to-one that the order's form edits as an optional singular
+    inline: the inline can create the delivery, edit it, or delete it on save.
+    """
+
+    formatted_name = None
+    formatted_name_lookup_expression = "carrier"
+
+    purchase_order = models.OneToOneField(
+        PurchaseOrder,
+        on_delete=models.CASCADE,
+        related_name="delivery",
+    )
+    carrier = models.CharField(max_length=100, help_text="Freight company carrying the order.")
+    tracking_number = models.CharField(max_length=64, blank=True)
+    receiving_instructions = models.TextField(
+        blank=True,
+        help_text="Dock, contact, or handling notes for the receiving warehouse.",
+    )
+
+    class Meta(BaseModelMeta):
+        ordering = ("purchase_order",)
+
+
 class PurchaseOrderStateCount(VuedaModel):
     """
     One row per purchase order workflow state, carrying how many orders sit in it.
