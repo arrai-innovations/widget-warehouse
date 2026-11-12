@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.12"
 
 [options]
@@ -844,6 +844,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/21/39/55822b15b7ec87410f34cd16ce04065ff390e50f9e29f31d6d116fc80456/django_cors_headers-4.9.0.tar.gz", hash = "sha256:fe5d7cb59fdc2c8c646ce84b727ac2bca8912a247e6e68e1fb507372178e59e8", size = 21458, upload-time = "2025-09-18T10:40:52.326Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/30/d8/19ed1e47badf477d17fb177c1c19b5a21da0fd2d9f093f23be3fb86c5fab/django_cors_headers-4.9.0-py3-none-any.whl", hash = "sha256:15c7f20727f90044dcee2216a9fd7303741a864865f0c3657e28b7056f61b449", size = 12809, upload-time = "2025-09-18T10:40:50.843Z" },
+]
+
+[[package]]
+name = "django-cte"
+version = "4.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/86/68/9d533b1fec250a0e4f659ef5116646cf9e61c353629f252cd5aa36587c56/django_cte-4.0.0.tar.gz", hash = "sha256:bb8dd23c19111c1e55c19dc5ffb30abee354c3f57c869baace90131e1463d74d", size = 12120, upload-time = "2026-08-31T11:30:32.486Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/73/37/3374d9a4dca2bd38806b3f00b8140bce59433e8342f2ffae166a55de8f86/django_cte-4.0.0-py3-none-any.whl", hash = "sha256:cf708d4172063d9a43b087a3d93b6d048c50a24fac46b04f45f274761af6db35", size = 13900, upload-time = "2026-08-31T11:30:31.31Z" },
 ]
 
 [[package]]
@@ -1947,7 +1959,7 @@ wheels = [
 
 [[package]]
 name = "vueda"
-version = "3.0.0b1"
+version = "3.0.0b2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ansicolors" },
@@ -1964,6 +1976,7 @@ dependencies = [
     { name = "django-anymail", extra = ["sendgrid"] },
     { name = "django-cache-url" },
     { name = "django-cors-headers" },
+    { name = "django-cte" },
     { name = "django-extensions" },
     { name = "django-filter" },
     { name = "django-pghistory" },
@@ -1976,6 +1989,7 @@ dependencies = [
     { name = "hashids" },
     { name = "ordered-set" },
     { name = "phonenumbers" },
+    { name = "psycopg" },
     { name = "pwned-passwords-django" },
     { name = "rest-framework-generic-relations" },
     { name = "sentry-sdk" },
@@ -1985,7 +1999,7 @@ dependencies = [
     { name = "urllib3" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0d/15/b345946d8dea5898f32d6ce3bb455e25b722b6affbc9984c7a3e9ad59794/vueda-3.0.0b1-py3-none-any.whl", hash = "sha256:55a630c9fc6fdadee483c5d9599896e28d528f9a991f210b535014dc302a3b4e", size = 461460, upload-time = "2026-10-21T17:33:38.18Z" },
+    { url = "https://files.pythonhosted.org/packages/97/71/bddf1a859941eabd248944ee6dad5c56414a44802b4746fda426d87a66e0/vueda-3.0.0b2-py3-none-any.whl", hash = "sha256:59bb8ce5b42ae4d167f60a34b7735d63d1389d0eb77d366fa0e274dca36a35ec", size = 499263, upload-time = "2026-11-12T20:14:27.114Z" },
 ]
 
 [[package]]
@@ -2026,7 +2040,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=12.2.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.0,<4" },
     { name = "redis", specifier = ">=7.4.0,<8" },
-    { name = "vueda", specifier = ">=3.0.0b1,<4" },
+    { name = "vueda", specifier = ">=3.0.0b2,<4" },
 ]
 
 [package.metadata.requires-dev]
@@ -2044,6 +2058,7 @@ dev = [
 name = "widget-warehouse-workspace"
 version = "0.0.0"
 source = { virtual = "." }
+default-groups = []
 
 [package.dev-dependencies]
 dev = [

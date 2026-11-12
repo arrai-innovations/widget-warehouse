@@ -402,10 +402,9 @@ class PurchaseOrderStateCount(VuedaModel):
     Backed by a database view rather than a table (``managed = False``, with the SQL in
     ``catalog/sql/``), which is how this project answers "how many, grouped by what"
     without a bespoke endpoint. VUEDA has no aggregate surface beyond summing a column of
-    a list, so the alternative was one filtered list request per state. That does not work
-    here anyway: the workflow state filter rejects a state no order is currently in, so
-    four of five requests would 400 rather than return zero. A view left-joins from the
-    state table instead, so a state with no orders is a row with a count of zero.
+    a list, so the alternative was one filtered list request per state, after loading the
+    state list. A view answers in one request instead, and left-joins from the state
+    table, so a state with no orders is a row with a count of zero.
 
     Nothing about consuming it is special. It is an ordinary model behind an ordinary
     VUEDA serializer, viewset, and route, with its own CRUDL permissions, so a role either

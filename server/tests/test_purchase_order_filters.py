@@ -3,19 +3,18 @@ Filter contract tests for the purchase order list.
 
 ``workflow_state`` comes from VUEDA, which adds it to every filterset of a workflow model,
 rather than from this project's filterset body. These cover what it does on this model: the
-filter narrows by state, and its accepted values are the states the queryset currently
-holds rather than the states the workflow defines. The second half is a framework
-behaviour a dashboard has to design around, so it is pinned here rather than discovered
-again later.
+filter narrows by state, accepts any state the purchase order workflow defines whether or
+not an order is in it, and rejects a state from another model's workflow.
 """
 
 from datetime import date
 
 import pytest
+from django.contrib.contenttypes.models import ContentType
 from vueda.workflow.models import State, Workflow
 
 from widget_warehouse.catalog.filtersets import PurchaseOrderFilterSet
-from widget_warehouse.catalog.models import PurchaseOrder, Supplier, Warehouse
+from widget_warehouse.catalog.models import PurchaseOrder, Supplier, Warehouse, Widget
 from widget_warehouse.catalog.seeding import DemoUsers, PurchaseOrderWorkflow
 
 
@@ -76,14 +75,10 @@ def test_workflow_state_filters_the_order_list(orders):
 
 
 @pytest.mark.django_db
-def test_a_state_no_order_is_in_is_rejected_rather_than_returning_nothing(orders):
+def test_a_state_no_order_is_in_matches_no_orders(orders):
     """
-    VUEDA's ``workflow_state`` filter replaces its queryset with the states present on
-    the rows it was given, and a ModelChoiceFilter validates a submitted value against that
-    same queryset. So asking for a state that currently holds no orders is an invalid
-    choice, not an empty result, and anything counting orders per state has to handle a 400
-    where it expected a zero. This is why the pipeline summary is a database view rather
-    than one filtered request per state.
+    A state that currently holds no orders is a valid value with an empty result, so a
+    saved list URL that names a state keeps working after the last order leaves it.
     """
     states = states_for_orders()
     assert not PurchaseOrder.objects.filter(object_states_proxy__state=states["approved"]).exists()
@@ -93,17 +88,26 @@ def test_a_state_no_order_is_in_is_rejected_rather_than_returning_nothing(orders
         queryset=PurchaseOrder.objects.all(),
     )
 
-    assert not filtered.is_valid()
-    assert "workflow_state" in filtered.errors
+    assert filtered.is_valid(), filtered.errors
+    assert not filtered.qs.exists()
 
 
 @pytest.mark.django_db
-def test_an_empty_queryset_accepts_every_state_in_the_table(orders):
-    """
-    The narrowing is skipped when no row has a state at all, so the filter is at its most
-    permissive with no data and at its strictest with data. States belonging to other
-    workflows entirely become acceptable values here.
-    """
-    accepted = PurchaseOrderFilterSet(queryset=PurchaseOrder.objects.none()).filters["workflow_state"].queryset
+def test_a_state_from_another_workflow_is_rejected(orders):
+    content_type = ContentType.objects.get_for_model(Widget)
+    other = Workflow.objects.create(
+        code="widget-review",
+        name="Widget review",
+        content_type=content_type,
+        historical_app_label=content_type.app_label,
+        historical_model=content_type.model,
+    )
+    foreign_state = State.objects.create(workflow=other, code="draft", name="Draft")
 
-    assert accepted.count() == State.objects.count()
+    filtered = PurchaseOrderFilterSet(
+        {"workflow_state": str(foreign_state.pk)},
+        queryset=PurchaseOrder.objects.all(),
+    )
+
+    assert not filtered.is_valid()
+    assert "workflow_state" in filtered.errors

@@ -154,9 +154,9 @@ class PromotionFilterSet(VuedaFilterSet):
 class PurchaseOrderFilterSet(VuedaFilterSet):
     """
     VUEDA adds the ``workflow_state`` filter to every filterset of a workflow model, which
-    is how a list request narrows to orders in a given state. It narrows the filter's
-    choices to the states orders are actually in, so the filter's options describe this
-    queryset rather than every state the workflow defines.
+    is how a list request narrows to orders in a given state. It accepts any state of the
+    purchase order workflow, including one that no order is in, and rejects states from
+    other workflows.
     """
 
     replenishment_batch = rest_framework.UUIDFilter(field_name="replenishment_batch_id", label="Replenishment batch")
@@ -183,8 +183,8 @@ class PurchaseOrderFilterSet(VuedaFilterSet):
         Late is two conditions, and a date comparison alone gets it wrong: an order that
         was received last month also has an arrival date in the past, and so does a
         cancelled one. Asking the client to combine a date filter with a state filter
-        would not work either, because the workflow state filter refuses a state no order
-        is currently in. So the question is answered here, where both halves are in reach.
+        would put the list of settled states in every caller. So the question is answered
+        here, where both halves are in reach and ``SETTLED_ORDER_STATES`` is the one list.
         """
         if value is None:
             return queryset

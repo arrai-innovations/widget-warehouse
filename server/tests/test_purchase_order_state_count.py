@@ -4,11 +4,10 @@ Contract tests for the view-backed order pipeline summary.
 ``PurchaseOrderStateCount`` is an unmanaged model over a database view, exposed through an
 ordinary VUEDA serializer, viewset, and route. These cover the three things that make it
 worth having: it answers in one request, it reports a state holding no orders as a zero
-rather than refusing the question, and it is gated by ordinary model permissions.
+row, and it is gated by ordinary model permissions.
 
-The last test is the reason the view exists at all. Counting by filtering the order list
-once per state cannot work, because the workflow state filter rejects a state no order is
-in. See ``test_purchase_order_filters.py`` for that behaviour on its own.
+Counting by filtering the order list once per state would also report zeros, but it takes
+one request per state, and the client would have to load the state list first.
 """
 
 from datetime import date

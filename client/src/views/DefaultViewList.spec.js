@@ -22,7 +22,7 @@ vi.mock("@vueda/views/ViewList.vue", async () => {
     const { h } = await import("vue");
     return {
         default: {
-            props: ["displayFields", "listFields"],
+            props: ["displayFields", "fieldDetails", "fetchFields"],
             setup(props, { slots }) {
                 mocks.listProps = props;
                 return () =>
@@ -31,7 +31,7 @@ vi.mock("@vueda/views/ViewList.vue", async () => {
                         mocks.rows.map((obj) =>
                             h(
                                 "div",
-                                Object.keys(props.displayFields).map((field) =>
+                                props.displayFields.map((field) =>
                                     slots[`field(${field})`]?.({
                                         pk: obj.id,
                                         obj,
@@ -68,8 +68,9 @@ describe("DefaultViewList", () => {
         expect(html).toContain('data-target="1:update"');
         expect(html).toContain('data-target="2:read"');
         expect(html.match(/data-target=/g)).toHaveLength(2);
-        expect(mocks.listProps.listFields).toEqual(["reference", "available_actions"]);
-        expect(mocks.listProps.displayFields.update.label).toBe("Actions");
+        expect(mocks.listProps.fetchFields).toEqual(["reference", "available_actions"]);
+        expect(mocks.listProps.displayFields).toEqual(["update", "reference"]);
+        expect(mocks.listProps.fieldDetails.update.label).toBe("Actions");
     });
 
     it("shows the column for read-only users and respects model action filtering", async () => {
@@ -83,11 +84,11 @@ describe("DefaultViewList", () => {
     it("omits the automatic column for list-only users", async () => {
         mocks.actions = ["list"];
         await render();
-        expect(mocks.listProps.displayFields).not.toHaveProperty("update");
+        expect(mocks.listProps.displayFields).not.toContain("update");
     });
 
     it("preserves explicit fetch fields and requests available_actions only once", async () => {
-        await render({ listFields: ["id", "workflow_state_name", "available_actions"] });
-        expect(mocks.listProps.listFields).toEqual(["id", "workflow_state_name", "available_actions"]);
+        await render({ fetchFields: ["id", "workflow_state_name", "available_actions"] });
+        expect(mocks.listProps.fetchFields).toEqual(["id", "workflow_state_name", "available_actions"]);
     });
 });

@@ -3,9 +3,8 @@
     order workflow, with the number of orders currently in it.
 
     Left joined from the state table on purpose. A state holding no orders still produces a
-    row, with a count of zero, which is the whole reason this exists: the workflow state
-    filter on the order list rejects a state no order is in, so counting by asking the list
-    endpoint once per state returns 400 exactly where a zero was wanted.
+    row, with a count of zero, so the pipeline gets every state in one request rather than
+    asking the order list endpoint once per state.
 
     The workflow is found through django_content_type rather than by a hardcoded id, so the
     view survives a rebuilt database where the content type ids differ.

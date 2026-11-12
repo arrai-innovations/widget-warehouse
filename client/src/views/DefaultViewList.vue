@@ -8,16 +8,17 @@ import { computed, toRef } from "vue";
 const props = defineProps({
     app: { type: String, required: true },
     model: { type: String, required: true },
-    displayFields: { type: Object, default: undefined },
-    listFields: { type: Array, default: undefined },
+    displayFields: { type: Array, default: undefined },
+    fieldDetails: { type: Object, default: undefined },
+    fetchFields: { type: Array, default: undefined },
 });
 defineOptions({ inheritAttrs: false });
 
 const modelConfig = useModelConfig(toRef(props, "app"), toRef(props, "model"), "list");
 const filteredActions = useFilteredActions({ modelConfigInstance: modelConfig });
-const listFieldsWithActions = computed(() => [
+const fetchFieldsWithActions = computed(() => [
     ...new Set([
-        ...(props.listFields?.length ? props.listFields : modelConfig.config?.fetchFields || []),
+        ...(props.fetchFields?.length ? props.fetchFields : modelConfig.config?.fetchFields || []),
         "available_actions",
     ]),
 ]);
@@ -25,32 +26,17 @@ const listFieldsWithActions = computed(() => [
 function canPerform(obj, action) {
     return filteredActions.actions.includes(action) && obj?.available_actions?.includes(action);
 }
-const updateField = {
-    name: "update",
-    label: "Actions",
-};
 
+// "update" is a synthetic column with no model info behind it, so its label comes from here.
 const displayFieldsWithUpdate = computed(() => {
-    const fields = {};
-    const configuredDisplayFields = Object.keys(props.displayFields || {}).length
-        ? Object.values(props.displayFields)
-        : (modelConfig.config?.displayFields || []).map((name) => ({
-              name,
-              ...modelConfig.config?.fieldDetails?.[name],
-          }));
-
-    if (filteredActions.actions.some((action) => ["update", "retrieve"].includes(action))) {
-        fields.update = updateField;
-    }
-    for (const field of configuredDisplayFields) {
-        if (field?.name === "update") {
-            fields.update = { ...updateField, ...field };
-        } else if (field?.name) {
-            fields[field.name] = field;
-        }
-    }
-    return fields;
+    const names = props.displayFields?.length ? props.displayFields : modelConfig.config?.displayFields || [];
+    const showUpdate = filteredActions.actions.some((action) => ["update", "retrieve"].includes(action));
+    return [...new Set([...(showUpdate ? ["update"] : []), ...names])];
 });
+const fieldDetailsWithUpdate = computed(() => ({
+    ...props.fieldDetails,
+    update: { label: "Actions", ...props.fieldDetails?.update },
+}));
 </script>
 
 <template>
@@ -59,7 +45,8 @@ const displayFieldsWithUpdate = computed(() => {
         :model="model"
         v-bind="$attrs"
         :display-fields="displayFieldsWithUpdate"
-        :list-fields="listFieldsWithActions"
+        :field-details="fieldDetailsWithUpdate"
+        :fetch-fields="fetchFieldsWithActions"
     >
         <!--
             Reusable per-row detail links. The default list prepends a synthetic
